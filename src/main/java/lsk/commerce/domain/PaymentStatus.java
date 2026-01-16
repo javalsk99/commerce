@@ -1,4 +1,4 @@
-package Java.lsk.commerce.domain;
+package lsk.commerce.domain;
 
 public enum PaymentStatus {
     PENDING, FAILED, COMPLETED;

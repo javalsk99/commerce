@@ -1,4 +1,4 @@
-package Java.lsk.commerce.domain;
+package lsk.commerce.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;

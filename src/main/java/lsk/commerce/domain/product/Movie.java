@@ -1,4 +1,4 @@
-package Java.lsk.commerce.domain.product;
+package lsk.commerce.domain.product;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
