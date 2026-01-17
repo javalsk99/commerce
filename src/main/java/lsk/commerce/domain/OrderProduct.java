@@ -1,13 +1,17 @@
 package lsk.commerce.domain;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lsk.commerce.domain.product.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import static jakarta.persistence.FetchType.*;
+import static lombok.AccessLevel.*;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = PROTECTED)
 public class OrderProduct {
 
     @Id @GeneratedValue
@@ -24,4 +28,18 @@ public class OrderProduct {
 
     private int orderPrice;
     private int count;
+
+    public static OrderProduct createOrderProduct(int count, Product product) {
+        OrderProduct orderProduct = new OrderProduct();
+        orderProduct.product = product;
+        orderProduct.orderPrice = product.getPrice() * count;
+        orderProduct.count = count;
+
+        product.removeStock(count);
+        return orderProduct;
+    }
+
+    protected void setOrder(Order order) {
+        this.order = order;
+    }
 }

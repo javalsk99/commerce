@@ -42,8 +42,8 @@ public abstract class Product {
         this.stockQuantity = restStock;
     }
 
-    public void updateProduct(String newName, int newPrice, int newStockQuantity) {
-        this.name = newName;
+    //가격, 수량만 변경
+    public void updateProduct(int newPrice, int newStockQuantity) {
         this.price = newPrice;
         this.stockQuantity = newStockQuantity;
     }

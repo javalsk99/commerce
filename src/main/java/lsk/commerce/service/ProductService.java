@@ -34,8 +34,8 @@ public class ProductService {
         productRepository.delete(product);
     }
 
-    public void updateProduct(Long productId, String newName, int newPrice, int newStockQuantity) {
+    public void updateProduct(Long productId, int newPrice, int newStockQuantity) {
         Product product = productRepository.findOne(productId);
-        product.updateProduct(newName, newPrice, newStockQuantity);
+        product.updateProduct(newPrice, newStockQuantity);
     }
 }

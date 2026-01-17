@@ -1,7 +1,6 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Member;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +21,7 @@ class MemberServiceTest {
     @Test
     void join() {
         //given
-        Member member = setMember1();
+        Member member = createMember1();
 
         //when
         Long memberId = memberService.join(member);
@@ -35,8 +34,8 @@ class MemberServiceTest {
     @Test
     void duplicate_join() {
         //given
-        Member member1 = setMember1();
-        Member member2 = setMember2();
+        Member member1 = createMember1();
+        Member member2 = createMember2();
 
         //when
         memberService.join(member1);
@@ -50,8 +49,8 @@ class MemberServiceTest {
     @Test
     void find() {
         //given
-        Member member1 = setMember1();
-        Member member2 = setMember3();
+        Member member1 = createMember1();
+        Member member2 = createMember3();
 
         Long memberId1 = memberService.join(member1);
         Long memberId2 = memberService.join(member2);
@@ -70,7 +69,7 @@ class MemberServiceTest {
     @Test
     void delete() {
         //given
-        Member member = setMember1();
+        Member member = createMember1();
         Long memberId = memberService.join(member);
 
         //when
@@ -84,7 +83,7 @@ class MemberServiceTest {
     @Test
     void change() {
         //given
-        Member member = setMember1();
+        Member member = createMember1();
         Long memberId = memberService.join(member);
 
         //when
@@ -96,15 +95,15 @@ class MemberServiceTest {
         assertThat(member.getAddress().getStreet()).isEqualTo("Gangseo");
     }
 
-    private static Member setMember1() {
+    private static Member createMember1() {
         return new Member("userA", "idA", "0000", "Seoul", "Gangnam", "01234");
     }
 
-    private static Member setMember2() {
+    private static Member createMember2() {
         return new Member("userB", "idA", "1111", "Seoul", "Gangbuk", "01235");
     }
 
-    private static Member setMember3() {
+    private static Member createMember3() {
         return new Member("userC", "idC", "2222", "Seoul", "Gangdong", "01236");
     }
 }
