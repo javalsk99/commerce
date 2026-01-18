@@ -1,7 +1,6 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -46,13 +45,14 @@ public class Order {
     @Enumerated(STRING)
     private OrderStatus orderStatus;
 
+    //OrderProduct에 order를 넣기 위해 양방향 매핑 추가
     public void addOrderProduct(OrderProduct orderProduct) {
         orderProducts.add(orderProduct);
         orderProduct.setOrder(this);
     }
 
     //결제는 주문 생성하고 바로 진행하지 않는다.
-    public static Order CreateOrder(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
+    public static Order createOrder(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
         Order order = new Order();
 
         order.member = member;
@@ -64,6 +64,16 @@ public class Order {
         }
         order.orderDate = LocalDateTime.now();
         order.orderStatus = OrderStatus.CREATED;
+
+        return order;
+    }
+
+    public static Order updateOrder(Order order, List<OrderProduct> newOrderProducts) {
+        order.totalAmount = 0;
+        for (OrderProduct newOrderProduct : newOrderProducts) {
+            order.addOrderProduct(newOrderProduct);
+            order.totalAmount += newOrderProduct.getOrderPrice();
+        }
 
         return order;
     }

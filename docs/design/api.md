@@ -39,6 +39,10 @@
 
   GET /orders/{orderId} 주문 조회
 
+  POST /orders/{orderId} 주문 수정
+
+  DELETE /orders/{orderId} 주문 취소
+
   POST /orders/{orderId}/delivery 배송 시작
 
   POST /orders/{orderId}/payment 결제 요청
@@ -55,3 +59,8 @@
   POST /products/{productId} 상품 수정
 
   DELETE /products/{productId} 상품 삭제
+
+### 변경 이력
+- 주문 수정, 취소 추가
+
+  결제를 하기 전에 수정하거나 취소할 수 있다.

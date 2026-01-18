@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Order;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 @RequiredArgsConstructor
 public class OrderRepository {
@@ -19,5 +17,9 @@ public class OrderRepository {
 
     public Order findOne(Long orderId) {
         return em.find(Order.class, orderId);
+    }
+
+    public void delete(Order order) {
+        em.remove(order);
     }
 }

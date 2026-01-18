@@ -1,6 +1,5 @@
 package lsk.commerce.service;
 
-import jakarta.persistence.NoResultException;
 import lsk.commerce.domain.Member;
 import lsk.commerce.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,10 +1,8 @@
 package lsk.commerce.domain.product;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lsk.commerce.domain.OrderProduct;
 import static jakarta.persistence.InheritanceType.*;
 import static lombok.AccessLevel.*;
 
@@ -35,6 +33,17 @@ public abstract class Product {
 
     public void removeStock(int quantity) {
         int restStock = this.stockQuantity - quantity;
+        if (restStock < 0) {
+            throw new IllegalArgumentException("재고가 부족합니다.");
+        }
+
+        this.stockQuantity = restStock;
+    }
+
+    public void updateStock(int quantity, int newQuantity) {
+        this.stockQuantity += quantity;
+
+        int restStock = this.stockQuantity - newQuantity;
         if (restStock < 0) {
             throw new IllegalArgumentException("재고가 부족합니다.");
         }

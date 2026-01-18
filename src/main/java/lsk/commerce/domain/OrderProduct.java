@@ -1,16 +1,19 @@
 package lsk.commerce.domain;
 
-import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lsk.commerce.domain.product.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
+
+import java.util.Map;
 
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
 
 @Entity
 @Getter
+@EqualsAndHashCode
 @NoArgsConstructor(access = PROTECTED)
 public class OrderProduct {
 
@@ -26,14 +29,14 @@ public class OrderProduct {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    private int orderPrice;
     private int count;
+    private int orderPrice;
 
-    public static OrderProduct createOrderProduct(int count, Product product) {
+    public static OrderProduct createOrderProduct(Product product, int count) {
         OrderProduct orderProduct = new OrderProduct();
         orderProduct.product = product;
-        orderProduct.orderPrice = product.getPrice() * count;
         orderProduct.count = count;
+        orderProduct.orderPrice = product.getPrice() * count;
 
         product.removeStock(count);
         return orderProduct;
@@ -41,5 +44,20 @@ public class OrderProduct {
 
     protected void setOrder(Order order) {
         this.order = order;
+    }
+
+    //수량만 변경
+    public static void updateCountOrderProduct(OrderProduct orderProduct, Product product, int newCount) {
+        if (orderProduct.product.equals(product)) {
+            product.updateStock(orderProduct.count, newCount);
+            orderProduct.count = newCount;
+        }
+    }
+
+    public static void deleteOrderProduct(Order order) {
+        for (OrderProduct orderProduct : order.getOrderProducts()) {
+            orderProduct.product.addStock(orderProduct.count);
+        }
+        order.getOrderProducts().removeAll(order.getOrderProducts());
     }
 }
