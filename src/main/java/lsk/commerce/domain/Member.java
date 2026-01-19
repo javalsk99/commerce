@@ -1,7 +1,6 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -16,7 +15,6 @@ public class Member {
     @Column(name = "member_id")
     private Long id;
 
-    @NotNull
     private String name;
     private String loginId;
     private String password;

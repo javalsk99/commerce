@@ -42,10 +42,6 @@ public class OrderProduct {
         return orderProduct;
     }
 
-    protected void setOrder(Order order) {
-        this.order = order;
-    }
-
     //수량만 변경
     public static void updateCountOrderProduct(OrderProduct orderProduct, Product product, int newCount) {
         if (orderProduct.product.equals(product)) {
@@ -59,5 +55,9 @@ public class OrderProduct {
             orderProduct.product.addStock(orderProduct.count);
         }
         order.getOrderProducts().removeAll(order.getOrderProducts());
+    }
+
+    protected void setOrder(Order order) {
+        this.order = order;
     }
 }

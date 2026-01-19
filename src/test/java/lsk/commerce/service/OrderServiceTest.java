@@ -1,21 +1,18 @@
 package lsk.commerce.service;
 
-import lsk.commerce.domain.Member;
-import lsk.commerce.domain.Order;
-import lsk.commerce.domain.OrderProduct;
+import lsk.commerce.domain.*;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.domain.product.Product;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import static lsk.commerce.domain.DeliveryStatus.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,23 +35,26 @@ class OrderServiceTest {
         Long bookId = createBook();
         Long movieId = createMovie();
 
-        //when
-        Long orderId = orderService.order(memberId, Map.of(albumId, 3, bookId, 5, movieId, 2));
-
-        //then
-        Order findOrder = orderService.findOrder(orderId);
-        assertThat(findOrder.getOrderProducts().size()).isEqualTo(3);
-        assertThat(findOrder.getTotalAmount()).isEqualTo(274000);
-
         Product album = productService.findProduct(albumId);
         Product book = productService.findProduct(bookId);
         Product movie = productService.findProduct(movieId);
+
+        //when
+        Long orderId = orderService.order(memberId, Map.of(albumId, 3, bookId, 5, movieId, 2));
+        Order findOrder = orderService.findOrder(orderId);
+
+        //then
+        assertThat(findOrder.getOrderProducts().size()).isEqualTo(3);
+        assertThat(findOrder.getTotalAmount()).isEqualTo(274000);
+
         assertThat(album.getStockQuantity()).isEqualTo(17);
         assertThat(book.getStockQuantity()).isEqualTo(5);
         assertThat(movie.getStockQuantity()).isEqualTo(13);
         assertThat(findOrder.getOrderProducts())
                 .extracting(OrderProduct::getProduct, OrderProduct::getCount, OrderProduct::getOrderPrice)
                 .contains(tuple(album, 3, 45000), tuple(book, 5, 215000), tuple(movie, 2, 14000));
+
+        assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(WAITING);
     }
 
     @Test
@@ -64,13 +64,13 @@ class OrderServiceTest {
         Long albumId = createAlbum();
 
         //when
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             orderService.order(memberId, Map.of(albumId, 21));
         });
     }
 
     @Test
-    void updateOrder() {
+    void update_order() {
         //given
         Long memberId = createMember1();
         Long albumId = createAlbum();
@@ -80,17 +80,18 @@ class OrderServiceTest {
         Long orderId = orderService.order(memberId, Map.of(albumId, 3, bookId, 5, movieId, 2));
         Order order = orderService.findOrder(orderId);
 
-        //when
-        orderService.updateOrder(order, Map.of(albumId, 1, bookId, 5));
-
-        //then
-        Order findOrder = orderService.findOrder(orderId);
-        assertThat(findOrder.getOrderProducts().size()).isEqualTo(2);
-        assertThat(findOrder.getTotalAmount()).isEqualTo(230000);
-
         Product album = productService.findProduct(albumId);
         Product book = productService.findProduct(bookId);
         Product movie = productService.findProduct(movieId);
+
+        //when
+        orderService.updateOrder(order, Map.of(albumId, 1, bookId, 5));
+        Order findOrder = orderService.findOrder(orderId);
+
+        //then
+        assertThat(findOrder.getOrderProducts().size()).isEqualTo(2);
+        assertThat(findOrder.getTotalAmount()).isEqualTo(230000);
+
         assertThat(album.getStockQuantity()).isEqualTo(19);
         assertThat(book.getStockQuantity()).isEqualTo(5);
         assertThat(movie.getStockQuantity()).isEqualTo(15);
@@ -100,7 +101,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void deleteOrder() {
+    void delete_order() {
         //given
         Long orderId = createOrder();
         Order order = orderService.findOrder(orderId);
@@ -111,6 +112,38 @@ class OrderServiceTest {
         //then
         Order findOrder = orderService.findOrder(orderId);
         assertThat(findOrder).isNull();
+    }
+
+    @Test
+    void paid_order() {
+        //given
+        Long orderId = createOrder();
+        Order findOrder = orderService.findOrder(orderId);
+
+        Payment.requestPayment(findOrder);
+        findOrder.getPayment().testCompleted();
+        findOrder.testPaid();
+
+        //when
+        Delivery.startShipping(findOrder);
+
+        //then
+        assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(PREPARING);
+    }
+
+    @Test
+    void failed_order() {
+        //given
+        Long orderId = createOrder();
+        Order findOrder = orderService.findOrder(orderId);
+
+        Payment.requestPayment(findOrder);
+        findOrder.getPayment().testFailed();
+
+        //when
+        assertThrows(IllegalStateException.class, () -> {
+            Delivery.startShipping(findOrder);
+        });
     }
 
     private Long createMember1() {

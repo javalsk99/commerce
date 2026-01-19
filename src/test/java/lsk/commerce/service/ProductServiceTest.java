@@ -77,9 +77,9 @@ class ProductServiceTest {
 
         //when
         productService.deleteProduct(album);
+        Product findAlbum = productService.findProduct(albumId);
 
         //then
-        Product findAlbum = productService.findProduct(albumId);
         assertThat(findAlbum).isNull();
     }
 
@@ -91,10 +91,9 @@ class ProductServiceTest {
 
         //when
         productService.updateProduct(albumId, 20000, 30);
-
-        //then
         Product findAlbum = productService.findProduct(albumId);
 
+        //then
         assertThat(findAlbum)
                 .extracting("price", "stockQuantity")
                 .contains(20000, 30);

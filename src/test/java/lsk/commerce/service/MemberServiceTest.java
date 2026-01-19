@@ -74,9 +74,9 @@ class MemberServiceTest {
 
         //when
         memberService.deleteMember(memberId);
+        Member findMember = memberService.findMember(memberId);
 
         //then
-        Member findMember = memberService.findMember(memberId);
         assertThat(findMember).isNull();
     }
 

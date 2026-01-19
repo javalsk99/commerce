@@ -12,6 +12,7 @@ import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
+import static lsk.commerce.domain.OrderStatus.PAID;
 
 @Entity
 @Table(name = "orders")
@@ -27,17 +28,17 @@ public class Order {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    //양방향 매핑으로 변경
-    @OneToMany(mappedBy = "order", cascade = ALL)
-    private List<OrderProduct> orderProducts = new ArrayList<>();
-
-    @OneToOne(fetch = LAZY)
+    @OneToOne(fetch = LAZY, cascade = ALL)
     @JoinColumn(name = "delivery_id")
     private Delivery delivery;
 
     @OneToOne(fetch = LAZY)
     @JoinColumn(name = "payment_id")
     private Payment payment;
+
+    //양방향 매핑으로 변경
+    @OneToMany(mappedBy = "order", cascade = ALL)
+    private List<OrderProduct> orderProducts = new ArrayList<>();
 
     private int totalAmount;
     private LocalDateTime orderDate;
@@ -76,5 +77,18 @@ public class Order {
         }
 
         return order;
+    }
+
+    protected void setPayment(Payment payment) {
+        this.payment = payment;
+    }
+
+    protected void setDelivery(Delivery delivery) {
+        this.delivery = delivery;
+    }
+
+    //결제 api 추가 전, 테스트용
+    public void testPaid() {
+        this.orderStatus = PAID;
     }
 }
