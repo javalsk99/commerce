@@ -68,3 +68,14 @@
       public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
           Order.updateOrder(order, newOrderProducts);
 
+  해결 - OrderProduct.deleteOrderProduct를 Order.updateOrder를 거치지 않고 OrderService에서 사용
+
+      public static void deleteOrderProduct(Order order) {
+          for (OrderProduct orderProduct : order.getOrderProducts()) {
+              orderProduct.product.addStock(orderProduct.count);
+          }
+          order.getOrderProducts().removeAll(order.getOrderProducts());
+      }
+
+      public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
+          OrderProduct.deleteOrderProduct(order);

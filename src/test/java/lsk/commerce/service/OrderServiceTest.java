@@ -44,15 +44,17 @@ class OrderServiceTest {
         //then
         Order findOrder = orderService.findOrder(orderId);
         assertThat(findOrder.getOrderProducts().size()).isEqualTo(3);
+        assertThat(findOrder.getTotalAmount()).isEqualTo(274000);
 
         Product album = productService.findProduct(albumId);
         Product book = productService.findProduct(bookId);
         Product movie = productService.findProduct(movieId);
-        assertThat(findOrder.getOrderProducts())
-                .extracting(OrderProduct::getProduct, OrderProduct::getCount)
-                .contains(tuple(album, 3), tuple(book, 5), tuple(movie, 2));
-
         assertThat(album.getStockQuantity()).isEqualTo(17);
+        assertThat(book.getStockQuantity()).isEqualTo(5);
+        assertThat(movie.getStockQuantity()).isEqualTo(13);
+        assertThat(findOrder.getOrderProducts())
+                .extracting(OrderProduct::getProduct, OrderProduct::getCount, OrderProduct::getOrderPrice)
+                .contains(tuple(album, 3, 45000), tuple(book, 5, 215000), tuple(movie, 2, 14000));
     }
 
     @Test
@@ -84,6 +86,7 @@ class OrderServiceTest {
         //then
         Order findOrder = orderService.findOrder(orderId);
         assertThat(findOrder.getOrderProducts().size()).isEqualTo(2);
+        assertThat(findOrder.getTotalAmount()).isEqualTo(230000);
 
         Product album = productService.findProduct(albumId);
         Product book = productService.findProduct(bookId);
@@ -91,6 +94,9 @@ class OrderServiceTest {
         assertThat(album.getStockQuantity()).isEqualTo(19);
         assertThat(book.getStockQuantity()).isEqualTo(5);
         assertThat(movie.getStockQuantity()).isEqualTo(15);
+        assertThat(findOrder.getOrderProducts())
+                .extracting(OrderProduct::getProduct, OrderProduct::getCount, OrderProduct::getOrderPrice)
+                .contains(tuple(album, 1, 15000), tuple(book, 5, 215000));
     }
 
     @Test
