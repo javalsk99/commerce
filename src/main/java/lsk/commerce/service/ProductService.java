@@ -34,6 +34,11 @@ public class ProductService {
         return productRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public Product findProductByName(String name) {
+        return productRepository.findByName(name);
+    }
+
     public void deleteProduct(Product product) {
         for (CategoryProduct removeCategoryProduct : product.removeCategoryProducts()) {
             categoryProductService.disConnect(removeCategoryProduct);

@@ -21,6 +21,9 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
+    @Column(name = "paid_id")
+    private String paymentId; //결제 api용
+
     @OneToOne(mappedBy = "payment", fetch = LAZY)
     private Order order;
 
@@ -45,6 +48,22 @@ public class Payment {
     private void addOrder(Order order) {
         this.order = order;
         order.setPayment(this);
+    }
+
+    //결제 api용
+    public Payment(String paymentId, PaymentStatus paymentStatus) {
+        this.paymentId = paymentId;
+        this.paymentStatus = paymentStatus;
+    }
+
+    //결제 api용
+    public Payment(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    //결제 api용
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 
     //결제 api 추가 전, 테스트용

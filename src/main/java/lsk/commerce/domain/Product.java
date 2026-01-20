@@ -15,7 +15,7 @@ import static lombok.AccessLevel.*;
 @Inheritance(strategy = SINGLE_TABLE)
 @DiscriminatorColumn(name = "dtype")
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = PUBLIC)
 public abstract class Product {
 
     @Id @GeneratedValue
@@ -29,11 +29,20 @@ public abstract class Product {
     private String name;
     private int price;
     private int stockQuantity;
+    private String currency; //결제 api용 (Dto 만들어서 거기서 사용)
 
     public Product(String name, int price, int stockQuantity) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
+    }
+
+    //결제 api용
+    public Product(String name, int price, int stockQuantity, String currency) {
+        this.name = name;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
+        this.currency = currency;
     }
 
     public void addStock(int quantity) {

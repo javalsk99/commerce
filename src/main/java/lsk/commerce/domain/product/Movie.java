@@ -11,7 +11,7 @@ import static lombok.AccessLevel.*;
 @Entity
 @DiscriminatorValue("M")
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = PUBLIC)
 public class Movie extends Product {
 
     private String director;

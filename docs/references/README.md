@@ -5,7 +5,7 @@
 
 - 도구
 
-  ChatGPT : 기획 추천, 설계 검증 및 다듬기, 파일 정리 구조 추천
+  ChatGPT : 기획 추천, 설계 검증 및 다듬기, 파일 정리 구조 추천, 메서드 이름 추천, 결제 api 연동시 발생한 예외 질문
 
 - 블로그
 
@@ -14,3 +14,7 @@
   AssertJ의 메서드 체이닝 https://umanking.github.io/2021/06/26/assertj-iteration
 
   ConcurrentModificationException https://jyyoun1022.tistory.com/12
+
+- GitHub
+
+  포트원 결제 api https://github.com/portone-io/portone-sample?tab=readme-ov-file

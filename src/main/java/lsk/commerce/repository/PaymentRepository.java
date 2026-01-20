@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Payment;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class PaymentRepository {
@@ -17,5 +19,13 @@ public class PaymentRepository {
 
     public Payment findOne(Long paymentId) {
         return em.find(Payment.class, paymentId);
+    }
+
+    public Optional<Payment> findByPaymentId(String paymentId) {
+        return em.createQuery("select p from Payment p where p.paymentId = :paymentId", Payment.class)
+                .setParameter("paymentId", paymentId)
+                .getResultList()
+                .stream()
+                .findFirst();
     }
 }

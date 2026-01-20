@@ -7,6 +7,8 @@ import lsk.commerce.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -21,7 +23,16 @@ public class PaymentService {
         return order.getPayment().getId();
     }
 
+    public Long request(Payment payment) {
+        paymentRepository.save(payment);
+        return payment.getId();
+    }
+
     public Payment findPayment(Long paymentId) {
         return paymentRepository.findOne(paymentId);
+    }
+
+    public Optional<Payment> findPaymentByPaymentId(String paymentId) {
+        return paymentRepository.findByPaymentId(paymentId);
     }
 }

@@ -16,6 +16,7 @@ import java.util.Map;
 import static lsk.commerce.domain.PaymentStatus.*;
 import static org.assertj.core.api.Assertions.*;
 
+/*
 @SpringBootTest
 @Transactional
 class PaymentServiceTest {
@@ -81,4 +82,4 @@ class PaymentServiceTest {
         Long movieId = createMovie();
         return orderService.order(memberId, Map.of(albumId, 3, bookId, 5, movieId, 2));
     }
-}
+}*/

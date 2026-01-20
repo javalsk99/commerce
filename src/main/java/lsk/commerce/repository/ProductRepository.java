@@ -26,6 +26,12 @@ public class ProductRepository {
                 .getResultList();
     }
 
+    public Product findByName(String name) {
+        return em.createQuery("select p from Product p where p.name = :name", Product.class)
+                .setParameter("name", name)
+                .getSingleResult();
+    }
+
     public void delete(Product product) {
         em.remove(product);
     }

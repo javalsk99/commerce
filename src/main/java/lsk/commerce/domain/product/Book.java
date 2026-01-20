@@ -6,12 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.domain.Product;
 
-import static lombok.AccessLevel.PROTECTED;
+import static lombok.AccessLevel.*;
 
 @Entity
 @DiscriminatorValue("B")
 @Getter
-@NoArgsConstructor(access = PROTECTED)
+@NoArgsConstructor(access = PUBLIC)
 public class Book extends Product {
 
     private String author;
