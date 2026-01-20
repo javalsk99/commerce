@@ -4,6 +4,7 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lsk.commerce.domain.Product;
 
 import static lombok.AccessLevel.*;
 
@@ -11,7 +12,7 @@ import static lombok.AccessLevel.*;
 @DiscriminatorValue("A")
 @Getter
 @NoArgsConstructor(access = PROTECTED)
-public class Album extends Product{
+public class Album extends Product {
 
     private String artist;
     private String studio;

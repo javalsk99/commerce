@@ -49,7 +49,7 @@ public class Delivery {
         order.getDelivery().setDeliveryStatus(PREPARING);
     }
 
-    protected void setDeliveryStatus(DeliveryStatus deliveryStatus) {
+    private void setDeliveryStatus(DeliveryStatus deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
     }
 

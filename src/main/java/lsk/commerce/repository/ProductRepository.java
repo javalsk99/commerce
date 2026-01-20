@@ -2,7 +2,7 @@ package lsk.commerce.repository;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.domain.product.Product;
+import lsk.commerce.domain.Product;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

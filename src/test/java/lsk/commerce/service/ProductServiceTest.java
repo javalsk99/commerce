@@ -1,9 +1,11 @@
 package lsk.commerce.service;
 
+import lsk.commerce.domain.Category;
+import lsk.commerce.domain.CategoryProduct;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.domain.product.Product;
+import lsk.commerce.domain.Product;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +21,8 @@ class ProductServiceTest {
 
     @Autowired
     ProductService productService;
+    @Autowired
+    CategoryService categoryService;
 
     @Test
     void register() {
@@ -70,20 +74,6 @@ class ProductServiceTest {
     }
 
     @Test
-    void delete() {
-        //given
-        Album album = createAlbum();
-        Long albumId = productService.register(album);
-
-        //when
-        productService.deleteProduct(album);
-        Product findAlbum = productService.findProduct(albumId);
-
-        //then
-        assertThat(findAlbum).isNull();
-    }
-
-    @Test
     void update() {
         //given
         Album album = createAlbum();
@@ -99,15 +89,83 @@ class ProductServiceTest {
                 .contains(20000, 30);
     }
 
-    private static Album createAlbum() {
+    @Test
+    void register_product_to_category() {
+        //given
+        Category parentCategory = createParentCategory("컴퓨터/IT");
+        Category childCategory1 = createChildCategory(parentCategory, "프로그래밍 언어");
+        Category childCategory2 = createChildCategory(childCategory1, "Java");
+
+        Book book = createBook();
+
+        //when
+        Long bookId = productService.register(book, childCategory2);
+        Product findBook = productService.findProduct(bookId);
+
+        //then
+        assertThat(findBook.getCategoryProducts())
+                .extracting(CategoryProduct::getCategory)
+                .contains(parentCategory, childCategory1, childCategory2);
+    }
+
+    @Test
+    void connect_category() {
+        //given
+        Album album = createAlbum();
+        Long albumId = productService.register(album);
+        Product findAlbum = productService.findProduct(albumId);
+
+        Category parentCategory = createParentCategory("Dance");
+        Category childCategory = createChildCategory(parentCategory, "Girl Group");
+
+        //when
+        findAlbum.addCategoryProduct(childCategory);
+
+        //then
+        assertThat(findAlbum.getCategoryProducts().size()).isEqualTo(2);
+        assertThat(findAlbum.getCategoryProducts())
+                .extracting(CategoryProduct::getCategory)
+                .contains(parentCategory, childCategory);
+    }
+
+    @Test
+    void delete() {
+        //given
+        Category parentCategory = createParentCategory("Dance");
+        Category childCategory = createChildCategory(parentCategory, "Girl Group");
+
+        Album album = createAlbum();
+        Long albumId = productService.register(album, childCategory);
+
+        //when
+        productService.deleteProduct(album);
+        Product findAlbum = productService.findProduct(albumId);
+
+        //then
+        assertThat(findAlbum).isNull();
+        assertThat(parentCategory.getCategoryProducts().size()).isEqualTo(0);
+        assertThat(childCategory.getCategoryProducts().size()).isEqualTo(0);
+    }
+
+    private Album createAlbum() {
         return new Album("하얀 그리움", 15000, 20, "fromis_9", "ASND");
     }
 
-    private static Book createBook() {
+    private Book createBook() {
         return new Book("자바 ORM 표준 JPA 프로그래밍", 43000, 10, "김영한", "9788960777330");
     }
 
-    private static Movie createMovie() {
+    private Movie createMovie() {
         return new Movie("굿뉴스", 7000, 15, "변성현", "설경구");
+    }
+
+    private Category createParentCategory(String name) {
+        Category category = Category.createParentCategory(name);
+        return categoryService.findCategory(categoryService.create(category));
+    }
+
+    private Category createChildCategory(Category parentCategory, String name) {
+        Category category = Category.createChildCategory(parentCategory, name);
+        return categoryService.findCategory(categoryService.create(category));
     }
 }

@@ -2,11 +2,8 @@ package lsk.commerce.domain;
 
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lsk.commerce.domain.product.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
-
-import java.util.Map;
 
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
@@ -57,6 +54,7 @@ public class OrderProduct {
         order.getOrderProducts().removeAll(order.getOrderProducts());
     }
 
+    //Order에서 사용해서 protected
     protected void setOrder(Order order) {
         this.order = order;
     }

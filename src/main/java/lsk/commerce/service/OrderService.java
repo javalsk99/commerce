@@ -2,7 +2,7 @@ package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.*;
-import lsk.commerce.domain.product.Product;
+import lsk.commerce.domain.Product;
 import lsk.commerce.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,6 +74,7 @@ public class OrderService {
         Order.updateOrder(order, newOrderProducts);
     }
 
+    @Transactional(readOnly = true)
     public Order findOrder(Long orderId) {
         return orderRepository.findOne(orderId);
     }

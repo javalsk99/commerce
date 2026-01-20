@@ -31,8 +31,8 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
-    public void deleteMember(Long memberId) {
-        memberRepository.delete(memberRepository.findOne(memberId));
+    public void deleteMember(Member member) {
+        memberRepository.delete(member);
     }
 
     public void changePassword(Long memberId, String newPassword) {

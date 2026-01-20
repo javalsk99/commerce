@@ -47,7 +47,7 @@ public class Order {
     private OrderStatus orderStatus;
 
     //OrderProduct에 order를 넣기 위해 양방향 매핑 추가
-    public void addOrderProduct(OrderProduct orderProduct) {
+    private void addOrderProduct(OrderProduct orderProduct) {
         orderProducts.add(orderProduct);
         orderProduct.setOrder(this);
     }
@@ -79,11 +79,12 @@ public class Order {
         return order;
     }
 
+    //Payment에서 사용해서 protected
     protected void setPayment(Payment payment) {
         this.payment = payment;
     }
 
-    protected void setDelivery(Delivery delivery) {
+    private void setDelivery(Delivery delivery) {
         this.delivery = delivery;
     }
 

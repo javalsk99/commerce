@@ -73,7 +73,7 @@ class MemberServiceTest {
         Long memberId = memberService.join(member);
 
         //when
-        memberService.deleteMember(memberId);
+        memberService.deleteMember(member);
         Member findMember = memberService.findMember(memberId);
 
         //then
@@ -95,15 +95,15 @@ class MemberServiceTest {
         assertThat(member.getAddress().getStreet()).isEqualTo("Gangseo");
     }
 
-    private static Member createMember1() {
+    private Member createMember1() {
         return new Member("userA", "idA", "0000", "Seoul", "Gangnam", "01234");
     }
 
-    private static Member createMember2() {
+    private Member createMember2() {
         return new Member("userB", "idA", "1111", "Seoul", "Gangbuk", "01235");
     }
 
-    private static Member createMember3() {
+    private Member createMember3() {
         return new Member("userC", "idC", "2222", "Seoul", "Gangdong", "01236");
     }
 }

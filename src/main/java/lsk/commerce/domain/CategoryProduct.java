@@ -1,13 +1,15 @@
 package lsk.commerce.domain;
 
-import lsk.commerce.domain.product.Product;
+import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import static jakarta.persistence.FetchType.*;
+import static lombok.AccessLevel.*;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = PROTECTED)
 public class CategoryProduct {
 
     @Id @GeneratedValue
@@ -21,4 +23,12 @@ public class CategoryProduct {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
+
+    protected void setProduct(Product product) {
+        this.product = product;
+    }
+
+    protected void setCategory(Category category) {
+        this.category = category;
+    }
 }

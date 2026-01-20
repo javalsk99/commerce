@@ -42,7 +42,7 @@ public class Payment {
     }
 
     //Order에 payment를 넣기 위해 양방향 매핑 추가
-    public void addOrder(Order order) {
+    private void addOrder(Order order) {
         this.order = order;
         order.setPayment(this);
     }

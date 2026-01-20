@@ -1,7 +1,9 @@
 package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.domain.product.Product;
+import lsk.commerce.domain.Category;
+import lsk.commerce.domain.CategoryProduct;
+import lsk.commerce.domain.Product;
 import lsk.commerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +16,10 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryProductService categoryProductService;
 
-    public Long register(Product product) {
+    public Long register(Product product, Category... categories) {
+        product.addCategoryProduct(categories);
         productRepository.save(product);
         return product.getId();
     }
@@ -31,6 +35,9 @@ public class ProductService {
     }
 
     public void deleteProduct(Product product) {
+        for (CategoryProduct removeCategoryProduct : product.removeCategoryProducts()) {
+            categoryProductService.disConnect(removeCategoryProduct);
+        }
         productRepository.delete(product);
     }
 
