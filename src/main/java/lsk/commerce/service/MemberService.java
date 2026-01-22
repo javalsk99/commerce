@@ -27,6 +27,11 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
+    public Member findMemberByLoginId(String loginId) {
+        return memberRepository.findByLoginId(loginId);
+    }
+
+    @Transactional(readOnly = true)
     public List<Member> findMembers() {
         return memberRepository.findAll();
     }
@@ -35,19 +40,19 @@ public class MemberService {
         memberRepository.delete(member);
     }
 
-    public void changePassword(Long memberId, String newPassword) {
-        Member member = memberRepository.findOne(memberId);
+    public void changePassword(String memberLoginId, String newPassword) {
+        Member member = memberRepository.findByLoginId(memberLoginId);
         member.changePassword(newPassword);
     }
 
-    public void changeAddress(Long memberId, String newCity, String newStreet, String newZipcode) {
-        Member member = memberRepository.findOne(memberId);
+    public void changeAddress(String memberLoginId, String newCity, String newStreet, String newZipcode) {
+        Member member = memberRepository.findByLoginId(memberLoginId);
         member.changeAddress(newCity, newStreet, newZipcode);
     }
 
     private void validateMember(Member member) {
-        List<Member> findMembers = memberRepository.findByLoginId(member.getLoginId());
-        if (!findMembers.isEmpty()) {
+        Member findMembers = memberRepository.findByLoginId(member.getLoginId());
+        if (findMembers != null) {
             throw new IllegalStateException("이미 사용 중인 아이디입니다.");
         }
     }

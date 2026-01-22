@@ -85,14 +85,15 @@ class MemberServiceTest {
         //given
         Member member = createMember1();
         Long memberId = memberService.join(member);
+        Member findMember = memberService.findMember(memberId);
 
         //when
-        memberService.changePassword(memberId, "1234");
-        memberService.changeAddress(memberId, "seoul", "Gangseo", "01237");
+        memberService.changePassword(findMember.getLoginId(), "1234");
+        memberService.changeAddress(findMember.getLoginId(), "seoul", "Gangseo", "01237");
 
         //then
-        assertThat(member.getPassword()).isEqualTo("1234");
-        assertThat(member.getAddress().getStreet()).isEqualTo("Gangseo");
+        assertThat(findMember.getPassword()).isEqualTo("1234");
+        assertThat(findMember.getAddress().getStreet()).isEqualTo("Gangseo");
     }
 
     private Member createMember1() {

@@ -111,9 +111,9 @@ class CategoryServiceTest {
         productService.register(book2, childCategory3);
 
         //when
-        List<Product> findProductParentCategoryId = categoryService.findProductsByCategoryId(parentCategory.getId());
-        List<Product> findProductsByChildCategoryId2 = categoryService.findProductsByCategoryId(childCategory2.getId());
-        List<Product> findProductsByChildCategoryId3 = categoryService.findProductsByCategoryId(childCategory3.getId());
+        List<Product> findProductParentCategoryId = categoryService.findProductsByCategoryId(parentCategory.getName());
+        List<Product> findProductsByChildCategoryId2 = categoryService.findProductsByCategoryId(childCategory2.getName());
+        List<Product> findProductsByChildCategoryId3 = categoryService.findProductsByCategoryId(childCategory3.getName());
 
         //then
         assertThat(findProductParentCategoryId)

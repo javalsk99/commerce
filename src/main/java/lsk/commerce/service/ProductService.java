@@ -24,6 +24,12 @@ public class ProductService {
         return product.getId();
     }
 
+    public Long register(Product product, List<Category> categories) {
+        product.addCategoryProduct(categories);
+        productRepository.save(product);
+        return product.getId();
+    }
+
     @Transactional(readOnly = true)
     public Product findProduct(Long productId) {
         return productRepository.findOne(productId);

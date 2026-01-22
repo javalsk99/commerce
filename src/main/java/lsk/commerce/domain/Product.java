@@ -89,6 +89,19 @@ public abstract class Product {
         }
     }
 
+    public void addCategoryProduct(List<Category> categories) {
+        for (Category category : categories) {
+            while (category != null) {
+                CategoryProduct categoryProduct = new CategoryProduct();
+                categoryProduct.setProduct(this);
+                categoryProduct.setCategory(category);
+                this.categoryProducts.add(categoryProduct);
+                category.getCategoryProducts().add(categoryProduct);
+                category = category.getParent();
+            }
+        }
+    }
+
     //상품 제거할 때 카테고리에서 카테고리 상품들 제거
     public List<CategoryProduct> removeCategoryProducts() {
         List<CategoryProduct> removeCategoryProducts = new ArrayList<>();

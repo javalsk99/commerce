@@ -1,5 +1,6 @@
 package lsk.commerce.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ import static lsk.commerce.domain.OrderStatus.PAID;
 @NoArgsConstructor(access = PROTECTED)
 public class Order {
 
+    @JsonIgnore
     @Id @GeneratedValue
     @Column(name = "order_id")
     private Long id;

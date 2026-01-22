@@ -22,17 +22,25 @@ public class CategoryRepository {
         return em.find(Category.class, categoryId);
     }
 
+    public Category findByName(String name) {
+        return em.createQuery("select c from Category c where c.name = :name", Category.class)
+                .setParameter("name", name)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
+    }
+
     public List<Category> findAll() {
         return em.createQuery("select c from Category c", Category.class)
                 .getResultList();
     }
 
-    public List<Product> findProductsByCategoryId(Long categoryId) {
+    public List<Product> findProductsByCategoryId(String categoryName) {
         return em.createQuery("select p from Product p " +
                         " join p.categoryProducts cp" +
                         " join cp.category c" +
-                        " where c.id = :id", Product.class)
-                .setParameter("id", categoryId)
+                        " where c.name = :name", Product.class)
+                .setParameter("name", categoryName)
                 .getResultList();
     }
 

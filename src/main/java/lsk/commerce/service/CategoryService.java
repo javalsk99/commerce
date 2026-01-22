@@ -10,36 +10,40 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
+    @Transactional
     public Long create(Category category) {
         categoryRepository.save(category);
         return category.getId();
     }
 
-    @Transactional(readOnly = true)
     public Category findCategory(Long categoryId) {
         return categoryRepository.findOne(categoryId);
     }
 
-    @Transactional(readOnly = true)
+    public Category findCategoryByName(String name) {
+        return categoryRepository.findByName(name);
+    }
+
     public List<Category> findCategories() {
         return categoryRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<Product> findProductsByCategoryId(Long categoryId) {
-        return categoryRepository.findProductsByCategoryId(categoryId);
+    public List<Product> findProductsByCategoryId(String categoryName) {
+        return categoryRepository.findProductsByCategoryId(categoryName);
     }
 
+    @Transactional
     public Category changeParentCategory(Category category, Category newParentCategory) {
         return category.changeParentCategory(newParentCategory);
     }
 
+    @Transactional
     public void deleteCategory(Category category) {
         if (!category.getChild().isEmpty()) {
             throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다.");
