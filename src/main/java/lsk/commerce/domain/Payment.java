@@ -28,6 +28,8 @@ public class Payment {
     private Order order;
 
     private int paymentAmount;
+
+    @Column(name = "paid_at")
     private LocalDateTime paymentDate;
 
     @Enumerated(STRING)

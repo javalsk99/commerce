@@ -43,6 +43,8 @@ public class Order {
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
     private int totalAmount;
+
+    @Column(name = "ordered_at")
     private LocalDateTime orderDate;
 
     @Enumerated(STRING)

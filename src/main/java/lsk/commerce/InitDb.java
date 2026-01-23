@@ -41,9 +41,9 @@ public class InitDb {
             Long memberId = memberService.join(new Member("test", "testId", "testPassword", "seoul", "Gangbuk", "11111"));
             Category parentCategory = Category.createParentCategory("dance");
             categoryService.create(parentCategory);
-            productService.register(new Album("하얀 그리움", 100, 10, "fromis_9", "ASND", Currency.Krw.INSTANCE.getValue()), parentCategory);
+            productService.register(new Album("하얀 그리움", 100, 10, "fromis_9", "ASND"), parentCategory);
             Product product = productService.findProduct(1L);
-            Long orderId = orderService.order(memberId, Map.of(product.getId(), 1));
+            Long orderId = orderService.order(memberId, Map.of(product.getId(), 3));
         }
     }
 }

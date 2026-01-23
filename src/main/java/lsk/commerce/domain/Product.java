@@ -1,5 +1,6 @@
 package lsk.commerce.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.portone.sdk.server.common.Currency.*;
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.InheritanceType.*;
 import static lombok.AccessLevel.*;
@@ -29,20 +31,12 @@ public abstract class Product {
     private String name;
     private int price;
     private int stockQuantity;
-    private String currency; //결제 api용 (Dto 만들어서 거기서 사용)
+    private final String currency = Krw.INSTANCE.getValue(); //결제 api용 (Dto 만들어서 거기서 사용)
 
     public Product(String name, int price, int stockQuantity) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
-    }
-
-    //결제 api용
-    public Product(String name, int price, int stockQuantity, String currency) {
-        this.name = name;
-        this.price = price;
-        this.stockQuantity = stockQuantity;
-        this.currency = currency;
     }
 
     public void addStock(int quantity) {

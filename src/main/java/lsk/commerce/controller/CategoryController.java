@@ -3,7 +3,9 @@ package lsk.commerce.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.controller.form.CategoryForm;
+import lsk.commerce.controller.form.ProductForm;
 import lsk.commerce.domain.Category;
+import lsk.commerce.domain.Product;
 import lsk.commerce.service.CategoryService;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,5 +82,22 @@ public class CategoryController {
         Category category = categoryService.findCategoryByName(categoryName);
         categoryService.deleteCategory(category);
         return "delete";
+    }
+
+    @GetMapping("/categories/{categoryName}/products")
+    public List<ProductForm> findProductsByCategory(@PathVariable("categoryName") String categoryName) {
+        if (categoryService.findCategoryByName(categoryName) == null) {
+            throw new IllegalArgumentException("존재하지 않는 카테고리 입니다. name: " + categoryName);
+        }
+
+        List<Product> products = categoryService.findProductsByCategoryName(categoryName);
+        List<ProductForm> productForms = new ArrayList<>();
+
+        for (Product product : products) {
+            ProductForm productForm = ProductForm.productChangeForm(product);
+            productForms.add(productForm);
+        }
+
+        return productForms;
     }
 }

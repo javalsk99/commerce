@@ -35,7 +35,7 @@ public class CategoryRepository {
                 .getResultList();
     }
 
-    public List<Product> findProductsByCategoryId(String categoryName) {
+    public List<Product> findProductsByCategoryName(String categoryName) {
         return em.createQuery("select p from Product p " +
                         " join p.categoryProducts cp" +
                         " join cp.category c" +

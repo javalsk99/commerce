@@ -22,7 +22,10 @@ public class Delivery {
     @Enumerated(STRING)
     private DeliveryStatus deliveryStatus;
 
+    @Column(name = "shipped_at")
     private LocalDateTime shippedDate;
+
+    @Column(name = "delivered_at")
     private LocalDateTime deliveredDate;
 
     @Embedded

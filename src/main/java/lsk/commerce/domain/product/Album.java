@@ -22,10 +22,4 @@ public class Album extends Product {
         this.artist = artist;
         this.studio = studio;
     }
-
-    public Album(String name, int price, int stockQuantity, String artist, String studio, String currency) {
-        super(name, price, stockQuantity, currency);
-        this.artist = artist;
-        this.studio = studio;
-    }
 }

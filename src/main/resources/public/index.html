@@ -16,18 +16,13 @@
     <main id="checkoutDialog" style="display: none">
         <form id="checkoutForm">
             <article>
-                <div class="product">
-                    <div class="product-image">
-                        <img id="productImage" />
-                    </div>
-                    <div class="product-text">
-                        <h5 id="productName"></h5>
-                        <p class="price-value"></p>
-                    </div>
+                <div class="productList" style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 10px;">
                 </div>
+
+                <hr>
                 <div class="price">
-                    <label>총 구입 가격</label>
-                    <span class="price-value" />
+                    <label>총 결제 금액</label>
+                    <span id="totalPriceDisplay" class="price-value"></span>
                 </div>
             </article>
             <button id="checkoutButton" type="submit">결제</button>
@@ -63,7 +58,7 @@
     checkout.load()
 
     function Checkout(storeId, channelKey) {
-      let product = null
+      let orderForm = null
       this.load = async () => {
         const waitPortOne = new Promise((resolve) => {
           const polling = setInterval(() => {
@@ -73,44 +68,73 @@
             }
           }, 50)
         })
-        const waitProduct = await fetch("/api/product").then(
-          async (response) => (product = await response.json()),
+
+        const urlParams = new URLSearchParams(window.location.search)
+        const orderId = urlParams.get('orderId') || 'default-id'
+
+        const waitOrder = await fetch(`/api/orders/${orderId}`).then(
+          async (response) => (orderForm = await response.json()),
         )
-        await Promise.all([waitPortOne, waitProduct])
+
+        await Promise.all([waitPortOne, waitOrder])
         window.loadingDialog.open = false
-        window.checkoutDialog.open = true
+        window.checkoutDialog.style.display = "block"
         await this.showCheckout()
       }
+
       this.showCheckout = async () => {
-        window.productName.replaceChildren(product.name)
-        window.productImage.src = `/${product.id}.png`
-        for (const priceElement of document.querySelectorAll(
-          ".price-value",
-        )) {
-          priceElement.replaceChildren(`${product.price.toLocaleString()}원`)
+        const productListContainer = document.querySelector(".productList")
+        let totalAmount = 0
+        let orderName = ""
+
+        productListContainer.innerHTML = ""
+
+        orderForm.orderProducts.forEach((product, index) => {
+          totalAmount += product.price * product.count;
+
+          if (index === 0) orderName = product.name;
+
+          const productHtml = `
+            <div class="orderProducts-product" style="min-width: 120px; flex: 0 0 auto; text-align: center;">
+                <img src="/${product.name}.png" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" />
+                <h6 style="margin: 5px 0;">${product.name}</h6>
+                <p style="font-size: 0.8rem;">${product.price.toLocaleString()}원 / ${product.count}개</p>
+            </div>
+          `
+          productListContainer.insertAdjacentHTML('beforeend', productHtml)
+        })
+
+        if (orderForm.orderProducts.length > 1) {
+          orderName += ` 외 ${orderForm.orderProducts.length - 1}건`
         }
-        window.checkoutDialog.onsubmit = async (e) => {
+
+        const finalAmount = orderForm.totalAmount || totalAmount
+        document.getElementById("totalPriceDisplay").innerText = `${finalAmount.toLocaleString()}원`
+
+        window.checkoutForm.onsubmit = async (e) => {
           e.preventDefault()
           this.setWaitingPayment(true)
-          const paymentId = randomId()
+
           const payment = await PortOne.requestPayment({
             storeId,
             channelKey,
-            paymentId,
-            orderName: product.name,
-            totalAmount: product.price,
-            currency: product.currency,
+            paymentId: randomId(),
+            orderName: orderName,
+            totalAmount: finalAmount,
+            currency: "KRW",
             payMethod: "EASY_PAY",
             customData: {
-              product: product.id,
+              orderId: orderForm.id,
             },
           })
+
           if (payment.code != null) {
             this.setWaitingPayment(false)
             console.log(payment)
             this.openFailDialog(payment.message)
             return
           }
+
           const completeResponse = await fetch("/api/payment/complete", {
             method: "POST",
             headers: {
@@ -123,7 +147,7 @@
           this.setWaitingPayment(false)
           if (completeResponse.ok) {
             const paymentComplete = await completeResponse.json()
-            switch (await paymentComplete.status) {
+            switch (paymentComplete.status) {
               case "PAID":
                 this.openSuccessDialog()
                 break
@@ -142,8 +166,8 @@
             dialogButton.closest('dialog').open = false
           }
         }
-        window.checkoutDialog.style = ""
       }
+
       this.setWaitingPayment = (isWaiting) => {
         window.checkoutButton.setAttribute("aria-busy", isWaiting.toString())
         window.checkoutButton.disabled = isWaiting

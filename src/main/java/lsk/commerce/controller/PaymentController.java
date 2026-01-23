@@ -9,12 +9,15 @@ import io.portone.sdk.server.webhook.Webhook;
 import io.portone.sdk.server.webhook.WebhookTransaction;
 import io.portone.sdk.server.webhook.WebhookVerifier;
 import kotlin.Unit;
+import lsk.commerce.controller.form.OrderForm;
+import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.Product;
 import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.PaymentCustomData;
 import lsk.commerce.api.portone.PortoneSecretProperties;
 import lsk.commerce.api.portone.SyncPaymentException;
+import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
 import lsk.commerce.service.ProductService;
 import org.slf4j.Logger;
@@ -31,22 +34,25 @@ public class PaymentController {
     private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
     private final ProductService productService;
+    private final OrderService orderService;
     private final PaymentService paymentService;
     private final PortoneSecretProperties secret;
     private final PaymentClient portone;
     private final WebhookVerifier portoneWebhook;
 
-    public PaymentController(ProductService productService, PaymentService paymentService, PortoneSecretProperties secret) {
+    public PaymentController(ProductService productService, OrderService orderService, PaymentService paymentService, PortoneSecretProperties secret) {
         this.productService = productService;
+        this.orderService = orderService;
         this.paymentService = paymentService;
         this.secret = secret;
         portone = new PaymentClient(secret.api(), "https://api.portone.io", "store-3218fbd8-7af7-4043-8a4e-ec6e84fd858c");
         portoneWebhook = new WebhookVerifier(secret.webhook());
     }
 
-    @GetMapping("/api/product")
-    public Product getProduct() {
-        return productService.findProductByName("하얀 그리움");
+    @GetMapping("/api/orders/{orderId}")
+    public OrderForm getOrder(@PathVariable("orderId") Long orderId) {
+        Order order = orderService.findOrder(orderId);
+        return OrderForm.orderChangeForm(order);
     }
 
     //브라우저에서 결제 완료 후 서버에 결제 완료를 알리는 용도 (결제 정보를 완전히 실시간으로 얻기 위해서는 웹훅 사용 / 수정할 곳 없음)

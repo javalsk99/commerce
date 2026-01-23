@@ -2,10 +2,7 @@ package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
-import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
-import lsk.commerce.domain.product.Movie;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -111,9 +108,9 @@ class CategoryServiceTest {
         productService.register(book2, childCategory3);
 
         //when
-        List<Product> findProductParentCategoryId = categoryService.findProductsByCategoryId(parentCategory.getName());
-        List<Product> findProductsByChildCategoryId2 = categoryService.findProductsByCategoryId(childCategory2.getName());
-        List<Product> findProductsByChildCategoryId3 = categoryService.findProductsByCategoryId(childCategory3.getName());
+        List<Product> findProductParentCategoryId = categoryService.findProductsByCategoryName(parentCategory.getName());
+        List<Product> findProductsByChildCategoryId2 = categoryService.findProductsByCategoryName(childCategory2.getName());
+        List<Product> findProductsByChildCategoryId3 = categoryService.findProductsByCategoryName(childCategory3.getName());
 
         //then
         assertThat(findProductParentCategoryId)

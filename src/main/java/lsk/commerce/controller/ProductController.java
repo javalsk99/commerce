@@ -10,9 +10,7 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,10 +53,42 @@ public class ProductController {
         List<ProductForm> productForms = new ArrayList<>();
 
         for (Product product : products) {
-            ProductForm productForm = ProductForm.ProductChangeForm(product);
+            ProductForm productForm = ProductForm.productChangeForm(product);
             productForms.add(productForm);
         }
 
         return productForms;
+    }
+
+    @GetMapping("/products/{productName}")
+    public ProductForm findProduct(@PathVariable("productName") String productName) {
+        if (productService.findProductByName(productName) == null) {
+            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
+        }
+
+        Product product = productService.findProductByName(productName);
+        return ProductForm.productChangeForm(product);
+    }
+
+    @PostMapping("/products/{productName}")
+    public ProductForm updateProduct(@PathVariable("productName") String productName, ProductForm form) {
+        if (productService.findProductByName(productName) == null) {
+            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
+        }
+
+        Product product = productService.findProductByName(productName);
+        productService.updateProduct(product.getId(), form.getPrice(), form.getStockQuantity());
+        return ProductForm.productChangeForm(product);
+    }
+
+    @DeleteMapping("/products/{productName}")
+    public String delete(@PathVariable("productName") String productName) {
+        if (productService.findProductByName(productName) == null) {
+            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
+        }
+
+        Product product = productService.findProductByName(productName);
+        productService.deleteProduct(product);
+        return "delete";
     }
 }

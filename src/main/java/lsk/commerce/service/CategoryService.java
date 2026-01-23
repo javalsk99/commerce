@@ -34,8 +34,8 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public List<Product> findProductsByCategoryId(String categoryName) {
-        return categoryRepository.findProductsByCategoryId(categoryName);
+    public List<Product> findProductsByCategoryName(String categoryName) {
+        return categoryRepository.findProductsByCategoryName(categoryName);
     }
 
     @Transactional

@@ -50,6 +50,33 @@ public class OrderService {
         return order.getId();
     }
 
+    public Long order(String memberLoginId, Map<String, Integer> productNamesCount) {
+        //엔티티 조회
+        Member member = memberService.findMemberByLoginId(memberLoginId);
+
+        //배송 정보 생성
+        Delivery delivery = new Delivery(member);
+
+        List<OrderProduct> orderProducts = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> productNameCountEntry : productNamesCount.entrySet()) {
+            String productName = productNameCountEntry.getKey();
+            int count = productNameCountEntry.getValue();
+
+            //주문 상품 생성
+            Product product = productService.findProductByName(productName);
+            orderProducts.add(OrderProduct.createOrderProduct(product, count));
+        }
+
+        //주문 생성
+        Order order = Order.createOrder(member, delivery, orderProducts);
+
+        //주문 저장
+        orderRepository.save(order);
+
+        return order.getId();
+    }
+
     public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
         //결제가 됐는지 검증
         if (!order.getOrderStatus().equals(CREATED)) {
