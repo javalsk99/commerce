@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
@@ -44,6 +45,7 @@ public class Payment {
         payment.paymentAmount = order.getTotalAmount();
         payment.paymentStatus = PENDING;
         payment.addOrder(order);
+        payment.paymentId = UUID.randomUUID().toString();
     }
 
     //Order에 payment를 넣기 위해 양방향 매핑 추가
@@ -52,20 +54,13 @@ public class Payment {
         order.setPayment(this);
     }
 
-    //결제 api용
-    public Payment(String paymentId, PaymentStatus paymentStatus) {
-        this.paymentId = paymentId;
-        this.paymentStatus = paymentStatus;
+    public void failed() {
+        this.paymentStatus = FAILED;
     }
 
-    //결제 api용
-    public Payment(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
-    }
-
-    //결제 api용
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void complete(LocalDateTime paymentDate) {
+        this.paymentStatus = COMPLETED;
+        this.paymentDate = paymentDate;
     }
 
     //결제 api 추가 전, 테스트용

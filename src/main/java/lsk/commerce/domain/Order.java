@@ -13,6 +13,7 @@ import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
+import static lsk.commerce.domain.DeliveryStatus.*;
 import static lsk.commerce.domain.OrderStatus.PAID;
 
 @Entity
@@ -81,6 +82,11 @@ public class Order {
         }
 
         return order;
+    }
+
+    public void completePaid() {
+        this.orderStatus = PAID;
+        this.delivery.setDeliveryStatus(PREPARING);
     }
 
     //Payment에서 사용해서 protected

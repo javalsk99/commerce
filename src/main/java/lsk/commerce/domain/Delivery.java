@@ -42,17 +42,7 @@ public class Delivery {
         this.deliveryStatus = WAITING;
     }
 
-    public static void startShipping(Order order) {
-        if (!order.getPayment().getPaymentStatus().equals(PaymentStatus.COMPLETED)) {
-            throw new IllegalStateException("결제가 완료된 주문이 아닙니다.");
-        } else if (order.getDelivery().deliveryStatus.equals(SHIPPED) || order.getDelivery().deliveryStatus.equals(DELIVERED)) {
-            throw new IllegalStateException("이미 배송된 주문입니다.");
-        }
-
-        order.getDelivery().setDeliveryStatus(PREPARING);
-    }
-
-    private void setDeliveryStatus(DeliveryStatus deliveryStatus) {
+    protected void setDeliveryStatus(DeliveryStatus deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
     }
 

@@ -125,7 +125,7 @@ class OrderServiceTest {
         findOrder.testPaid();
 
         //when
-        Delivery.startShipping(findOrder);
+        findOrder.getDelivery().startShipping(findOrder);
 
         //then
         assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(PREPARING);
@@ -142,7 +142,7 @@ class OrderServiceTest {
 
         //when
         assertThrows(IllegalStateException.class, () -> {
-            Delivery.startShipping(findOrder);
+            findOrder.getDelivery().startShipping(findOrder);
         });
     }
 

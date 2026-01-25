@@ -1,6 +1,7 @@
 package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.controller.form.OrderForm;
 import lsk.commerce.domain.*;
 import lsk.commerce.domain.Product;
 import lsk.commerce.repository.OrderRepository;
@@ -108,5 +109,12 @@ public class OrderService {
 
     public void DeleteOrder(Order order) {
         orderRepository.delete(order);
+    }
+
+    //for-each문 때문에 Form에서 컨트롤러로 바로 호출하면 LazyInitializtionException이 발생
+    @Transactional(readOnly = true)
+    public OrderForm getOrderForm(Long orderId) {
+        Order order = orderRepository.findOne(orderId);
+        return OrderForm.orderChangeForm(order);
     }
 }

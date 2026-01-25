@@ -1,4 +1,4 @@
 package lsk.commerce.api.portone;
 
-public record PaymentCustomData(String product) {
+public record PaymentCustomData(Long orderId) {
 }
