@@ -37,7 +37,7 @@ public class Payment {
     private PaymentStatus paymentStatus;
 
     public static void requestPayment(Order order) {
-        if (!order.getOrderStatus().equals(CREATED)) {
+        if (order.getOrderStatus() != CREATED) {
             throw new IllegalStateException("이미 결제된 주문입니다.");
         }
 

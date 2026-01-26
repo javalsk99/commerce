@@ -1,6 +1,5 @@
 package lsk.commerce.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -109,7 +108,7 @@ public abstract class Product {
     //같은 카테고리 상품인 상품과 카테고리에서 카테고리 상품 제거
     public CategoryProduct removeCategoryProduct(Category category) {
         for (CategoryProduct categoryProduct : category.getCategoryProducts()) {
-            if (categoryProduct.getProduct().equals(this)) {
+            if (this.equals(categoryProduct.getProduct())) {
                 this.categoryProducts.remove(categoryProduct);
                 category.getCategoryProducts().remove(categoryProduct);
                 return categoryProduct;

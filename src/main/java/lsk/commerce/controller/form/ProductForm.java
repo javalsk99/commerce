@@ -1,6 +1,5 @@
 package lsk.commerce.controller.form;
 
-import io.portone.sdk.server.common.Currency;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lsk.commerce.domain.Product;
@@ -25,6 +24,7 @@ public class ProductForm {
     @Range(min = 0, max = 1000)
     private Integer stockQuantity;
 
+    @NotNull
     private String dtype;
 
     private String artist;

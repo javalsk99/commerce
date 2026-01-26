@@ -6,3 +6,5 @@
 - ConcurrentModificationException https://jyyoun1022.tistory.com/12
 
 - Lazy 로딩으로 인한 JSON 반환 오류 https://blogshine.tistory.com/548
+
+- JWT Filter 등록 https://hansel.tistory.com/152 (인터셉터로 변경)

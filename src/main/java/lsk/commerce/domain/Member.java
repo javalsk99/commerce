@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import static jakarta.persistence.EnumType.*;
 import static lombok.AccessLevel.*;
+import static lsk.commerce.domain.Grade.*;
 
 @Entity
 @Getter
@@ -19,6 +21,9 @@ public class Member {
     private String loginId;
     private String password;
 
+    @Enumerated(STRING)
+    private Grade grade;
+
     @Embedded
     private Address address;
 
@@ -26,7 +31,12 @@ public class Member {
         this.name = name;
         this.loginId = loginId;
         this.password = password;
+        this.grade = USER;
         this.address = new Address(city, street, zipcode);
+    }
+
+    public void setAdmin() {
+        this.grade = ADMIN;
     }
 
     public void changePassword(String newPassword) {

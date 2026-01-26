@@ -21,6 +21,13 @@ public class MemberService {
         return member.getId();
     }
 
+    public Long adminJoin(Member member) {
+        validateMember(member);
+        member.setAdmin();
+        memberRepository.save(member);
+        return member.getId();
+    }
+
     @Transactional(readOnly = true)
     public Member findMember(Long memberId) {
         return memberRepository.findOne(memberId);

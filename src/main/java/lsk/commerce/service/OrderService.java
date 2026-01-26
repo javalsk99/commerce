@@ -80,7 +80,7 @@ public class OrderService {
 
     public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
         //결제가 됐는지 검증
-        if (!order.getOrderStatus().equals(CREATED)) {
+        if (order.getOrderStatus() != CREATED) {
             throw new IllegalStateException("결제가 완료돼서 주문을 수정할 수 없습니다.");
         }
 

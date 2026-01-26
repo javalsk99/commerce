@@ -1,6 +1,5 @@
 package lsk.commerce;
 
-import io.portone.sdk.server.common.Currency;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
@@ -38,7 +37,7 @@ public class InitDb {
         private final OrderService orderService;
 
         public void dbInit() {
-            Long memberId = memberService.join(new Member("test", "testId", "testPassword", "seoul", "Gangbuk", "11111"));
+            Long memberId = memberService.adminJoin(new Member("test", "testId", "testPassword", "seoul", "Gangbuk", "11111"));
             Category parentCategory = Category.createParentCategory("dance");
             categoryService.create(parentCategory);
             productService.register(new Album("하얀 그리움", 100, 10, "fromis_9", "ASND"), parentCategory);
