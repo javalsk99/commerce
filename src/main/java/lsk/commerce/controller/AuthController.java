@@ -4,12 +4,13 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.controller.form.LoginRequest;
-import lsk.commerce.controller.form.LoginResponse;
+import lsk.commerce.dto.request.MemberLoginRequest;
+import lsk.commerce.dto.response.MemberLoginResponse;
 import lsk.commerce.domain.Member;
 import lsk.commerce.provider.JwtProvider;
 import lsk.commerce.service.AuthService;
 import lsk.commerce.service.MemberService;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,7 +23,7 @@ public class AuthController {
     private final JwtProvider jwtProvider;
 
     @PostMapping("/login")
-    public LoginResponse login(@Valid LoginRequest loginRequest, HttpServletResponse response) {
+    public MemberLoginResponse login(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
         Member loginMember = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
         if (memberService.findMemberByLoginId(loginRequest.getLoginId()) == null) {
             throw new IllegalArgumentException("잘못된 아이디를 입력했습니다. id: " + loginRequest.getLoginId());
@@ -38,7 +39,7 @@ public class AuthController {
         cookie.setHttpOnly(true);
         response.addCookie(cookie);
 
-        return new LoginResponse(loginMember.getLoginId(), loginMember.getGrade());
+        return new MemberLoginResponse(loginMember.getLoginId(), loginMember.getGrade());
     }
 
     @PostMapping("/logout")
@@ -50,5 +51,21 @@ public class AuthController {
         response.addCookie(cookie);
 
         return "logout";
+    }
+
+    //결제하기 위한 로그인 (인터셉터 통과)
+    @GetMapping("/web/login")
+    public String webLogin(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
+        Member loginMember = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
+
+        String token = jwtProvider.createToken(loginMember);
+
+        Cookie cookie = new Cookie("jjwt", token);
+        cookie.setMaxAge(3600);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+
+        return "login";
     }
 }

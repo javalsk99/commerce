@@ -2,11 +2,14 @@ package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.controller.form.CategoryForm;
-import lsk.commerce.controller.form.ProductForm;
+import lsk.commerce.dto.request.ProductRequest;
+import lsk.commerce.dto.request.CategoryRequest;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.response.CategoryResponse;
+import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.service.CategoryService;
+import lsk.commerce.service.ProductService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -17,50 +20,51 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final ProductService productService;
 
     @PostMapping("/categories")
-    public String create(@Valid CategoryForm form) {
-        if (form.getParentName() != null) {
-            if (categoryService.findCategoryByName(form.getParentName()) == null) {
-                throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + form.getParentName());
+    public String create(@Valid CategoryRequest request) {
+        if (request.getParentName() != null) {
+            if (categoryService.findCategoryByName(request.getParentName()) == null) {
+                throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + request.getParentName());
             }
 
-            Category parentCategory = categoryService.findCategoryByName(form.getParentName());
-            Category childCategory = Category.createChildCategory(parentCategory, form.getName());
+            Category parentCategory = categoryService.findCategoryByName(request.getParentName());
+            Category childCategory = Category.createChildCategory(parentCategory, request.getName());
             categoryService.create(childCategory);
             return childCategory.getName() + " created";
         }
 
-        Category parentCategory = Category.createParentCategory(form.getName());
+        Category parentCategory = Category.createParentCategory(request.getName());
         categoryService.create(parentCategory);
         return parentCategory.getName() + " created";
     }
 
     @GetMapping("/categories")
-    public List<CategoryForm> categoryList() {
+    public List<CategoryResponse> categoryList() {
         List<Category> categories = categoryService.findCategories();
-        List<CategoryForm> categoryForms = new ArrayList<>();
+        List<CategoryResponse> categoryResponses = new ArrayList<>();
 
         for (Category category : categories) {
-            CategoryForm categoryForm = CategoryForm.categoryChangeForm(category);
-            categoryForms.add(categoryForm);
+            CategoryResponse categoryDto = categoryService.getCategoryDto(category);
+            categoryResponses.add(categoryDto);
         }
 
-        return categoryForms;
+        return categoryResponses;
     }
 
     @GetMapping("/categories/{categoryName}")
-    public CategoryForm findCategory(@PathVariable("categoryName") String categoryName) {
+    public CategoryResponse findCategory(@PathVariable("categoryName") String categoryName) {
         if (categoryService.findCategoryByName(categoryName) == null) {
             throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
         }
 
         Category category = categoryService.findCategoryByName(categoryName);
-        return CategoryForm.categoryChangeForm(category);
+        return categoryService.getCategoryDto(category);
     }
 
     @PostMapping("/categories/{categoryName}")
-    public CategoryForm changeParentCategory(@PathVariable("categoryName") String categoryName, CategoryForm form) {
+    public CategoryResponse changeParentCategory(@PathVariable("categoryName") String categoryName, CategoryRequest form) {
         if (categoryService.findCategoryByName(categoryName) == null) {
             throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
         } else if (categoryService.findCategoryByName(form.getParentName()) == null) {
@@ -70,7 +74,7 @@ public class CategoryController {
         Category category = categoryService.findCategoryByName(categoryName);
         Category newParentCategory = categoryService.findCategoryByName(form.getParentName());
         categoryService.changeParentCategory(category, newParentCategory);
-        return CategoryForm.categoryChangeForm(newParentCategory);
+        return categoryService.getCategoryDto(category);
     }
 
     @DeleteMapping("/categories/{categoryName}")
@@ -85,19 +89,19 @@ public class CategoryController {
     }
 
     @GetMapping("/categories/{categoryName}/products")
-    public List<ProductForm> findProductsByCategory(@PathVariable("categoryName") String categoryName) {
+    public List<ProductResponse> findProductsByCategory(@PathVariable("categoryName") String categoryName) {
         if (categoryService.findCategoryByName(categoryName) == null) {
             throw new IllegalArgumentException("존재하지 않는 카테고리 입니다. name: " + categoryName);
         }
 
         List<Product> products = categoryService.findProductsByCategoryName(categoryName);
-        List<ProductForm> productForms = new ArrayList<>();
+        List<ProductResponse> productResponses = new ArrayList<>();
 
         for (Product product : products) {
-            ProductForm productForm = ProductForm.productChangeForm(product);
-            productForms.add(productForm);
+            ProductResponse productDto = productService.getProductDto(product);
+            productResponses.add(productDto);
         }
 
-        return productForms;
+        return productResponses;
     }
 }

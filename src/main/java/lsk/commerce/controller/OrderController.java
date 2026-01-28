@@ -1,8 +1,8 @@
 package lsk.commerce.controller;
 
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.controller.form.OrderForm;
 import lsk.commerce.domain.Order;
+import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
 import org.springframework.web.bind.annotation.*;
@@ -18,21 +18,25 @@ public class OrderController {
 
     @PostMapping("/orders")
     public String create(String memberLoginId, @RequestBody Map<String, Integer> productMap) {
+        if (productMap.isEmpty()) {
+            throw new IllegalArgumentException("주문 상품이 없습니다.");
+        }
+
         Long orderId = orderService.order(memberLoginId, productMap);
 
         return orderId + " created";
     }
 
     @GetMapping("/orders/{orderId}")
-    public OrderForm orderList(@PathVariable("orderId") Long orderId) {
+    public OrderResponse findOrder(@PathVariable("orderId") Long orderId) {
         Order order = orderService.findOrder(orderId);
-        return OrderForm.orderChangeForm(order);
+        return orderService.getOrderResponse(order);
     }
 
     @PostMapping("/orders/{orderId}/payment")
-    public OrderForm requestPayment(@PathVariable("orderId") Long orderId) {
+    public OrderResponse requestPayment(@PathVariable("orderId") Long orderId) {
         Order order = orderService.findOrder(orderId);
         paymentService.request(order);
-        return OrderForm.orderChangeForm(order);
+        return orderService.getOrderResponse(order);
     }
 }

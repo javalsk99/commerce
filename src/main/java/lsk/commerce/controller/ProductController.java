@@ -2,12 +2,14 @@ package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.controller.form.ProductForm;
+import lsk.commerce.dto.request.ProductRequest;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.ProductUpdateRequest;
+import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping("/products")
-    public String create(@Valid ProductForm form, String... categoryNames) {
+    public String create(@Valid ProductRequest request, String... categoryNames) {
         List<Category> categories = new ArrayList<>();
         for (String categoryName : categoryNames) {
             if (categoryService.findCategoryByName(categoryName) == null) {
@@ -33,52 +35,54 @@ public class ProductController {
             categories.add(categoryService.findCategoryByName(categoryName));
         }
 
-        if (form.getDtype().equals("A")) {
-            Album album = new Album(form.getName(), form.getPrice(), form.getStockQuantity(), form.getArtist(), form.getStudio());
+        if (request.getDtype().equals("A")) {
+            Album album = new Album(request.getName(), request.getPrice(), request.getStockQuantity(), request.getArtist(), request.getStudio());
             productService.register(album, categories);
-        } else if (form.getDtype().equals("B")) {
-            Book book = new Book(form.getName(), form.getPrice(), form.getStockQuantity(), form.getAuthor(), form.getIsbn());
+        } else if (request.getDtype().equals("B")) {
+            Book book = new Book(request.getName(), request.getPrice(), request.getStockQuantity(), request.getAuthor(), request.getIsbn());
             productService.register(book, categories);
-        } else {
-            Movie movie = new Movie(form.getName(), form.getPrice(), form.getStockQuantity(), form.getDirector(), form.getActor());
+        } else if (request.getDtype().equals("M")) {
+            Movie movie = new Movie(request.getName(), request.getPrice(), request.getStockQuantity(), request.getDirector(), request.getActor());
             productService.register(movie, categories);
+        } else {
+            throw new IllegalArgumentException("잘못된 양식입니다. dtype: " + request.getDtype());
         }
 
-        return form.getName() + " created";
+        return request.getName() + " created";
     }
 
     @GetMapping("/products")
-    public List<ProductForm> productList() {
+    public List<ProductResponse> productList() {
         List<Product> products = productService.findProducts();
-        List<ProductForm> productForms = new ArrayList<>();
+        List<ProductResponse> productResponses = new ArrayList<>();
 
         for (Product product : products) {
-            ProductForm productForm = ProductForm.productChangeForm(product);
-            productForms.add(productForm);
+            ProductResponse productDto = productService.getProductDto(product);
+            productResponses.add(productDto);
         }
 
-        return productForms;
+        return productResponses;
     }
 
     @GetMapping("/products/{productName}")
-    public ProductForm findProduct(@PathVariable("productName") String productName) {
+    public ProductResponse findProduct(@PathVariable("productName") String productName) {
         if (productService.findProductByName(productName) == null) {
             throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
         }
 
         Product product = productService.findProductByName(productName);
-        return ProductForm.productChangeForm(product);
+        return productService.getProductDto(product);
     }
 
     @PostMapping("/products/{productName}")
-    public ProductForm updateProduct(@PathVariable("productName") String productName, ProductForm form) {
+    public ProductResponse updateProduct(@PathVariable("productName") String productName, ProductUpdateRequest request) {
         if (productService.findProductByName(productName) == null) {
             throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
         }
 
         Product product = productService.findProductByName(productName);
-        productService.updateProduct(product.getId(), form.getPrice(), form.getStockQuantity());
-        return ProductForm.productChangeForm(product);
+        productService.updateProduct(product.getId(), request.getPrice(), request.getStockQuantity());
+        return productService.getProductDto(product);
     }
 
     @DeleteMapping("/products/{productName}")

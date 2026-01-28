@@ -42,6 +42,17 @@ public class Delivery {
         this.deliveryStatus = WAITING;
     }
 
+    public void startDelivery(Order order) {
+        order.getDelivery().setDeliveryStatus(SHIPPED);
+        order.getDelivery().shippedDate = LocalDateTime.now();
+    }
+
+    public void completeDelivery(Order order) {
+        order.getDelivery().setDeliveryStatus(DELIVERED);
+        order.getDelivery().deliveredDate = LocalDateTime.now();
+        order.setOrderStatus(OrderStatus.DELIVERED);
+    }
+
     protected void setDeliveryStatus(DeliveryStatus deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
     }

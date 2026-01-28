@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static jakarta.persistence.EnumType.*;
 import static lombok.AccessLevel.*;
 import static lsk.commerce.domain.Grade.*;
@@ -16,6 +19,9 @@ public class Member {
     @Id @GeneratedValue
     @Column(name = "member_id")
     private Long id;
+
+    @OneToMany(mappedBy = "member")
+    private List<Order> orders = new ArrayList<>();
 
     private String name;
     private String loginId;

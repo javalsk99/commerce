@@ -1,10 +1,10 @@
-package lsk.commerce.controller.form;
+package lsk.commerce.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter
-public class ChangeAddressMemberForm {
+public class MemberChangeAddressRequest {
 
     @NotNull
     private String city;
@@ -15,7 +15,7 @@ public class ChangeAddressMemberForm {
     @NotNull
     private String zipcode;
 
-    public ChangeAddressMemberForm(String city, String street, String zipcode) {
+    public MemberChangeAddressRequest(String city, String street, String zipcode) {
         this.city = city;
         this.street = street;
         this.zipcode = zipcode;

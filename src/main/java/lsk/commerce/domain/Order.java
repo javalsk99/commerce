@@ -89,6 +89,10 @@ public class Order {
         this.delivery.setDeliveryStatus(PREPARING);
     }
 
+    protected void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
     //Payment에서 사용해서 protected
     protected void setPayment(Payment payment) {
         this.payment = payment;

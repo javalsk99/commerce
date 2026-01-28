@@ -4,15 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.portone.sdk.server.payment.PaidPayment;
 import io.portone.sdk.server.payment.PaymentClient;
-import io.portone.sdk.server.payment.VirtualAccountIssuedPayment;
 import io.portone.sdk.server.webhook.Webhook;
 import io.portone.sdk.server.webhook.WebhookTransaction;
 import io.portone.sdk.server.webhook.WebhookVerifier;
 import kotlin.Unit;
-import lsk.commerce.controller.form.OrderForm;
-import lsk.commerce.controller.form.OrderProductForm;
-import lsk.commerce.controller.form.PaymentForm;
-import lsk.commerce.domain.Order;
+import lsk.commerce.dto.request.OrderRequest;
+import lsk.commerce.dto.OrderProductDto;
+import lsk.commerce.dto.request.PaymentRequest;
 import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.Product;
 import lsk.commerce.api.portone.CompletePaymentRequest;
@@ -31,8 +29,6 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-
-import static lsk.commerce.domain.PaymentStatus.*;
 
 @RestController
 public class PaymentController {
@@ -57,14 +53,13 @@ public class PaymentController {
     }
 
     @GetMapping("/api/orders/{orderId}")
-    public OrderForm getOrder(@PathVariable("orderId") Long orderId) {
-        Order order = orderService.findOrder(orderId);
-        return OrderForm.orderChangeForm(order);
+    public OrderRequest getOrder(@PathVariable("orderId") Long orderId) {
+        return orderService.getOrderRequest(orderId);
     }
 
     //브라우저에서 결제 완료 후 서버에 결제 완료를 알리는 용도 (결제 정보를 완전히 실시간으로 얻기 위해서는 웹훅 사용 / 수정할 곳 없음)
     @PostMapping("/api/payment/complete")
-    public Mono<PaymentForm> completePayment(@RequestBody CompletePaymentRequest completeRequest) {
+    public Mono<PaymentRequest> completePayment(@RequestBody CompletePaymentRequest completeRequest) {
         return syncPayment(completeRequest.paymentId);
     }
 
@@ -89,9 +84,9 @@ public class PaymentController {
     }
 
     //서버의 결제 데이터베이스를 따라하는 샘플 / syncPayment 호출시에 포트원의 결제 건을 조회하여 상태를 동기화하고 결제 완료시에 완료 처리를 한다 (실제 데이터베이스 사용시에는 결제건 단위 락을 잡아 동시성 문제 피하기 / 수정해야 함)
-    private Mono<PaymentForm> syncPayment(String paymentId) {
+    private Mono<PaymentRequest> syncPayment(String paymentId) {
         Payment payment = paymentService.findPaymentByPaymentId(paymentId);
-        PaymentForm paymentForm = PaymentForm.paymentChangeForm(payment);
+        PaymentRequest paymentForm = PaymentRequest.paymentChangeDto(payment);
         return Mono.fromFuture(portone.getPayment(paymentId))
                 .onErrorMap(e -> {
                         logger.error("포트원 조회 중 에러 발생: {}", e.getMessage()); // 진짜 에러 이유 출력
@@ -107,11 +102,11 @@ public class PaymentController {
 
                             return Mono.fromCallable(() -> paymentService.completePayment(paymentId, paymentDate))
                                     .subscribeOn(Schedulers.boundedElastic())
-                                    .map(updatePayment -> PaymentForm.paymentChangeForm(updatePayment));
+                                    .map(updatePayment -> PaymentRequest.paymentChangeDto(updatePayment));
                         default:
                             return Mono.fromCallable(() -> paymentService.failedPayment(paymentId))
                                     .subscribeOn(Schedulers.boundedElastic())
-                                    .map(updatePayment -> PaymentForm.paymentChangeForm(updatePayment));
+                                    .map(updatePayment -> PaymentRequest.paymentChangeDto(updatePayment));
                     }
                 });
     }
@@ -131,15 +126,18 @@ public class PaymentController {
             return false;
         }
 
-        OrderForm orderForm = orderService.getOrderForm(customDataDecoded.orderId());
-        for (OrderProductForm orderProduct : orderForm.getOrderProducts()) {
+        OrderRequest orderRequest = orderService.getOrderRequest(customDataDecoded.orderId());
+        for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
             Product product = productService.findProductByName(orderProduct.getName());
             if (product == null) return false;
         }
 
-        //결제로 주문한 상품의 이름과 상품의 이름이 같은지, 결제한 총 금액과 상품의 가격이 같은지 (주문 금액으로 변경), 결제한 화폐와 상품의 화폐가 같은지
-        return payment.getOrderName().equals(orderForm.getOrderProducts().getFirst().getName() + " 외 " + (orderForm.getOrderProducts().size() - 1) + "건") &&
-                payment.getAmount().getTotal() == orderForm.getTotalAmount() &&
-                payment.getCurrency().getValue().equals("KRW");
+        if (orderRequest.getOrderProducts().size() == 1) {
+            return payment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().getName()) &&
+                    payment.getAmount().getTotal() == orderRequest.getTotalAmount();
+        } else {
+            return payment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건") &&
+                    payment.getAmount().getTotal() == orderRequest.getTotalAmount();
+        }
     }
 }

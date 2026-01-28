@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.CategoryProduct;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,5 +56,10 @@ public class ProductService {
     public void updateProduct(Long productId, int newPrice, int newStockQuantity) {
         Product product = productRepository.findOne(productId);
         product.updateProduct(newPrice, newStockQuantity);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductResponse getProductDto(Product product) {
+        return ProductResponse.productChangeDto(product);
     }
 }

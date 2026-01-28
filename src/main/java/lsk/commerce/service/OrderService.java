@@ -1,9 +1,10 @@
 package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.controller.form.OrderForm;
+import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.domain.*;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,10 +112,16 @@ public class OrderService {
         orderRepository.delete(order);
     }
 
-    //for-each문 때문에 Form에서 컨트롤러로 바로 호출하면 LazyInitializtionException이 발생
+    //결제 로직 검증용
     @Transactional(readOnly = true)
-    public OrderForm getOrderForm(Long orderId) {
+    public OrderRequest getOrderRequest(Long orderId) {
         Order order = orderRepository.findOne(orderId);
-        return OrderForm.orderChangeForm(order);
+        return OrderRequest.orderChangeRequest(order);
+    }
+
+    //주문 리턴용
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderResponse(Order order) {
+        return OrderResponse.orderChangeResponse(order);
     }
 }

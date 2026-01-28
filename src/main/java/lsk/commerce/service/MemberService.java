@@ -1,6 +1,7 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Member;
+import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,11 @@ public class MemberService {
     public void changeAddress(String memberLoginId, String newCity, String newStreet, String newZipcode) {
         Member member = memberRepository.findByLoginId(memberLoginId);
         member.changeAddress(newCity, newStreet, newZipcode);
+    }
+
+    @Transactional(readOnly = true)
+    public MemberResponse getMemberDto(Member member) {
+        return MemberResponse.memberChangeDto(member);
     }
 
     private void validateMember(Member member) {

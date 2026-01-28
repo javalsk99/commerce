@@ -29,7 +29,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if ("/members".equals(requestURI) && "POST".equalsIgnoreCase(method)) {
+        if (("/members".equals(requestURI) && "POST".equalsIgnoreCase(method)) || "OPTIONS".equalsIgnoreCase(method)) {
             return true;
         }
 
@@ -85,8 +85,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if ((requestURI.startsWith("/products") || requestURI.startsWith("/categories"))
-                && !"GET".equalsIgnoreCase(method)) {
+        if ((requestURI.startsWith("/products") || requestURI.startsWith("/categories")) && !"GET".equalsIgnoreCase(method)) {
             return true;
         }
 

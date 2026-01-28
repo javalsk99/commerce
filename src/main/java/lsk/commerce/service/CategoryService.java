@@ -3,6 +3,7 @@ package lsk.commerce.service;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,5 +57,9 @@ public class CategoryService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    public CategoryResponse getCategoryDto(Category category) {
+        return CategoryResponse.categoryChangeDto(category);
     }
 }

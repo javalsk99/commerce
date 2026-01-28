@@ -1,12 +1,11 @@
-package lsk.commerce.controller.form;
+package lsk.commerce.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lsk.commerce.domain.Member;
 
 @Getter
-public class MemberForm {
+public class MemberRequest {
 
     @NotNull
     private String name;
@@ -14,7 +13,6 @@ public class MemberForm {
     @NotNull
     private String loginId;
 
-    @JsonIgnore
     @NotNull
     private String password;
 
@@ -27,16 +25,12 @@ public class MemberForm {
     @NotNull
     private String zipcode;
 
-    public MemberForm(String name, String loginId, String password, String city, String street, String zipcode) {
+    public MemberRequest(String name, String loginId, String password, String city, String street, String zipcode) {
         this.name = name;
         this.loginId = loginId;
         this.password = password;
         this.city = city;
         this.street = street;
         this.zipcode = zipcode;
-    }
-
-    public static MemberForm memberChangeForm(Member member) {
-        return new MemberForm(member.getName(), member.getLoginId(), member.getPassword(), member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode());
     }
 }
