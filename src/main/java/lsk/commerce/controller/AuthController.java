@@ -25,10 +25,8 @@ public class AuthController {
     @PostMapping("/login")
     public MemberLoginResponse login(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
         Member loginMember = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
-        if (memberService.findMemberByLoginId(loginRequest.getLoginId()) == null) {
-            throw new IllegalArgumentException("잘못된 아이디를 입력했습니다. id: " + loginRequest.getLoginId());
-        } else if (loginMember == null) {
-            throw new IllegalArgumentException("잘못된 비밀번호를 입력했습니다.");
+        if (memberService.findMemberByLoginId(loginRequest.getLoginId()) == null || loginMember == null) {
+            throw new IllegalArgumentException("로그인에 실패했습니다.");
         }
 
         String token = jwtProvider.createToken(loginMember);
@@ -57,6 +55,9 @@ public class AuthController {
     @GetMapping("/web/login")
     public String webLogin(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
         Member loginMember = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
+        if (memberService.findMemberByLoginId(loginRequest.getLoginId()) == null || loginMember == null) {
+            throw new IllegalArgumentException("로그인에 실패했습니다.");
+        }
 
         String token = jwtProvider.createToken(loginMember);
 

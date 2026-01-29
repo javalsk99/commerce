@@ -79,3 +79,74 @@
 
       public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
           OrderProduct.deleteOrderProduct(order);
+
+
+- completeDelivery가 실행되지 않는 문제 - this로 트랜잭션이 동작하지 않음
+
+      public Payment completePayment(String paymentId, LocalDateTime paymentDate) {
+          TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+              @Override
+              public void afterCommit() {
+                  scheduler.schedule(() -> deliveryService.startDelivery(orderId), Instant.now().plusSeconds(60));
+              }
+          });
+
+      public void startDelivery(Long orderId) {
+          Order order = orderService.findOrder(orderId);
+          order.getDelivery().startDelivery();
+
+              @Override
+              public void afterCommit() {
+                  DeliveryService deliveryService = applicationContext.getBean(DeliveryService.class);
+                  scheduler.schedule(() -> completeDelivery(orderId), Instant.now().plusSeconds(60));
+              }
+          });
+      }
+
+      public void completeDelivery(Long orderId) {
+          Order order = orderService.findOrder(orderId);
+          order.getDelivery().completeDelivery();
+      }
+
+  시도한 방법: DeliveryService 직접 주입 - 무한 루프 발생
+
+  The dependencies of some of the beans in the application context form a cycle:
+
+  orderController defined in file [commerce\build\classes\java\main\lsk\commerce\controller\OrderController.class]
+
+  ↓
+
+  paymentService defined in file [commerce\build\classes\java\main\lsk\commerce\service\PaymentService.class]
+
+  ┌─────┐
+
+  |  deliveryService defined in file [commerce\build\classes\java\main\lsk\commerce\service\DeliveryService.class]
+
+  └─────┘
+
+  해결: @TransactionalEventListener로 서비스와 이벤트 분리
+
+      public Payment completePayment(String paymentId, LocalDateTime paymentDate) {
+          eventPublisher.publishEvent(new PaymentCompletedEvent(orderId));
+
+      public void startDelivery(Long orderId) {
+          Order order = orderService.findOrder(orderId);
+          order.getDelivery().startDelivery();
+
+          eventPublisher.publishEvent(new DeliveryStartedEvent(orderId));
+      }
+
+      public void completeDelivery(Long orderId) {
+          Order order = orderService.findOrder(orderId);
+          order.getDelivery().completeDelivery();
+      }
+
+      @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+      public void startDelivery(PaymentCompletedEvent event) {
+          scheduler.schedule(() -> deliveryService.startDelivery(event.orderId()), Instant.now().plusSeconds(60));
+      }
+
+      @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+      public void completeDelivery(DeliveryStartedEvent event) {
+          scheduler.schedule(() -> deliveryService.completeDelivery(event.orderId()), Instant.now().plusSeconds(60));
+      }

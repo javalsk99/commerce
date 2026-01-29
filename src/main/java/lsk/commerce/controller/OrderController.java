@@ -33,7 +33,7 @@ public class OrderController {
         return orderService.getOrderResponse(order);
     }
 
-    @PostMapping("/orders/{orderId}/payment")
+    @PostMapping("/orders/{orderId}/payments")
     public OrderResponse requestPayment(@PathVariable("orderId") Long orderId) {
         Order order = orderService.findOrder(orderId);
         paymentService.request(order);

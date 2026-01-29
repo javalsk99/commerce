@@ -19,12 +19,12 @@ public class OrderProduct {
     private Long id;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
-
-    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     private int count;
     private int orderPrice;

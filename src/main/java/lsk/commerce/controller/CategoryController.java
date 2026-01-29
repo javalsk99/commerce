@@ -64,15 +64,15 @@ public class CategoryController {
     }
 
     @PostMapping("/categories/{categoryName}")
-    public CategoryResponse changeParentCategory(@PathVariable("categoryName") String categoryName, CategoryRequest form) {
+    public CategoryResponse changeParentCategory(@PathVariable("categoryName") String categoryName, String newParentCategoryName) {
         if (categoryService.findCategoryByName(categoryName) == null) {
             throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-        } else if (categoryService.findCategoryByName(form.getParentName()) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + form.getParentName());
+        } else if (categoryService.findCategoryByName(newParentCategoryName) == null) {
+            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + newParentCategoryName);
         }
 
         Category category = categoryService.findCategoryByName(categoryName);
-        Category newParentCategory = categoryService.findCategoryByName(form.getParentName());
+        Category newParentCategory = categoryService.findCategoryByName(newParentCategoryName);
         categoryService.changeParentCategory(category, newParentCategory);
         return categoryService.getCategoryDto(category);
     }

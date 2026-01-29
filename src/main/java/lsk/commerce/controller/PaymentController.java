@@ -52,7 +52,7 @@ public class PaymentController {
         portoneWebhook = new WebhookVerifier(secret.webhook());
     }
 
-    @GetMapping("/api/orders/{orderId}")
+    @GetMapping("/api/payments/{orderId}")
     public OrderRequest getOrder(@PathVariable("orderId") Long orderId) {
         return orderService.getOrderRequest(orderId);
     }

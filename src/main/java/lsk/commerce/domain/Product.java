@@ -30,7 +30,6 @@ public abstract class Product {
     private String name;
     private int price;
     private int stockQuantity;
-    private final String currency = Krw.INSTANCE.getValue(); //결제 api용 (Dto 만들어서 거기서 사용)
 
     public Product(String name, int price, int stockQuantity) {
         this.name = name;
@@ -105,7 +104,7 @@ public abstract class Product {
         return removeCategoryProducts;
     }
 
-    //같은 카테고리 상품인 상품과 카테고리에서 카테고리 상품 제거
+    //같은 카테고리 상품인 상품과 카테고리를 카테고리 상품 제거
     public CategoryProduct removeCategoryProduct(Category category) {
         for (CategoryProduct categoryProduct : category.getCategoryProducts()) {
             if (this.equals(categoryProduct.getProduct())) {

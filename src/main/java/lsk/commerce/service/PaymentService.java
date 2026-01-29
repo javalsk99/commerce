@@ -2,16 +2,15 @@ package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.api.portone.CompletePaymentRequest;
-import lsk.commerce.domain.Delivery;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Payment;
-import lsk.commerce.domain.PaymentStatus;
+import lsk.commerce.event.PaymentCompletedEvent;
 import lsk.commerce.repository.PaymentRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -19,6 +18,7 @@ import java.util.Optional;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     //이후 결제 진행은 다른 비즈니스 로직 다 생성 후 진행
     public Long request(Order order) {
@@ -28,10 +28,12 @@ public class PaymentService {
         return order.getPayment().getId();
     }
 
+    @Transactional(readOnly = true)
     public Payment findPayment(Long paymentId) {
         return paymentRepository.findOne(paymentId);
     }
 
+    @Transactional(readOnly = true)
     public Payment findPaymentByPaymentId(String paymentId) {
         return paymentRepository.findByPaymentId(paymentId);
     }
@@ -46,6 +48,10 @@ public class PaymentService {
         Payment payment = paymentRepository.findByPaymentId(paymentId);
         payment.complete(paymentDate);
         payment.getOrder().completePaid();
+
+        Long orderId = payment.getOrder().getId();
+        eventPublisher.publishEvent(new PaymentCompletedEvent(orderId));
+
         return payment;
     }
 }

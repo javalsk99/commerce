@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 import static jakarta.persistence.EnumType.*;
+import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
 import static lsk.commerce.domain.DeliveryStatus.*;
 
@@ -18,6 +19,9 @@ public class Delivery {
     @Id @GeneratedValue
     @Column(name = "delivery_id")
     private Long id;
+
+    @OneToOne(mappedBy = "delivery", fetch = LAZY)
+    private Order order;
 
     @Enumerated(STRING)
     private DeliveryStatus deliveryStatus;
@@ -42,15 +46,15 @@ public class Delivery {
         this.deliveryStatus = WAITING;
     }
 
-    public void startDelivery(Order order) {
-        order.getDelivery().setDeliveryStatus(SHIPPED);
-        order.getDelivery().shippedDate = LocalDateTime.now();
+    public void startDelivery() {
+        this.deliveryStatus = SHIPPED;
+        this.shippedDate = LocalDateTime.now();
     }
 
-    public void completeDelivery(Order order) {
-        order.getDelivery().setDeliveryStatus(DELIVERED);
-        order.getDelivery().deliveredDate = LocalDateTime.now();
-        order.setOrderStatus(OrderStatus.DELIVERED);
+    public void completeDelivery() {
+        this.deliveryStatus = DELIVERED;
+        this.deliveredDate = LocalDateTime.now();
+        this.order.setOrderStatus(OrderStatus.DELIVERED);
     }
 
     protected void setDeliveryStatus(DeliveryStatus deliveryStatus) {

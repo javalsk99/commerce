@@ -1,23 +1,27 @@
 # API 명세
 ![api](images/API_명세.PNG)
+- Auth
+
+  POST /login 로그인
+
+  POST /logout 로그아웃
+
+  GET /web/login 웹 로그인
+
+
 - Category
 
   GET /categories 카테고리 목록 조회
 
   POST /categories 카테고리 등록
 
-  GET /categories/{categoryId} 카테고리 조회
+  GET /categories/{categoryName} 카테고리 조회
 
-  POST /categories/{categoryId} 카테고리 수정
+  POST /categories/{categoryName} 카테고리 수정
 
-  DELETE /categories/{categoryId} 카테고리 삭제
+  DELETE /categories/{categoryName} 카테고리 삭제
 
-  GET /categories/{categoryId}/products 카테고리에 소속된 상품 조회
-
-
-- Auth
-
-  POST /login 로그인
+  GET /categories/{categoryName}/products 카테고리에 소속된 상품 조회
 
 
 - Member
@@ -26,11 +30,13 @@
 
   POST /members 회원 가입
 
-  GET /members/{memberId} 회원 조회
+  GET /members/{memberLoginId} 회원 조회
 
-  POST /members/{memberId} 회원 수정
+  DELETE /members/{memberLoginId} 회원 삭제
 
-  DELETE /members/{memberId} 회원 삭제
+  POST /members/{memberLoginId}/password 회원 비밀번호 수정
+
+  POST /members/{memberLoginId}/address 회원 주소 수정
 
 
 - Order
@@ -43,9 +49,16 @@
 
   DELETE /orders/{orderId} 주문 취소
 
-  POST /orders/{orderId}/delivery 배송 시작
+  POST /orders/{orderId}/payments 결제 요청
 
-  POST /orders/{orderId}/payment 결제 요청
+
+- Payment
+
+  GET /api/payments 결제 화면
+
+  GET /api/payments/{orderId} 주문 정보 전달
+
+  POST /api/payments/complete 결제 완료 처리
 
 
 - Product
@@ -54,13 +67,29 @@
 
   POST /products 상품 등록
 
-  GET /products/{productId} 상품 조회
+  GET /products/{productName} 상품 조회
 
-  POST /products/{productId} 상품 수정
+  POST /products/{productName} 상품 수정
 
-  DELETE /products/{productId} 상품 삭제
+  DELETE /products/{productName} 상품 삭제
 
 ### 변경 이력
 - 주문 수정, 취소 추가
 
   결제를 하기 전에 수정하거나 취소할 수 있다.
+
+- /logout, /web/login 추가
+
+  쿠키 삭제, 결제할 때 인터셉터 통과를 위해 웹 로그인 추가
+
+- {categoryId} -> {categoryName}, {memberId} -> {memberLoginId}, {productId} -> {productName} 변경
+
+  PK가 아닌 키로 변경 (orderId는 생각 중)
+
+- POST /members/{memberLoginId}를 /members/{memberLoginId}/password, /members/{memberLoginId}/address로 분리
+
+  비밀번호만 수정, 주소만 수정하게 설정
+
+- /api/payments, /api/payments/{orderId}, /api/payments/complete 추가
+
+  결제 화면에 들어가면 자바스크립트로 주문 정보 전달되고, 결제를 끝내면 결제 정보가 DB에 저장된다.

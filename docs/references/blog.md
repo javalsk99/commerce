@@ -8,3 +8,11 @@
 - Lazy 로딩으로 인한 JSON 반환 오류 https://blogshine.tistory.com/548
 
 - JWT Filter 등록 https://hansel.tistory.com/152 (인터셉터로 변경)
+
+- 특정 시간에 작업 예약 https://xxeol.tistory.com/53
+
+- afterCommit https://luna-archive.tistory.com/12
+
+- Self Injection 문제 https://sundries-in-myidea.tistory.com/167
+
+- @TransactionalEventListener https://wildeveloperetrain.tistory.com/246

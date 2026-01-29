@@ -49,7 +49,12 @@ public class OrderResponse {
             orderProductForms.add(orderProductForm);
         }
 
-        return new OrderResponse(orderProductForms, order.getTotalAmount(), order.getOrderStatus(), order.getOrderDate(), order.getPayment().getPaymentStatus(),
-                order.getPayment().getPaymentDate(), order.getDelivery().getDeliveryStatus(), order.getDelivery().getShippedDate(), order.getDelivery().getDeliveredDate());
+        if (order.getPayment() == null) {
+            return new OrderResponse(orderProductForms, order.getTotalAmount(), order.getOrderStatus(), order.getOrderDate(), null,
+                    null, order.getDelivery().getDeliveryStatus(), order.getDelivery().getShippedDate(), order.getDelivery().getDeliveredDate());
+        } else {
+            return new OrderResponse(orderProductForms, order.getTotalAmount(), order.getOrderStatus(), order.getOrderDate(), order.getPayment().getPaymentStatus(),
+                    order.getPayment().getPaymentDate(), order.getDelivery().getDeliveryStatus(), order.getDelivery().getShippedDate(), order.getDelivery().getDeliveredDate());
+        }
     }
 }
