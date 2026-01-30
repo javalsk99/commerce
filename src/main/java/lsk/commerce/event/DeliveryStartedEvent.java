@@ -1,4 +1,4 @@
 package lsk.commerce.event;
 
-public record DeliveryStartedEvent(Long orderId) {
+public record DeliveryStartedEvent(String orderNumber) {
 }

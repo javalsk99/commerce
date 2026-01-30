@@ -5,6 +5,8 @@ import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 import lombok.Getter;
 
+import java.util.ArrayList;
+
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
 
@@ -51,7 +53,8 @@ public class OrderProduct {
         for (OrderProduct orderProduct : order.getOrderProducts()) {
             orderProduct.product.addStock(orderProduct.count);
         }
-        order.getOrderProducts().removeAll(order.getOrderProducts());
+
+        order.getOrderProducts().clear();
     }
 
     //Order에서 사용해서 protected

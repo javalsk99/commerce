@@ -16,3 +16,5 @@
 - Self Injection 문제 https://sundries-in-myidea.tistory.com/167
 
 - @TransactionalEventListener https://wildeveloperetrain.tistory.com/246
+
+- Soft Delete https://velog.io/@min429/SoftDelete%EC%99%80-%EC%A7%80%EC%97%B0%EB%A1%9C%EB%94%A9FetchType.LAZY

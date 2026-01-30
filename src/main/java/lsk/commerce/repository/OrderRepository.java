@@ -19,6 +19,14 @@ public class OrderRepository {
         return em.find(Order.class, orderId);
     }
 
+    public Order findByOrderNumber(String orderNumber) {
+        return em.createQuery("select o from Order o where o.orderNumber = :orderNumber", Order.class)
+                .setParameter("orderNumber", orderNumber)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
+    }
+
     public void delete(Order order) {
         em.remove(order);
     }

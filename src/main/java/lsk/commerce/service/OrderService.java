@@ -25,7 +25,7 @@ public class OrderService {
     private final ProductService productService;
 
     //기존의 파라미터는 각 상품별 수량을 조절할 수 없어서 Map으로 변경
-    public Long order(Long memberId, Map<Long, Integer> productIdsCount) {
+    public String order(Long memberId, Map<Long, Integer> productIdsCount) {
         //엔티티 조회
         Member member = memberService.findMember(memberId);
 
@@ -49,10 +49,10 @@ public class OrderService {
         //주문 저장
         orderRepository.save(order);
 
-        return order.getId();
+        return order.getOrderNumber();
     }
 
-    public Long order(String memberLoginId, Map<String, Integer> productNamesCount) {
+    public String order(String memberLoginId, Map<String, Integer> productNamesCount) {
         //엔티티 조회
         Member member = memberService.findMemberByLoginId(memberLoginId);
 
@@ -76,10 +76,12 @@ public class OrderService {
         //주문 저장
         orderRepository.save(order);
 
-        return order.getId();
+        return order.getOrderNumber();
     }
 
-    public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
+    public void updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
+        Order order = findOrderByOrderNumber(orderNumber);
+
         //결제가 됐는지 검증
         if (order.getOrderStatus() != CREATED) {
             throw new IllegalStateException("결제가 완료돼서 주문을 수정할 수 없습니다.");
@@ -90,12 +92,12 @@ public class OrderService {
 
         List<OrderProduct> newOrderProducts = new ArrayList<>();
 
-        for (Map.Entry<Long, Integer> newProductIdCountEntry : newProductIdsCount.entrySet()) {
-            Long newProductId = newProductIdCountEntry.getKey();
-            int newCount = newProductIdCountEntry.getValue();
+        for (Map.Entry<String, Integer> newProductNameCountEntry : newProductNamesCount.entrySet()) {
+            String newProductName = newProductNameCountEntry.getKey();
+            int newCount = newProductNameCountEntry.getValue();
 
             //새로운 주문 상품 생성
-            Product newProduct = productService.findProduct(newProductId);
+            Product newProduct = productService.findProductByName(newProductName);
             newOrderProducts.add(OrderProduct.createOrderProduct(newProduct, newCount));
         }
 
@@ -108,14 +110,23 @@ public class OrderService {
         return orderRepository.findOne(orderId);
     }
 
-    public void DeleteOrder(Order order) {
+    @Transactional(readOnly = true)
+    public Order findOrderByOrderNumber(String orderNumber) {
+        return orderRepository.findByOrderNumber(orderNumber);
+    }
+
+    public void deleteOrder(Order order) {
+        if (order.getDelivery().getDeliveryStatus() != DeliveryStatus.DELIVERED) {
+            throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다.");
+        }
+
         orderRepository.delete(order);
     }
 
     //결제 로직 검증용
     @Transactional(readOnly = true)
-    public OrderRequest getOrderRequest(Long orderId) {
-        Order order = orderRepository.findOne(orderId);
+    public OrderRequest getOrderRequest(String orderNumber) {
+        Order order = orderRepository.findByOrderNumber(orderNumber);
         return OrderRequest.orderChangeRequest(order);
     }
 
@@ -123,5 +134,9 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderResponse(Order order) {
         return OrderResponse.orderChangeResponse(order);
+    }
+
+    public void cancelOrder(Order order) {
+        order.cancel();
     }
 }

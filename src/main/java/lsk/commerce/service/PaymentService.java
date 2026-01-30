@@ -49,8 +49,8 @@ public class PaymentService {
         payment.complete(paymentDate);
         payment.getOrder().completePaid();
 
-        Long orderId = payment.getOrder().getId();
-        eventPublisher.publishEvent(new PaymentCompletedEvent(orderId));
+        String orderNumber = payment.getOrder().getOrderNumber();
+        eventPublisher.publishEvent(new PaymentCompletedEvent(orderNumber));
 
         return payment;
     }

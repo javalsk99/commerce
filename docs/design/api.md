@@ -21,7 +21,11 @@
 
   DELETE /categories/{categoryName} 카테고리 삭제
 
-  GET /categories/{categoryName}/products 카테고리에 소속된 상품 조회
+  POST /categories/{categoryName}/{productName} 카테고리에 소속된 상품 제거
+
+  GET /categories/{categoryName}/products 카테고리에 소속된 상품들 조회
+
+  POST /categories/{categoryName}/products 카테고리에 소속된 상품들 제거
 
 
 - Member
@@ -73,6 +77,8 @@
 
   DELETE /products/{productName} 상품 삭제
 
+  POST /products/{productName}/{categoryName} 카테고리에 등록
+
 ### 변경 이력
 - 주문 수정, 취소 추가
 
@@ -93,3 +99,7 @@
 - /api/payments, /api/payments/{orderId}, /api/payments/complete 추가
 
   결제 화면에 들어가면 자바스크립트로 주문 정보 전달되고, 결제를 끝내면 결제 정보가 DB에 저장된다.
+
+- POST /categories/{categoryName}/{productName}, /categories/{categoryName}/products, /products/{productName}/{categoryName} 추가
+
+  상품과 카테고리 관리를 유동적으로 하기 위해 카테고리에서 상품 제거, 상품을 카테고리에 등록 추가

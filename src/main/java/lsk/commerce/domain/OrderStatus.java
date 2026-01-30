@@ -1,5 +1,5 @@
 package lsk.commerce.domain;
 
 public enum OrderStatus {
-    CREATED, PAID, DELIVERED
+    CREATED, CANCELED, PAID, DELIVERED
 }

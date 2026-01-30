@@ -10,7 +10,6 @@ import java.util.UUID;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
-import static lsk.commerce.domain.OrderStatus.*;
 import static lsk.commerce.domain.PaymentStatus.*;
 
 @Entity
@@ -22,8 +21,8 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
-    @Column(name = "paid_id")
-    private String paymentId; //결제 api용
+    @Column(name = "payment_number")
+    private String paymentId;
 
     @OneToOne(mappedBy = "payment", fetch = LAZY)
     private Order order;
@@ -37,7 +36,7 @@ public class Payment {
     private PaymentStatus paymentStatus;
 
     public static void requestPayment(Order order) {
-        if (order.getOrderStatus() != CREATED) {
+        if (order.getOrderStatus() != OrderStatus.CREATED) {
             throw new IllegalStateException("이미 결제된 주문입니다.");
         }
 
@@ -56,6 +55,10 @@ public class Payment {
 
     public void failed() {
         this.paymentStatus = FAILED;
+    }
+
+    public void canceled() {
+        this.paymentStatus = CANCELED;
     }
 
     public void complete(LocalDateTime paymentDate) {

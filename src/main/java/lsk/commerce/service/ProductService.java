@@ -48,7 +48,7 @@ public class ProductService {
 
     public void deleteProduct(Product product) {
         for (CategoryProduct removeCategoryProduct : product.removeCategoryProducts()) {
-            categoryProductService.disConnect(removeCategoryProduct);
+            categoryProductService.disconnect(removeCategoryProduct);
         }
         productRepository.delete(product);
     }

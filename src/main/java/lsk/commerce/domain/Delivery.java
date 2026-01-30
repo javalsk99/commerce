@@ -35,6 +35,10 @@ public class Delivery {
     @Embedded
     private Address address;
 
+    protected void setOrder(Order order) {
+        this.order = order;
+    }
+
     //주문을 결제해야 배송 준비가 시작돼서 결제 대기 상태 추가
     public Delivery(Member member) {
         this.address = member.getAddress();

@@ -52,9 +52,9 @@ public class PaymentController {
         portoneWebhook = new WebhookVerifier(secret.webhook());
     }
 
-    @GetMapping("/api/payments/{orderId}")
-    public OrderRequest getOrder(@PathVariable("orderId") Long orderId) {
-        return orderService.getOrderRequest(orderId);
+    @GetMapping("/api/payments/{orderNumber}")
+    public OrderRequest getOrder(@PathVariable("orderNumber") String orderNumber) {
+        return orderService.getOrderRequest(orderNumber);
     }
 
     //브라우저에서 결제 완료 후 서버에 결제 완료를 알리는 용도 (결제 정보를 완전히 실시간으로 얻기 위해서는 웹훅 사용 / 수정할 곳 없음)
@@ -126,7 +126,7 @@ public class PaymentController {
             return false;
         }
 
-        OrderRequest orderRequest = orderService.getOrderRequest(customDataDecoded.orderId());
+        OrderRequest orderRequest = orderService.getOrderRequest(customDataDecoded.orderNumber());
         for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
             Product product = productService.findProductByName(orderProduct.getName());
             if (product == null) return false;

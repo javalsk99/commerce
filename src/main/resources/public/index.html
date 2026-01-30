@@ -70,10 +70,10 @@
         })
 
         const urlParams = new URLSearchParams(window.location.search)
-        const orderId = urlParams.get('orderId') || 'default-id'
+        const orderNumber = urlParams.get('orderNumber') || 'default-id'
 
         const fetchOrder = async () => {
-          const response = await fetch(`/api/payments/${orderId}`, {
+          const response = await fetch(`/api/payments/${orderNumber}`, {
             method: "GET",
             credentials: "include"
           })
@@ -133,7 +133,7 @@
             currency: "KRW",
             payMethod: "EASY_PAY",
             customData: {
-              orderId: orderRequest.id,
+              orderNumber: orderRequest.orderNumber,
             },
           })
 

@@ -41,6 +41,11 @@ public class Member {
         this.address = new Address(city, street, zipcode);
     }
 
+    protected void addOrder(Order order) {
+        orders.add(order);
+        order.setMember(this);
+    }
+
     public void setAdmin() {
         this.grade = ADMIN;
     }

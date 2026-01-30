@@ -10,6 +10,7 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.ProductUpdateRequest;
 import lsk.commerce.dto.response.ProductResponse;
+import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ public class ProductController {
 
     private final CategoryService categoryService;
     private final ProductService productService;
+    private final CategoryProductService categoryProductService;
 
     @PostMapping("/products")
     public String create(@Valid ProductRequest request, String... categoryNames) {
@@ -94,5 +96,27 @@ public class ProductController {
         Product product = productService.findProductByName(productName);
         productService.deleteProduct(product);
         return "delete";
+    }
+
+    @PostMapping("/products/{productName}/{categoryName}")
+    public List<ProductResponse> connectCategory(@PathVariable("productName") String productName, @PathVariable("categoryName") String categoryName) {
+        if (productService.findProductByName(productName) == null) {
+            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
+        } else if (categoryService.findCategoryByName(categoryName) == null) {
+            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
+        }
+
+        Product product = productService.findProductByName(productName);
+        Category category = categoryService.findCategoryByName(categoryName);
+        categoryProductService.connect(product, category);
+
+        List<Product> products = categoryService.findProductsByCategoryName(categoryName);
+        List<ProductResponse> productResponses = new ArrayList<>();
+        for (Product findProduct : products) {
+            ProductResponse productDto = productService.getProductDto(findProduct);
+            productResponses.add(productDto);
+        }
+
+        return productResponses;
     }
 }

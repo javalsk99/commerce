@@ -1,4 +1,4 @@
 package lsk.commerce.event;
 
-public record PaymentCompletedEvent(Long orderId) {
+public record PaymentCompletedEvent(String orderNumber) {
 }

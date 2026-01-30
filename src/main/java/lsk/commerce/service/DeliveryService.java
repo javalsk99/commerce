@@ -17,15 +17,15 @@ public class DeliveryService {
     private final ApplicationEventPublisher eventPublisher;
     private final OrderService orderService;
 
-    public void startDelivery(Long orderId) {
-        Order order = orderService.findOrder(orderId);
+    public void startDelivery(String orderNumber) {
+        Order order = orderService.findOrderByOrderNumber(orderNumber);
         order.getDelivery().startDelivery();
 
-        eventPublisher.publishEvent(new DeliveryStartedEvent(orderId));
+        eventPublisher.publishEvent(new DeliveryStartedEvent(orderNumber));
     }
 
-    public void completeDelivery(Long orderId) {
-        Order order = orderService.findOrder(orderId);
+    public void completeDelivery(String orderNumber) {
+        Order order = orderService.findOrderByOrderNumber(orderNumber);
         order.getDelivery().completeDelivery();
     }
 }

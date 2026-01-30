@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 public class OrderRequest {
 
-    private Long id;
+    private String orderNumber;
     private String memberLoginId;
     private int totalAmount;
     private LocalDateTime orderDate;
@@ -21,8 +21,8 @@ public class OrderRequest {
     private DeliveryStatus deliveryStatus;
     private PaymentStatus paymentStatus;
 
-    public OrderRequest(Long id, String memberLoginId, int totalAmount, LocalDateTime orderDate, List<OrderProductDto> orderProducts, String paymentId, OrderStatus orderStatus, DeliveryStatus deliveryStatus, PaymentStatus paymentStatus) {
-        this.id = id;
+    public OrderRequest(String orderNumber, String memberLoginId, int totalAmount, LocalDateTime orderDate, List<OrderProductDto> orderProducts, String paymentId, OrderStatus orderStatus, DeliveryStatus deliveryStatus, PaymentStatus paymentStatus) {
+        this.orderNumber = orderNumber;
         this.memberLoginId = memberLoginId;
         this.totalAmount = totalAmount;
         this.orderDate = orderDate;
@@ -41,8 +41,8 @@ public class OrderRequest {
         }
 
         if (order.getPayment() == null) {
-            return new OrderRequest(order.getId(), order.getMember().getLoginId(), order.getTotalAmount(), order.getOrderDate(), orderProductForms, null, order.getOrderStatus(), order.getDelivery().getDeliveryStatus(), null);
+            return new OrderRequest(order.getOrderNumber(), order.getMember().getLoginId(), order.getTotalAmount(), order.getOrderDate(), orderProductForms, null, order.getOrderStatus(), order.getDelivery().getDeliveryStatus(), null);
         }
-        return new OrderRequest(order.getId(), order.getMember().getLoginId(), order.getTotalAmount(), order.getOrderDate(), orderProductForms, order.getPayment().getPaymentId(), order.getOrderStatus(), order.getDelivery().getDeliveryStatus(), order.getPayment().getPaymentStatus());
+        return new OrderRequest(order.getOrderNumber(), order.getMember().getLoginId(), order.getTotalAmount(), order.getOrderDate(), orderProductForms, order.getPayment().getPaymentId(), order.getOrderStatus(), order.getDelivery().getDeliveryStatus(), order.getPayment().getPaymentStatus());
     }
 }

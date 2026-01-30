@@ -1,10 +1,15 @@
 package lsk.commerce.domain;
 
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SoftDelete;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,24 +19,33 @@ import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
 import static lsk.commerce.domain.DeliveryStatus.*;
+import static lsk.commerce.domain.OrderStatus.CANCELED;
 import static lsk.commerce.domain.OrderStatus.PAID;
+import static lsk.commerce.domain.PaymentStatus.*;
 
 @Entity
 @Table(name = "orders")
 @Getter
 @NoArgsConstructor(access = PROTECTED)
+@SQLRestriction("is_deleted = false")
+@SQLDelete(sql = "UPDATE orders SET is_deleted = true WHERE order_id = ?")
 public class Order {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final char[] NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnoqprstuvwxyz".toCharArray();
 
     @JsonIgnore
     @Id @GeneratedValue
     @Column(name = "order_id")
     private Long id;
 
+    private String orderNumber;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToOne(fetch = LAZY, cascade = ALL)
+    @OneToOne(fetch = LAZY, cascade = PERSIST)
     @JoinColumn(name = "delivery_id")
     private Delivery delivery;
 
@@ -40,7 +54,7 @@ public class Order {
     private Payment payment;
 
     //양방향 매핑으로 변경
-    @OneToMany(mappedBy = "order", cascade = ALL)
+    @OneToMany(mappedBy = "order", cascade = ALL, orphanRemoval = true)
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
     private int totalAmount;
@@ -50,6 +64,8 @@ public class Order {
 
     @Enumerated(STRING)
     private OrderStatus orderStatus;
+
+    private boolean isDeleted = false;
 
     //OrderProduct에 order를 넣기 위해 양방향 매핑 추가
     private void addOrderProduct(OrderProduct orderProduct) {
@@ -61,8 +77,8 @@ public class Order {
     public static Order createOrder(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
         Order order = new Order();
 
-        order.member = member;
-        order.delivery = delivery;
+        member.addOrder(order);
+        order.setDelivery(delivery);
         order.totalAmount = 0;
         for (OrderProduct orderProduct : orderProducts) {
             order.addOrderProduct(orderProduct);
@@ -70,6 +86,7 @@ public class Order {
         }
         order.orderDate = LocalDateTime.now();
         order.orderStatus = OrderStatus.CREATED;
+        order.orderNumber = NanoIdUtils.randomNanoId(SECURE_RANDOM, NUMBER_ALPHABET, 12);
 
         return order;
     }
@@ -98,12 +115,33 @@ public class Order {
         this.payment = payment;
     }
 
-    private void setDelivery(Delivery delivery) {
+    protected void setDelivery(Delivery delivery) {
         this.delivery = delivery;
+        this.delivery.setOrder(this);
+    }
+
+    protected void setMember(Member member) {
+        this.member = member;
     }
 
     //결제 api 추가 전, 테스트용
     public void testPaid() {
         this.orderStatus = PAID;
+    }
+
+    public void cancel() {
+        for (OrderProduct orderProduct : this.orderProducts) {
+            orderProduct.getProduct().addStock(orderProduct.getCount());
+        }
+
+        if (this.payment != null) {
+            if (this.payment.getPaymentStatus() == COMPLETED) {
+                throw new IllegalStateException("결제가 완료돼서 취소할 수 없습니다.");
+            }
+
+            this.payment.canceled();
+        }
+
+        this.orderStatus = CANCELED;
     }
 }

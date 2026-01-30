@@ -3,7 +3,6 @@ package lsk.commerce.service;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.CategoryProduct;
 import lsk.commerce.domain.product.Book;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,7 +31,7 @@ class CategoryProductServiceTest {
         productService.register(book, childCategory);
 
         //when
-        categoryProductService.disConnect(childCategory, book);
+        categoryProductService.disconnect(childCategory, book);
 
         //then
         assertThat(book).isNotNull();

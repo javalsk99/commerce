@@ -33,8 +33,8 @@ class PaymentServiceTest {
     @Test
     void request() {
         //given
-        Long orderId = createOrder();
-        Order findOrder = orderService.findOrder(orderId);
+        Long orderNumber = createOrder();
+        Order findOrder = orderService.findOrder(orderNumber);
 
         //when
         Long paymentId = paymentService.request(findOrder);

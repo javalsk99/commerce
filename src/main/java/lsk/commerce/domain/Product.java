@@ -67,15 +67,19 @@ public abstract class Product {
         this.stockQuantity = newStockQuantity;
     }
 
+    public void connectCategory(Category category) {
+        CategoryProduct categoryProduct = new CategoryProduct();
+        categoryProduct.setProduct(this);
+        categoryProduct.setCategory(category);
+        this.categoryProducts.add(categoryProduct);
+        category.getCategoryProducts().add(categoryProduct);
+    }
+
     //CategoryProduct에서 protected 생성자, 메서드를 사용하기 위해서 패키지 이동
     public void addCategoryProduct(Category... categories) {
         for (Category category : categories) {
             while (category != null) {
-                CategoryProduct categoryProduct = new CategoryProduct();
-                categoryProduct.setProduct(this);
-                categoryProduct.setCategory(category);
-                this.categoryProducts.add(categoryProduct);
-                category.getCategoryProducts().add(categoryProduct);
+                connectCategory(category);
                 category = category.getParent();
             }
         }
@@ -84,11 +88,7 @@ public abstract class Product {
     public void addCategoryProduct(List<Category> categories) {
         for (Category category : categories) {
             while (category != null) {
-                CategoryProduct categoryProduct = new CategoryProduct();
-                categoryProduct.setProduct(this);
-                categoryProduct.setCategory(category);
-                this.categoryProducts.add(categoryProduct);
-                category.getCategoryProducts().add(categoryProduct);
+                connectCategory(category);
                 category = category.getParent();
             }
         }
@@ -107,7 +107,11 @@ public abstract class Product {
     //같은 카테고리 상품인 상품과 카테고리를 카테고리 상품 제거
     public CategoryProduct removeCategoryProduct(Category category) {
         for (CategoryProduct categoryProduct : category.getCategoryProducts()) {
-            if (this.equals(categoryProduct.getProduct())) {
+            if (categoryProduct.getProduct() == null) {
+                throw new IllegalArgumentException("카테고리에 상품이 없습니다.");
+            }
+
+            if (this.getId().equals(categoryProduct.getProduct().getId())) {
                 this.categoryProducts.remove(categoryProduct);
                 category.getCategoryProducts().remove(categoryProduct);
                 return categoryProduct;

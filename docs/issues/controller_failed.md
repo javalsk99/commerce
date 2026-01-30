@@ -109,3 +109,33 @@
           return payment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건") &&
                   payment.getAmount().getTotal() == orderRequest.getTotalAmount();
       }
+
+
+- java.lang.IllegalArgumentException: 해당 상품의 카테고리가 아닙니다. at lsk.commerce.domain.Product.removeCategoryProduct(Product.java:118)
+
+      public CategoryProduct removeCategoryProduct(Category category) {
+          for (CategoryProduct categoryProduct : category.getCategoryProducts()) {
+              if (this.equals(categoryProduct.getProduct())) {
+                  this.categoryProducts.remove(categoryProduct);
+                  category.getCategoryProducts().remove(categoryProduct);
+                  return categoryProduct;
+              }
+          }
+
+          throw new IllegalArgumentException("해당 상품의 카테고리가 아닙니다.");
+      }
+
+  this: lsk.commerce.domain.product.Book, getProduct: lsk.commerce.domain.Product$HibernateProxy 프록시로 나와서 return으로 못 빠지는 문제
+
+  해결: Id값으로 비교 this.getId().equals(categoryProduct.getProduct().getId())
+
+
+- Soft Delete 적용 중 발생한 문제
+
+  @SoftDelete 사용 -> Caused by: jakarta.persistence.PersistenceException: [PersistenceUnit: default] Unable to build Hibernate SessionFactory; nested exception is org.hibernate.metamodel.UnsupportedMappingException: To-one attribute (lsk.commerce.domain.OrderProduct.order) cannot be mapped as LAZY as its associated entity is defined with @SoftDelete
+
+  @SQLRestriction, @SQLDelete 사용 -> java.sql.SQLIntegrityConstraintViolationException: Cannot delete or update a parent row: a foreign key constraint fails (`commerce`.`orders`, CONSTRAINT `FKtkrur7wg4d8ax0pwgo0vmy20c` FOREIGN KEY (`delivery_id`) REFERENCES `delivery` (`delivery_id`))
+
+  delivery의 cascade를 PERSIST로 변경 -> org.hibernate.TransientObjectException: persistent instance references an unsaved transient instance of 'lsk.commerce.domain.Order' (save the transient instance before flushing)
+
+  Member, Delivery Order 연관 메서드 생성 -> 그대로
