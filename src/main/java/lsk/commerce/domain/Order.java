@@ -1,13 +1,11 @@
 package lsk.commerce.domain;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.SoftDelete;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -27,14 +25,13 @@ import static lsk.commerce.domain.PaymentStatus.*;
 @Table(name = "orders")
 @Getter
 @NoArgsConstructor(access = PROTECTED)
-@SQLRestriction("is_deleted = false")
-@SQLDelete(sql = "UPDATE orders SET is_deleted = true WHERE order_id = ?")
+@SQLRestriction("deleted = false")
+@SQLDelete(sql = "UPDATE orders SET deleted = true WHERE order_id = ?")
 public class Order {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final char[] NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnoqprstuvwxyz".toCharArray();
 
-    @JsonIgnore
     @Id @GeneratedValue
     @Column(name = "order_id")
     private Long id;
@@ -45,7 +42,7 @@ public class Order {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToOne(fetch = LAZY, cascade = PERSIST)
+    @OneToOne(fetch = LAZY, cascade = ALL, orphanRemoval = true)
     @JoinColumn(name = "delivery_id")
     private Delivery delivery;
 
@@ -65,7 +62,17 @@ public class Order {
     @Enumerated(STRING)
     private OrderStatus orderStatus;
 
-    private boolean isDeleted = false;
+    private boolean deleted = false;
+
+    private void addDelivery(Delivery delivery) {
+        this.delivery = delivery;
+        this.delivery.setOrder(this);
+    }
+
+    private void addMember(Member member) {
+        this.member = member;
+        this.member.getOrders().add(this);
+    }
 
     //OrderProduct에 order를 넣기 위해 양방향 매핑 추가
     private void addOrderProduct(OrderProduct orderProduct) {
@@ -77,8 +84,8 @@ public class Order {
     public static Order createOrder(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
         Order order = new Order();
 
-        member.addOrder(order);
-        order.setDelivery(delivery);
+        order.addMember(member);
+        order.addDelivery(delivery);
         order.totalAmount = 0;
         for (OrderProduct orderProduct : orderProducts) {
             order.addOrderProduct(orderProduct);
@@ -113,20 +120,6 @@ public class Order {
     //Payment에서 사용해서 protected
     protected void setPayment(Payment payment) {
         this.payment = payment;
-    }
-
-    protected void setDelivery(Delivery delivery) {
-        this.delivery = delivery;
-        this.delivery.setOrder(this);
-    }
-
-    protected void setMember(Member member) {
-        this.member = member;
-    }
-
-    //결제 api 추가 전, 테스트용
-    public void testPaid() {
-        this.orderStatus = PAID;
     }
 
     public void cancel() {

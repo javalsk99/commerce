@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -36,7 +37,8 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public Member findMemberByLoginId(String loginId) {
-        return memberRepository.findByLoginId(loginId);
+        return memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
     }
 
     @Transactional(readOnly = true)
@@ -49,12 +51,12 @@ public class MemberService {
     }
 
     public void changePassword(String memberLoginId, String newPassword) {
-        Member member = memberRepository.findByLoginId(memberLoginId);
+        Member member = findMemberByLoginId(memberLoginId);
         member.changePassword(newPassword);
     }
 
     public void changeAddress(String memberLoginId, String newCity, String newStreet, String newZipcode) {
-        Member member = memberRepository.findByLoginId(memberLoginId);
+        Member member = findMemberByLoginId(memberLoginId);
         member.changeAddress(newCity, newStreet, newZipcode);
     }
 
@@ -64,8 +66,7 @@ public class MemberService {
     }
 
     private void validateMember(Member member) {
-        Member findMembers = memberRepository.findByLoginId(member.getLoginId());
-        if (findMembers != null) {
+        if (memberRepository.existsByLoginId(member.getLoginId())) {
             throw new IllegalStateException("이미 사용 중인 아이디입니다.");
         }
     }

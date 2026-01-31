@@ -15,7 +15,7 @@ public class AuthService {
     public Member login(String loginId, String password) {
         Member member = memberService.findMemberByLoginId(loginId);
         if (!member.getPassword().equals(password)) {
-            return null;
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.");
         }
 
         return member;

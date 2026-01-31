@@ -3,9 +3,12 @@ package lsk.commerce.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
+import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
@@ -14,13 +17,15 @@ import static lsk.commerce.domain.DeliveryStatus.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = PROTECTED)
+@SQLRestriction("deleted = false")
+@SQLDelete(sql = "UPDATE delivery SET deleted = true WHERE delivery_id = ?")
 public class Delivery {
 
     @Id @GeneratedValue
     @Column(name = "delivery_id")
     private Long id;
 
-    @OneToOne(mappedBy = "delivery", fetch = LAZY)
+    @OneToOne(mappedBy = "delivery", fetch = LAZY, cascade = ALL)
     private Order order;
 
     @Enumerated(STRING)
@@ -34,6 +39,8 @@ public class Delivery {
 
     @Embedded
     private Address address;
+
+    private boolean deleted = false;
 
     protected void setOrder(Order order) {
         this.order = order;
@@ -63,15 +70,5 @@ public class Delivery {
 
     protected void setDeliveryStatus(DeliveryStatus deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
-    }
-
-    //결제 api 추가 전, 테스트용
-    public void testShipped() {
-        this.deliveryStatus = SHIPPED;
-    }
-
-    //결제 api 추가 전, 테스트용
-    public void testDelivered() {
-        this.deliveryStatus = DELIVERED;
     }
 }

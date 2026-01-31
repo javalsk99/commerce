@@ -47,20 +47,22 @@
 
   POST /orders 주문 생성
 
-  GET /orders/{orderId} 주문 조회
+  GET /orders/{orderNumber} 주문 조회
 
-  POST /orders/{orderId} 주문 수정
+  POST /orders/{orderNumber} 주문 수정
 
-  DELETE /orders/{orderId} 주문 취소
+  DELETE /orders/{orderNumber} 주문 삭제
 
-  POST /orders/{orderId}/payments 결제 요청
+  POST /orders/{orderNumber} 주문 취소
+
+  POST /orders/{orderNumber}/payments 결제 요청
 
 
 - Payment
 
   GET /api/payments 결제 화면
 
-  GET /api/payments/{orderId} 주문 정보 전달
+  GET /api/payments/{orderNumber} 주문 정보 전달
 
   POST /api/payments/complete 결제 완료 처리
 
@@ -103,3 +105,11 @@
 - POST /categories/{categoryName}/{productName}, /categories/{categoryName}/products, /products/{productName}/{categoryName} 추가
 
   상품과 카테고리 관리를 유동적으로 하기 위해 카테고리에서 상품 제거, 상품을 카테고리에 등록 추가
+
+- {orderId} -> {orderNumber} 변경
+
+  PK가 아닌 키로 변경
+
+- DELETE /orders/{orderNumber}를 주문 삭제로 변경, POST /orders/{orderNumber}/cancel을 주문 취소로 추가
+
+  주문 삭제는 Soft Delete로 DB에는 남아있지만 사용자가 조회할 때 안 보이게 하는 기능이고, 주문 취소는 결제 전 주문을 취소하는 기능이다.

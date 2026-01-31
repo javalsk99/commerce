@@ -4,8 +4,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 import lombok.Getter;
-
-import java.util.ArrayList;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import static jakarta.persistence.FetchType.*;
 import static lombok.AccessLevel.*;
@@ -14,6 +14,8 @@ import static lombok.AccessLevel.*;
 @Getter
 @EqualsAndHashCode
 @NoArgsConstructor(access = PROTECTED)
+@SQLRestriction("deleted = false")
+@SQLDelete(sql = "UPDATE order_product SET deleted = true WHERE order_product_id = ?")
 public class OrderProduct {
 
     @Id @GeneratedValue
@@ -30,6 +32,8 @@ public class OrderProduct {
 
     private int count;
     private int orderPrice;
+
+    private boolean deleted = false;
 
     public static OrderProduct createOrderProduct(Product product, int count) {
         OrderProduct orderProduct = new OrderProduct();

@@ -53,3 +53,11 @@
 - 결제에서 paymentId 추가
 
   PK가 아닌 결제 번호를 사용하기 위해 추가
+
+- 주문에서 orderNumber 추가
+
+  PK가 아닌 주문 번호를 사용하기 위해 추가
+
+- 주문, 배송, 주문 상품에서 deleted 추가
+
+  Soft Delete하기 위해 추가

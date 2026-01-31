@@ -116,7 +116,9 @@ public class OrderService {
     }
 
     public void deleteOrder(Order order) {
-        if (order.getDelivery().getDeliveryStatus() != DeliveryStatus.DELIVERED) {
+        if (order.getOrderStatus() == CREATED) {
+            throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다.");
+        } else if (order.getOrderStatus() == PAID) {
             throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다.");
         }
 

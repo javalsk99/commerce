@@ -139,3 +139,11 @@
   delivery의 cascade를 PERSIST로 변경 -> org.hibernate.TransientObjectException: persistent instance references an unsaved transient instance of 'lsk.commerce.domain.Order' (save the transient instance before flushing)
 
   Member, Delivery Order 연관 메서드 생성 -> 그대로
+
+  Delivery, OrderProduct에도 @SQLRestriction, @SQLDelete 사용 -> 그대로
+
+  해결: delivery에서도 order로 cascade 설정
+  
+  해결 이후 시도: OrderProduct에서는 @SQLRestriction, @SQLDelete를 빼도 정상적으로 작동하지만, Delivery에는 @SQLRestriction, @SQLDelete를 빼면 예외가 발생한다.
+  
+  결론: @OneToOne 매핑은 Repository를 사용하지 않으면 연관관계의 주인이 아니여도 cascade를 양쪽에 써야된다.

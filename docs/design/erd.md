@@ -20,3 +20,9 @@
 - 회원에서 등급 추가
 
 - 결제에서 결제 번호 추가
+
+- 결제 번호 이름을 paid_id -> payment_number으로 변경
+
+- 주문에서 주문 번호 order_number로 추가
+
+- 주문, 배송, 주문 상품에서 Soft Delete를 관리할 deleted 추가
