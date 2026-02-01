@@ -8,21 +8,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberService {
 
     private final MemberRepository memberRepository;
 
+    @Transactional
     public Long join(Member member) {
         validateMember(member);
         memberRepository.save(member);
         return member.getId();
     }
 
+    @Transactional
     public Long adminJoin(Member member) {
         validateMember(member);
         member.setAdmin();
@@ -30,37 +31,36 @@ public class MemberService {
         return member.getId();
     }
 
-    @Transactional(readOnly = true)
     public Member findMember(Long memberId) {
         return memberRepository.findOne(memberId);
     }
 
-    @Transactional(readOnly = true)
     public Member findMemberByLoginId(String loginId) {
         return memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
     }
 
-    @Transactional(readOnly = true)
     public List<Member> findMembers() {
         return memberRepository.findAll();
     }
 
+    @Transactional
     public void deleteMember(Member member) {
         memberRepository.delete(member);
     }
 
+    @Transactional
     public void changePassword(String memberLoginId, String newPassword) {
         Member member = findMemberByLoginId(memberLoginId);
         member.changePassword(newPassword);
     }
 
+    @Transactional
     public void changeAddress(String memberLoginId, String newCity, String newStreet, String newZipcode) {
         Member member = findMemberByLoginId(memberLoginId);
         member.changeAddress(newCity, newStreet, newZipcode);
     }
 
-    @Transactional(readOnly = true)
     public MemberResponse getMemberDto(Member member) {
         return MemberResponse.memberChangeDto(member);
     }

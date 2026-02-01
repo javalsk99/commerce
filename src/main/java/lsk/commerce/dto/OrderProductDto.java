@@ -9,13 +9,13 @@ public class OrderProductDto {
     private String name;
     private int price;
     private int count;
-    private int totalPrice;
+    private int orderPrice;
 
-    public OrderProductDto(String name, int price, int count, int totalPrice) {
+    public OrderProductDto(String name, int price, int count, int orderPrice) {
         this.name = name;
         this.price = price;
         this.count = count;
-        this.totalPrice = totalPrice;
+        this.orderPrice = orderPrice;
     }
 
     public static OrderProductDto orderProductChangeForm(OrderProduct orderProduct) {
