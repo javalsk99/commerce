@@ -2,14 +2,14 @@ package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.dto.query.MemberQueryDto;
+import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.service.MemberService;
-import lsk.commerce.service.query.MemberQueryService;
+import lsk.commerce.query.MemberQueryService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,27 +29,24 @@ public class MemberController {
     }
 
     @GetMapping("/members")
-    public List<MemberQueryDto> memberOrderList() {
-        return memberQueryService.findMembersWithOrder();
+    public List<MemberQueryDto> memberList() {
+        return memberQueryService.findMembers();
     }
 
     @GetMapping("/members/{memberLoginId}")
-    public MemberResponse findMember(@PathVariable("memberLoginId") String memberLoginId) {
-        Member member = memberService.findMemberByLoginId(memberLoginId);
-        return memberService.getMemberDto(member);
+    public MemberQueryDto findMember(@PathVariable("memberLoginId") String memberLoginId) {
+        return memberQueryService.findMember(memberLoginId);
     }
 
     @PostMapping("/members/{memberLoginId}/password")
     public MemberResponse changePassword(@PathVariable("memberLoginId") String memberLoginId, @Valid MemberChangePasswordRequest form) {
-        Member member = memberService.findMemberByLoginId(memberLoginId);
-        memberService.changePassword(member.getLoginId(), form.getPassword());
+        Member member = memberService.changePassword(memberLoginId, form.getPassword());
         return memberService.getMemberDto(member);
     }
 
     @PostMapping("/members/{memberLoginId}/address")
     public MemberResponse changeAddress(@PathVariable("memberLoginId") String memberLoginId, @Valid MemberChangeAddressRequest form) {
-        Member member = memberService.findMemberByLoginId(memberLoginId);
-        memberService.changeAddress(member.getLoginId(), form.getCity(), form.getStreet(), form.getZipcode());
+        Member member = memberService.changeAddress(memberLoginId, form.getCity(), form.getStreet(), form.getZipcode());
         return memberService.getMemberDto(member);
     }
 

@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -19,21 +22,31 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
-    public Long create(Category category) {
+    public String create(String categoryName, String parentCategoryName) {
+        Category parentCategory = validateCategory(categoryName, parentCategoryName);
+        Category category = Category.createCategory(parentCategory, categoryName);
         categoryRepository.save(category);
-        return category.getId();
+        return category.getName();
     }
 
     public Category findCategory(Long categoryId) {
         return categoryRepository.findOne(categoryId);
     }
 
-    public Category findCategoryByName(String name) {
-        return categoryRepository.findByName(name);
+    public Category findCategoryByName(String categoryName) {
+        List<Category> categories = categoryRepository.findAll();
+
+        return categories.stream()
+                .filter(c -> c.getName().equals(categoryName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
     }
 
     public List<Category> findCategories() {
-        return categoryRepository.findAll();
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream()
+                .filter(c -> c.getParent() == null)
+                .collect(toList());
     }
 
     public List<Product> findProductsByCategoryName(String categoryName) {
@@ -41,7 +54,18 @@ public class CategoryService {
     }
 
     @Transactional
-    public Category changeParentCategory(Category category, Category newParentCategory) {
+    public Category changeParentCategory(String categoryName, String newParentCategoryName) {
+        List<Category> categories = categoryRepository.findAll();
+        Category category = categories.stream()
+                .filter(c -> c.getName().equals(categoryName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
+
+        Category newParentCategory = categories.stream()
+                .filter(c -> c.getName().equals(newParentCategoryName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + newParentCategoryName));
+
         return category.changeParentCategory(newParentCategory);
     }
 
@@ -66,5 +90,22 @@ public class CategoryService {
 
     public CategoryDisconnectResponse getCategoryDisconnectResponse(Category category) {
         return CategoryDisconnectResponse.categoryChangeDisconnectResponse(category);
+    }
+
+    private Category validateCategory(String categoryName, String parentCategoryName) {
+        List<Category> categories = categoryRepository.existsByCategoryName(categoryName, parentCategoryName);
+        if (categories.stream().anyMatch(c -> c.getName().equals(categoryName))) {
+            throw new IllegalArgumentException("이미 존재하는 카테고리입니다. name: " + categoryName);
+        }
+
+        Category parentCategory = null;
+        if (parentCategoryName != null) {
+            parentCategory = categories.stream()
+                    .filter(c -> c.getName().equals(parentCategoryName))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + parentCategoryName));
+        }
+
+        return parentCategory;
     }
 }

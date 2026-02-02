@@ -30,10 +30,6 @@ public class ProductController {
     public String create(@Valid ProductRequest request, String... categoryNames) {
         List<Category> categories = new ArrayList<>();
         for (String categoryName : categoryNames) {
-            if (categoryService.findCategoryByName(categoryName) == null) {
-                throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-            }
-
             categories.add(categoryService.findCategoryByName(categoryName));
         }
 
@@ -102,8 +98,6 @@ public class ProductController {
     public List<ProductResponse> connectCategory(@PathVariable("productName") String productName, @PathVariable("categoryName") String categoryName) {
         if (productService.findProductByName(productName) == null) {
             throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
-        } else if (categoryService.findCategoryByName(categoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
         }
 
         Product product = productService.findProductByName(productName);

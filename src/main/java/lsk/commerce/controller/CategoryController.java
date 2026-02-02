@@ -27,20 +27,8 @@ public class CategoryController {
 
     @PostMapping("/categories")
     public String create(@Valid CategoryRequest request) {
-        if (request.getParentName() != null) {
-            if (categoryService.findCategoryByName(request.getParentName()) == null) {
-                throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + request.getParentName());
-            }
-
-            Category parentCategory = categoryService.findCategoryByName(request.getParentName());
-            Category childCategory = Category.createChildCategory(parentCategory, request.getName());
-            categoryService.create(childCategory);
-            return childCategory.getName() + " created";
-        }
-
-        Category parentCategory = Category.createParentCategory(request.getName());
-        categoryService.create(parentCategory);
-        return parentCategory.getName() + " created";
+        String categoryName = categoryService.create(request.getName(), request.getParentName());
+        return categoryName + " created";
     }
 
     @GetMapping("/categories")
@@ -58,34 +46,18 @@ public class CategoryController {
 
     @GetMapping("/categories/{categoryName}")
     public CategoryResponse findCategory(@PathVariable("categoryName") String categoryName) {
-        if (categoryService.findCategoryByName(categoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-        }
-
         Category category = categoryService.findCategoryByName(categoryName);
         return categoryService.getCategoryDto(category);
     }
 
     @PostMapping("/categories/{categoryName}")
     public CategoryResponse changeParentCategory(@PathVariable("categoryName") String categoryName, String newParentCategoryName) {
-        if (categoryService.findCategoryByName(categoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-        } else if (categoryService.findCategoryByName(newParentCategoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + newParentCategoryName);
-        }
-
-        Category category = categoryService.findCategoryByName(categoryName);
-        Category newParentCategory = categoryService.findCategoryByName(newParentCategoryName);
-        categoryService.changeParentCategory(category, newParentCategory);
+        Category category = categoryService.changeParentCategory(categoryName, newParentCategoryName);
         return categoryService.getCategoryDto(category);
     }
 
     @DeleteMapping("/categories/{categoryName}")
     public String delete(@PathVariable("categoryName") String categoryName) {
-        if (categoryService.findCategoryByName(categoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-        }
-
         Category category = categoryService.findCategoryByName(categoryName);
         categoryService.deleteCategory(category);
         return "delete";
@@ -93,10 +65,6 @@ public class CategoryController {
 
     @GetMapping("/categories/{categoryName}/products")
     public List<ProductResponse> findProductsByCategory(@PathVariable("categoryName") String categoryName) {
-        if (categoryService.findCategoryByName(categoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-        }
-
         List<Product> products = categoryService.findProductsByCategoryName(categoryName);
         List<ProductResponse> productResponses = new ArrayList<>();
 
@@ -110,12 +78,6 @@ public class CategoryController {
 
     @PostMapping("/categories/{categoryName}/{productName}")
     public CategoryDisconnectResponse disconnectProduct(@PathVariable("categoryName") String categoryName, @PathVariable("productName") String productName) {
-        if (categoryService.findCategoryByName(categoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-        } else if (productService.findProductByName(productName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
-        }
-
         Category category = categoryService.findCategoryByName(categoryName);
         Product product = productService.findProductByName(productName);
         categoryProductService.disconnect(category, product);
@@ -125,10 +87,6 @@ public class CategoryController {
 
     @PostMapping("/categories/{categoryName}/products")
     public CategoryDisconnectResponse disconnectProducts(@PathVariable("categoryName") String categoryName) {
-        if (categoryService.findCategoryByName(categoryName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName);
-        }
-
         Category category = categoryService.findCategoryByName(categoryName);
         for (CategoryProduct categoryProduct : new ArrayList<>(category.getCategoryProducts())) {
             categoryProductService.disconnect(category, categoryProduct.getProduct());

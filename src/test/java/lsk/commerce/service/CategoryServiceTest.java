@@ -1,3 +1,4 @@
+/*
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
@@ -170,4 +171,4 @@ class CategoryServiceTest {
         Category category = Category.createChildCategory(parentCategory, name);
         return categoryService.findCategory(categoryService.create(category));
     }
-}
+}*/

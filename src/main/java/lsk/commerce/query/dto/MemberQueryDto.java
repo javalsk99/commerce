@@ -1,4 +1,4 @@
-package lsk.commerce.dto.query;
+package lsk.commerce.query.dto;
 
 import lombok.Data;
 import lsk.commerce.domain.Grade;
@@ -16,11 +16,5 @@ public class MemberQueryDto {
     public MemberQueryDto(String loginId, Grade grade) {
         this.loginId = loginId;
         this.grade = grade;
-    }
-
-    public MemberQueryDto(String loginId, Grade grade, List<OrderQueryDto> orders) {
-        this.loginId = loginId;
-        this.grade = grade;
-        this.orders = orders;
     }
 }

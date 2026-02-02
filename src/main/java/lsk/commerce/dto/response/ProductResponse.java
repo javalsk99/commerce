@@ -7,8 +7,6 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import org.hibernate.Hibernate;
 
-import static io.portone.sdk.server.common.Currency.*;
-
 @Getter
 public class ProductResponse {
 
@@ -31,8 +29,6 @@ public class ProductResponse {
     private String director;
 
     private String actor;
-
-    private final String currency = Krw.INSTANCE.getValue();
 
     public ProductResponse(String name, int price, int stockQuantity, String dtype, String artist, String studio, String author, String isbn, String director, String actor) {
         this.name = name;

@@ -42,16 +42,13 @@ public class Category {
         this.parent.child.remove(this);
     }
 
-    public static Category createParentCategory(String name) {
+    public static Category createCategory(Category parentCategory, String name) {
         Category category = new Category();
         category.name = name;
-        return category;
-    }
+        if (parentCategory != null) {
+            category.connectParent(parentCategory);
+        }
 
-    public static Category createChildCategory(Category parentCategory, String name) {
-        Category category = new Category();
-        category.name = name;
-        category.connectParent(parentCategory);
         return category;
     }
 

@@ -1,14 +1,15 @@
-package lsk.commerce.repository.query;
+package lsk.commerce.query;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.dto.query.MemberQueryDto;
-import lsk.commerce.dto.query.OrderProductQueryDto;
-import lsk.commerce.dto.query.OrderQueryDto;
+import lsk.commerce.query.dto.MemberQueryDto;
+import lsk.commerce.query.dto.OrderProductQueryDto;
+import lsk.commerce.query.dto.OrderQueryDto;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.*;
 
@@ -37,9 +38,9 @@ public class MemberQueryRepository {
         return result;
     }
 
-    private Map<String, List<OrderProductQueryDto>> findOrderProductMap(List<String> orderNumbers) {
+    protected Map<String, List<OrderProductQueryDto>> findOrderProductMap(List<String> orderNumbers) {
         List<OrderProductQueryDto> orderProducts = em.createQuery(
-                        "select new lsk.commerce.dto.query.OrderProductQueryDto(op.order.orderNumber, prod.name, prod.price, op.count, op.orderPrice)" +
+                        "select new lsk.commerce.query.dto.OrderProductQueryDto(op.order.orderNumber, prod.name, prod.price, op.count, op.orderPrice)" +
                                 " from OrderProduct op" +
                                 " join op.product prod" +
                                 " where op.order.orderNumber in :orderNumbers", OrderProductQueryDto.class)
@@ -50,15 +51,15 @@ public class MemberQueryRepository {
                 .collect(groupingBy(orderProductQueryDto -> orderProductQueryDto.getOrderNumber()));
     }
 
-    private static List<String> toOrderNumbers(List<OrderQueryDto> result) {
+    protected static List<String> toOrderNumbers(List<OrderQueryDto> result) {
         return result.stream()
                 .map(o -> o.getOrderNumber())
                 .collect(toList());
     }
 
-    private List<OrderQueryDto> findOrdersByLoginIds(List<String> loginIds) {
+    protected List<OrderQueryDto> findOrdersByLoginIds(List<String> loginIds) {
         return em.createQuery(
-                        "select new lsk.commerce.dto.query.OrderQueryDto(o.member.loginId, o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
+                        "select new lsk.commerce.query.dto.OrderQueryDto(o.member.loginId, o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
                                 " from Order o" +
                                 " join o.payment pay" +
                                 " join o.delivery d" +
@@ -67,16 +68,37 @@ public class MemberQueryRepository {
                 .getResultList();
     }
 
-    private static List<String> toMemberLoginIds(List<MemberQueryDto> result) {
+    protected List<OrderQueryDto> findOrdersByLoginId(String loginId) {
+        return em.createQuery(
+                        "select new lsk.commerce.query.dto.OrderQueryDto(o.member.loginId, o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
+                                " from Order o" +
+                                " join o.payment pay" +
+                                " join o.delivery d" +
+                                " where o.member.loginId = :loginId", OrderQueryDto.class)
+                .setParameter("loginId", loginId)
+                .getResultList();
+    }
+
+    protected static List<String> toMemberLoginIds(List<MemberQueryDto> result) {
         return result.stream()
                 .map(m -> m.getLoginId())
                 .collect(toList());
     }
 
-    private List<MemberQueryDto> findMembers() {
+    protected List<MemberQueryDto> findMembers() {
         return em.createQuery(
-                        "select new lsk.commerce.dto.query.MemberQueryDto(m.loginId, m.grade)" +
+                        "select new lsk.commerce.query.dto.MemberQueryDto(m.loginId, m.grade)" +
                                 " from Member m", MemberQueryDto.class)
                 .getResultList();
+    }
+
+    protected Optional<MemberQueryDto> findMember(String loginId) {
+        return em.createQuery(
+                        "select new lsk.commerce.query.dto.MemberQueryDto(m.loginId, m.grade)" +
+                                " from Member m" +
+                                " where m.loginId = :loginId", MemberQueryDto.class)
+                .setParameter("loginId", loginId)
+                .getResultStream()
+                .findFirst();
     }
 }

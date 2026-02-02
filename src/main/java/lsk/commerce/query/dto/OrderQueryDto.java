@@ -1,4 +1,4 @@
-package lsk.commerce.dto.query;
+package lsk.commerce.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -32,21 +32,6 @@ public class OrderQueryDto {
                          LocalDateTime paymentDate, DeliveryStatus deliveryStatus, LocalDateTime shippedDate, LocalDateTime deliveredDate) {
         this.loginId = loginId;
         this.orderNumber = orderNumber;
-        this.totalAmount = totalAmount;
-        this.orderStatus = orderStatus;
-        this.orderDate = orderDate;
-        this.paymentStatus = paymentStatus;
-        this.paymentDate = paymentDate;
-        this.deliveryStatus = deliveryStatus;
-        this.shippedDate = shippedDate;
-        this.deliveredDate = deliveredDate;
-    }
-
-    public OrderQueryDto(String loginId, String orderNumber, List<OrderProductQueryDto> orderProducts, int totalAmount, OrderStatus orderStatus, LocalDateTime orderDate,
-                         PaymentStatus paymentStatus, LocalDateTime paymentDate, DeliveryStatus deliveryStatus, LocalDateTime shippedDate, LocalDateTime deliveredDate) {
-        this.loginId = loginId;
-        this.orderNumber = orderNumber;
-        this.orderProducts = orderProducts;
         this.totalAmount = totalAmount;
         this.orderStatus = orderStatus;
         this.orderDate = orderDate;

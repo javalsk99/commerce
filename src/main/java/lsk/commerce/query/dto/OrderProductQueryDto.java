@@ -1,4 +1,4 @@
-package lsk.commerce.dto.query;
+package lsk.commerce.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;

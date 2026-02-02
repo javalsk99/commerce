@@ -37,6 +37,11 @@ public class MemberService {
 
     public Member findMemberByLoginId(String loginId) {
         return memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+    }
+
+    public Member findMemberForLogin(String loginId) {
+        return memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
     }
 
@@ -50,15 +55,17 @@ public class MemberService {
     }
 
     @Transactional
-    public void changePassword(String memberLoginId, String newPassword) {
+    public Member changePassword(String memberLoginId, String newPassword) {
         Member member = findMemberByLoginId(memberLoginId);
         member.changePassword(newPassword);
+        return member;
     }
 
     @Transactional
-    public void changeAddress(String memberLoginId, String newCity, String newStreet, String newZipcode) {
+    public Member changeAddress(String memberLoginId, String newCity, String newStreet, String newZipcode) {
         Member member = findMemberByLoginId(memberLoginId);
         member.changeAddress(newCity, newStreet, newZipcode);
+        return member;
     }
 
     public MemberResponse getMemberDto(Member member) {

@@ -7,6 +7,7 @@ import lsk.commerce.domain.Product;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,12 +23,11 @@ public class CategoryRepository {
         return em.find(Category.class, categoryId);
     }
 
-    public Category findByName(String name) {
+    public Optional<Category> findByName(String name) {
         return em.createQuery("select c from Category c where c.name = :name", Category.class)
                 .setParameter("name", name)
                 .getResultStream()
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public List<Category> findAll() {
@@ -36,15 +36,26 @@ public class CategoryRepository {
     }
 
     public List<Product> findProductsByCategoryName(String categoryName) {
-        return em.createQuery("select p from Product p " +
-                        " join p.categoryProducts cp" +
-                        " join cp.category c" +
-                        " where c.name = :name", Product.class)
+        return em.createQuery(
+                        "select p from Product p " +
+                                " join p.categoryProducts cp" +
+                                " join cp.category c" +
+                                " where c.name = :name", Product.class)
                 .setParameter("name", categoryName)
                 .getResultList();
     }
 
     public void delete(Category category) {
         em.remove(category);
+    }
+
+    public List<Category> existsByCategoryName(String categoryName, String parentCategoryName) {
+        return em.createQuery(
+                "select c from Category c" +
+                        " where c.name = :name" +
+                        " or (:parentName is not null and c.name = :parentName)", Category.class)
+                .setParameter("name", categoryName)
+                .setParameter("parentName", parentCategoryName)
+                .getResultList();
     }
 }

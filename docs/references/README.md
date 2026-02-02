@@ -7,6 +7,12 @@
 
   실전! 스프링 부트와 JPA 활용2 - API 개발과 성능 최적화 (김영한)
 
+
+- Official Docs
+
+  Spring Data JPA 에서 null 파라미터 담는 법 https://www.baeldung.com/spring-data-jpa-null-parameters (jpql로 적용)
+
+
 - 도구 - AI
 
   기획 추천, 설계 검증 및 다듬기, 파일 정리 구조 추천, 메서드 이름 추천
@@ -17,12 +23,14 @@
 
   배포 시 주소 불일치 방지를 위한 CORS 등록
 
+
 - [Blog](blog.md)
 - GitHub
 
   포트원 결제 api https://github.com/portone-io/portone-sample?tab=readme-ov-file
 
   Java JWT https://github.com/jwtk/jjwt?tab=readme-ov-file#reading-a-jwt
+
 
 - Stack Overflow
 

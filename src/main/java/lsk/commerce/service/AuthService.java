@@ -13,7 +13,7 @@ public class AuthService {
     private final MemberService memberService;
 
     public Member login(String loginId, String password) {
-        Member member = memberService.findMemberByLoginId(loginId);
+        Member member = memberService.findMemberForLogin(loginId);
         if (!member.getPassword().equals(password)) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.");
         }
