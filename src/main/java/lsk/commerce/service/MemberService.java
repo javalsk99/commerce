@@ -74,7 +74,7 @@ public class MemberService {
 
     private void validateMember(Member member) {
         if (memberRepository.existsByLoginId(member.getLoginId())) {
-            throw new IllegalStateException("이미 사용 중인 아이디입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
     }
 }

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
+import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 import static lsk.commerce.domain.DeliveryStatus.*;
 
@@ -21,7 +22,7 @@ import static lsk.commerce.domain.DeliveryStatus.*;
 @SQLDelete(sql = "UPDATE delivery SET deleted = true WHERE delivery_id = ?")
 public class Delivery {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "delivery_id")
     private Long id;
 

@@ -28,10 +28,7 @@ public class ProductController {
 
     @PostMapping("/products")
     public String create(@Valid ProductRequest request, String... categoryNames) {
-        List<Category> categories = new ArrayList<>();
-        for (String categoryName : categoryNames) {
-            categories.add(categoryService.findCategoryByName(categoryName));
-        }
+        List<Category> categories = categoryService.findCategoryByNames(categoryNames);
 
         if (request.getDtype().equals("A")) {
             Album album = new Album(request.getName(), request.getPrice(), request.getStockQuantity(), request.getArtist(), request.getStudio());
@@ -64,20 +61,12 @@ public class ProductController {
 
     @GetMapping("/products/{productName}")
     public ProductResponse findProduct(@PathVariable("productName") String productName) {
-        if (productService.findProductByName(productName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
-        }
-
         Product product = productService.findProductByName(productName);
         return productService.getProductDto(product);
     }
 
     @PostMapping("/products/{productName}")
     public ProductResponse updateProduct(@PathVariable("productName") String productName, ProductUpdateRequest request) {
-        if (productService.findProductByName(productName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
-        }
-
         Product product = productService.findProductByName(productName);
         productService.updateProduct(product.getId(), request.getPrice(), request.getStockQuantity());
         return productService.getProductDto(product);
@@ -85,10 +74,6 @@ public class ProductController {
 
     @DeleteMapping("/products/{productName}")
     public String delete(@PathVariable("productName") String productName) {
-        if (productService.findProductByName(productName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
-        }
-
         Product product = productService.findProductByName(productName);
         productService.deleteProduct(product);
         return "delete";
@@ -96,10 +81,6 @@ public class ProductController {
 
     @PostMapping("/products/{productName}/{categoryName}")
     public List<ProductResponse> connectCategory(@PathVariable("productName") String productName, @PathVariable("categoryName") String categoryName) {
-        if (productService.findProductByName(productName) == null) {
-            throw new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName);
-        }
-
         Product product = productService.findProductByName(productName);
         Category category = categoryService.findCategoryByName(categoryName);
         categoryProductService.connect(product, category);

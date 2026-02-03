@@ -52,9 +52,6 @@ public class AuthController {
     @GetMapping("/web/login")
     public String webLogin(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
         Member loginMember = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
-        if (memberService.findMemberByLoginId(loginRequest.getLoginId()) == null || loginMember == null) {
-            throw new IllegalArgumentException("로그인에 실패했습니다.");
-        }
 
         String token = jwtProvider.createToken(loginMember);
 

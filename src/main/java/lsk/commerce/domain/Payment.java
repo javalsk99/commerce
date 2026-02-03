@@ -5,10 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
+import static jakarta.persistence.GenerationType.*;
+import static java.util.UUID.randomUUID;
 import static lombok.AccessLevel.*;
 import static lsk.commerce.domain.PaymentStatus.*;
 
@@ -17,7 +18,7 @@ import static lsk.commerce.domain.PaymentStatus.*;
 @NoArgsConstructor(access = PROTECTED)
 public class Payment {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "payment_id")
     private Long id;
 
@@ -44,7 +45,7 @@ public class Payment {
         payment.paymentAmount = order.getTotalAmount();
         payment.paymentStatus = PENDING;
         payment.addOrder(order);
-        payment.paymentId = UUID.randomUUID().toString();
+        payment.paymentId = randomUUID().toString();
     }
 
     //Order에 payment를 넣기 위해 양방향 매핑 추가

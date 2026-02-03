@@ -8,6 +8,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import static jakarta.persistence.FetchType.*;
+import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 
 @Entity
@@ -18,7 +19,7 @@ import static lombok.AccessLevel.*;
 @SQLDelete(sql = "UPDATE order_product SET deleted = true WHERE order_product_id = ?")
 public class OrderProduct {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "order_product_id")
     private Long id;
 

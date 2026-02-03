@@ -1,10 +1,9 @@
 # 테스트 실행 중 발생한 예외 및 실패
-- org.springframework.dao.InvalidDataAccessApiUsageException: id to load is required for loading
-
+- org.springframework.dao.InvalidDataAccessApiUsageException: id to load is required for loading  
   회원, 상품 생성 후 저장하지 않아서 id 값이 load되지 않아서 발생한 문제
 
-- order 테스트 중 주문 상품 리스트가 예상대로 들어가지 않는 문제 발생
 
+- order 테스트 중 주문 상품 리스트가 예상대로 들어가지 않는 문제 발생  
   테스트 내용
 
       @Test
@@ -52,8 +51,7 @@
             orderProducts.add(OrderProduct.createOrderProduct(product, count));
         }
 
-- java.util.ConcurrentModificationException 동시 수정이 일어날 때 발생하는 예외
-
+- java.util.ConcurrentModificationException 동시 수정이 일어날 때 발생하는 예외  
   원인 - OrderProduct.deleteOrderProduct를 Order.updateOrder에서 사용하고, OrderService에서 Order.updateOrder 사용해서 발생한 것으로 예상
 
       public static void deleteOrderProduct(Order order, OrderProduct orderProduct) {
@@ -110,18 +108,12 @@
 
   시도한 방법: DeliveryService 직접 주입 - 무한 루프 발생
 
-  The dependencies of some of the beans in the application context form a cycle:
-
-  orderController defined in file [commerce\build\classes\java\main\lsk\commerce\controller\OrderController.class]
-
-  ↓
-
-  paymentService defined in file [commerce\build\classes\java\main\lsk\commerce\service\PaymentService.class]
-
-  ┌─────┐
-
-  |  deliveryService defined in file [commerce\build\classes\java\main\lsk\commerce\service\DeliveryService.class]
-
+  The dependencies of some of the beans in the application context form a cycle:  
+  orderController defined in file [commerce\build\classes\java\main\lsk\commerce\controller\OrderController.class]  
+  ↓  
+  paymentService defined in file [commerce\build\classes\java\main\lsk\commerce\service\PaymentService.class]  
+  ┌─────┐  
+  |  deliveryService defined in file [commerce\build\classes\java\main\lsk\commerce\service\DeliveryService.class]  
   └─────┘
 
   해결: @TransactionalEventListener로 서비스와 이벤트 분리

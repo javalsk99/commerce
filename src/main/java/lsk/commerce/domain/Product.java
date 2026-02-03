@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.portone.sdk.server.common.Currency.*;
 import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.GenerationType.*;
 import static jakarta.persistence.InheritanceType.*;
 import static lombok.AccessLevel.*;
 
@@ -19,7 +19,7 @@ import static lombok.AccessLevel.*;
 @NoArgsConstructor(access = PUBLIC)
 public abstract class Product {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "product_id")
     private Long id;
 
@@ -88,6 +88,11 @@ public abstract class Product {
     public void addCategoryProduct(List<Category> categories) {
         for (Category category : categories) {
             while (category != null) {
+                Category finalCategory = category;
+                if (categoryProducts.stream().anyMatch(categoryProduct -> categoryProduct.getCategory() == finalCategory)) {
+                    break;
+                }
+
                 connectCategory(category);
                 category = category.getParent();
             }

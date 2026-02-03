@@ -9,8 +9,9 @@ import lsk.commerce.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 
@@ -39,11 +40,26 @@ public class CategoryService {
         return categories.stream()
                 .filter(c -> c.getName().equals(categoryName))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
+    }
+
+    public List<Category> findCategoryByNames(String... categoryNames) {
+        List<Category> categories = categoryRepository.findAll();
+
+        List<Category> categoryList = new ArrayList<>();
+        for (String categoryName : categoryNames) {
+            categoryList.add(categories.stream()
+                    .filter(c -> c.getName().equals(categoryName))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName)));
+        }
+
+        return categoryList;
     }
 
     public List<Category> findCategories() {
         List<Category> categories = categoryRepository.findAll();
+
         return categories.stream()
                 .filter(c -> c.getParent() == null)
                 .collect(toList());
@@ -70,7 +86,10 @@ public class CategoryService {
     }
 
     @Transactional
-    public void deleteCategory(Category category) {
+    public void deleteCategory(String categoryName) {
+        Category category = categoryRepository.findWithChild(categoryName)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
+
         if (!category.getChild().isEmpty()) {
             throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다.");
         } else if (!category.getCategoryProducts().isEmpty()) {

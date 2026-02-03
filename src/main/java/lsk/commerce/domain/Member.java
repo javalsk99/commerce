@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static jakarta.persistence.EnumType.*;
+import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 import static lsk.commerce.domain.Grade.*;
 
@@ -16,7 +17,7 @@ import static lsk.commerce.domain.Grade.*;
 @NoArgsConstructor(access = PROTECTED)
 public class Member {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "member_id")
     private Long id;
 

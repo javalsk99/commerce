@@ -1,20 +1,14 @@
 # 컨트롤러에서 발생한 예외와 문제
-- getSingleResult();를 사용해서 발생하는 NoResultException 예외
-
+- getSingleResult();를 사용해서 발생하는 NoResultException 예외  
   em.createQuery().getResultStream().findFirst().orElse(null);로 해결
 
-  https://stackoverflow.com/questions/2002993/jpa-getsingleresult-or-null
 
-
-- org.springframework.http.converter.HttpMessageConversionException: Type definition error: [simple type, class org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor]
-
-  엔티티로 반환해서 생긴 문제
-
+- org.springframework.http.converter.HttpMessageConversionException: Type definition error: [simple type, class org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor]  
+  엔티티로 반환해서 생긴 문제  
   DTO 반환으로 변경 -> 현재 생긴 추가 문제 : CategoryForm에서 계층 구조를 나타내지 못함
 
 
-- java.lang.IllegalArgumentException: 잘못된 상품입니다. product.name: 하얀 그리움 at lsk.commerce.controller.form.ProductForm.productChangeForm(ProductForm.java:60)
-
+- java.lang.IllegalArgumentException: 잘못된 상품입니다. product.name: 하얀 그리움 at lsk.commerce.controller.form.ProductForm.productChangeForm(ProductForm.java:60)  
   CategoryProduct에서 Product로 꺼내서 Album, Book, Movie로 다운 캐스팅 못해서 생긴 문제
 
       Category category = categoryService.findCategoryByName(categoryName);
@@ -37,15 +31,12 @@
       }
 
 
-- Uncaught (in promise) SyntaxError: Unexpected token ']', ..."Products":]}}]}}]}}]"... is not valid JSON
-
-  상품에 카테고리 추가해서 발생한 무한 루프 - PaymentController에서 Dto가 아닌 도메인 엔티티 반환
-
+- Uncaught (in promise) SyntaxError: Unexpected token ']', ..."Products":]}}]}}]}}]"... is not valid JSON  
+  상품에 카테고리 추가해서 발생한 무한 루프 - PaymentController에서 Dto가 아닌 도메인 엔티티 반환  
   Dto 반환으로 변경
 
 
-- java.lang.IllegalArgumentException: 잘못된 상품입니다. product.name: 자바 ORM 표준 JPA 프로그래밍 at lsk.commerce.dto.response.ProductResponse.productChangeDto(ProductResponse.java:54) ~[main/:na]
-
+- java.lang.IllegalArgumentException: 잘못된 상품입니다. product.name: 자바 ORM 표준 JPA 프로그래밍 at lsk.commerce.dto.response.ProductResponse.productChangeDto(ProductResponse.java:54) ~[main/:na]  
   상품이 instanceof로 구분되지 않는 문제
 
       if (product instanceof Album album) {
@@ -74,10 +65,8 @@
   Hibernate.unproxy로 실제 객체 가져와서 해결
 
 
-- ERROR 16460 --- [commerce] [nio-8080-exec-2] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: 로그인을 해야 접근할 수 있습니다.] with root cause
-
-  Postman에서는 로그인을 해서 쿠키가 있지만, 웹에서는 로그인을 하지 않아서 쿠키가 없어서 생긴 문제
-
+- ERROR 16460 --- [commerce] [nio-8080-exec-2] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: 로그인을 해야 접근할 수 있습니다.] with root cause  
+  Postman에서는 로그인을 해서 쿠키가 있지만, 웹에서는 로그인을 하지 않아서 쿠키가 없어서 생긴 문제  
   임시 해결: web용 로그인 추가
 
 
@@ -130,20 +119,12 @@
   해결: Id값으로 비교 this.getId().equals(categoryProduct.getProduct().getId())
 
 
-- Soft Delete 적용 중 발생한 문제
-
-  @SoftDelete 사용 -> Caused by: jakarta.persistence.PersistenceException: [PersistenceUnit: default] Unable to build Hibernate SessionFactory; nested exception is org.hibernate.metamodel.UnsupportedMappingException: To-one attribute (lsk.commerce.domain.OrderProduct.order) cannot be mapped as LAZY as its associated entity is defined with @SoftDelete
-
-  @SQLRestriction, @SQLDelete 사용 -> java.sql.SQLIntegrityConstraintViolationException: Cannot delete or update a parent row: a foreign key constraint fails (`commerce`.`orders`, CONSTRAINT `FKtkrur7wg4d8ax0pwgo0vmy20c` FOREIGN KEY (`delivery_id`) REFERENCES `delivery` (`delivery_id`))
-
-  delivery의 cascade를 PERSIST로 변경 -> org.hibernate.TransientObjectException: persistent instance references an unsaved transient instance of 'lsk.commerce.domain.Order' (save the transient instance before flushing)
-
-  Member, Delivery Order 연관 메서드 생성 -> 그대로
-
-  Delivery, OrderProduct에도 @SQLRestriction, @SQLDelete 사용 -> 그대로
-
-  해결: delivery에서도 order로 cascade 설정
-  
-  해결 이후 시도: OrderProduct에서는 @SQLRestriction, @SQLDelete를 빼도 정상적으로 작동하지만, Delivery에는 @SQLRestriction, @SQLDelete를 빼면 예외가 발생한다.
-  
+- Soft Delete 적용 중 발생한 문제  
+  @SoftDelete 사용 -> Caused by: jakarta.persistence.PersistenceException: [PersistenceUnit: default] Unable to build Hibernate SessionFactory; nested exception is org.hibernate.metamodel.UnsupportedMappingException: To-one attribute (lsk.commerce.domain.OrderProduct.order) cannot be mapped as LAZY as its associated entity is defined with @SoftDelete  
+  @SQLRestriction, @SQLDelete 사용 -> java.sql.SQLIntegrityConstraintViolationException: Cannot delete or update a parent row: a foreign key constraint fails (`commerce`.`orders`, CONSTRAINT `FKtkrur7wg4d8ax0pwgo0vmy20c` FOREIGN KEY (`delivery_id`) REFERENCES `delivery` (`delivery_id`))  
+  delivery의 cascade를 PERSIST로 변경 -> org.hibernate.TransientObjectException: persistent instance references an unsaved transient instance of 'lsk.commerce.domain.Order' (save the transient instance before flushing)  
+  Member, Delivery Order 연관 메서드 생성 -> 그대로  
+  Delivery, OrderProduct에도 @SQLRestriction, @SQLDelete 사용 -> 그대로  
+  해결: delivery에서도 order로 cascade 설정  
+  해결 이후 시도: OrderProduct에서는 @SQLRestriction, @SQLDelete를 빼도 정상적으로 작동하지만, Delivery에는 @SQLRestriction, @SQLDelete를 빼면 예외가 발생한다.  
   결론: @OneToOne 매핑은 Repository를 사용하지 않으면 연관관계의 주인이 아니여도 cascade를 양쪽에 써야된다.

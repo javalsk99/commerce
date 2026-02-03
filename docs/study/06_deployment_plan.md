@@ -1,14 +1,10 @@
 # 6일차 – 배포 흐름 미리 그려보기 (구현 x)
 ## 목표 : 전체 그림을 머릿속에 넣기
 ## 체크리스트
-로컬 실행 흐름 정리
-
-Docker 컨테이너 실행 흐름 정리
-
-EC2 + Nginx + RDS 연결 흐름 그리기
-
-배포 중 예상 문제 3가지 적기
-
+로컬 실행 흐름 정리  
+Docker 컨테이너 실행 흐름 정리  
+EC2 + Nginx + RDS 연결 흐름 그리기  
+배포 중 예상 문제 3가지 적기  
 산출물 : 간단한 아키텍처 그림 (손그림도 됨)
 
 ## 체크리스트 정리
@@ -44,9 +40,6 @@ EC2 + Nginx + RDS 연결 흐름 그리기
   3. EC2, Nginx, 애플리케이션, RDS의 접근 권한 설정으로 연동 문제가 발생할 수 있다.
 
 ### 참고 자료
-- Docker란?
-  https://docs.docker.com/get-started/docker-overview
-- Spring Boot와 Nginx 연동
-  https://velog.io/@bjo6300/Springboot-docker-compose%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%B4-springboot-nginx-%EC%97%B0%EB%8F%99%ED%95%98%EA%B8%B0
-- EC2 보안 그룹 설정
-  https://velog.io/@wbsldj59/AWS-EC2-%EB%B3%B4%EC%95%88%EA%B7%B8%EB%A3%B9-%EC%84%A4%EC%A0%95
+- [Docker란?](https://docs.docker.com/get-started/docker-overview)
+- [Spring Boot와 Nginx 연동](https://velog.io/@bjo6300/Springboot-docker-compose%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%B4-springboot-nginx-%EC%97%B0%EB%8F%99%ED%95%98%EA%B8%B0)
+- [EC2 보안 그룹 설정](https://velog.io/@wbsldj59/AWS-EC2-%EB%B3%B4%EC%95%88%EA%B7%B8%EB%A3%B9-%EC%84%A4%EC%A0%95)

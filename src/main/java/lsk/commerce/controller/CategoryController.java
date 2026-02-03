@@ -58,8 +58,7 @@ public class CategoryController {
 
     @DeleteMapping("/categories/{categoryName}")
     public String delete(@PathVariable("categoryName") String categoryName) {
-        Category category = categoryService.findCategoryByName(categoryName);
-        categoryService.deleteCategory(category);
+        categoryService.deleteCategory(categoryName);
         return "delete";
     }
 

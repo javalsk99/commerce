@@ -15,6 +15,7 @@ import java.util.List;
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.FetchType.*;
+import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 import static lsk.commerce.domain.DeliveryStatus.*;
 import static lsk.commerce.domain.OrderStatus.CANCELED;
@@ -32,7 +33,7 @@ public class Order {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final char[] NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnoqprstuvwxyz".toCharArray();
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "order_id")
     private Long id;
 
