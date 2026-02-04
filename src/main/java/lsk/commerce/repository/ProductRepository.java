@@ -6,6 +6,7 @@ import lsk.commerce.domain.Product;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -26,12 +27,32 @@ public class ProductRepository {
                 .getResultList();
     }
 
-    public Product findByName(String name) {
+    public Optional<Product> findByName(String productName) {
         return em.createQuery("select p from Product p where p.name = :name", Product.class)
-                .setParameter("name", name)
+                .setParameter("name", productName)
                 .getResultStream()
-                .findFirst()
-                .orElse(null);
+                .findFirst();
+    }
+
+    public Optional<Product> findWithCategoryProduct(String productName) {
+        return em.createQuery(
+                        "select p from Product p" +
+                                " left join fetch p.categoryProducts" +
+                                " where p.name = :name", Product.class)
+                .setParameter("name", productName)
+                .getResultStream()
+                .findFirst();
+    }
+
+    public Optional<Product> findWithCategoryProductCategory(String productName) {
+        return em.createQuery(
+                        "select p from Product p" +
+                                " left join fetch p.categoryProducts cp" +
+                                " left join fetch cp.category c" +
+                                " where p.name = :name", Product.class)
+                .setParameter("name", productName)
+                .getResultStream()
+                .findFirst();
     }
 
     public void delete(Product product) {

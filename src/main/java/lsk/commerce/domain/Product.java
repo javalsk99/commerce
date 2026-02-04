@@ -100,29 +100,34 @@ public abstract class Product {
     }
 
     //상품 제거할 때 카테고리에서 카테고리 상품들 제거
-    public List<CategoryProduct> removeCategoryProducts() {
-        List<CategoryProduct> removeCategoryProducts = new ArrayList<>();
+    public void removeCategoryProducts() {
         for (CategoryProduct categoryProduct : this.categoryProducts) {
-            categoryProduct.getCategory().getCategoryProducts().remove(categoryProduct);
-            removeCategoryProducts.add(categoryProduct);
+            Category category = categoryProduct.getCategory();
+
+            if (category != null) {
+                category.getCategoryProducts().remove(categoryProduct);
+            }
         }
-        return removeCategoryProducts;
     }
 
     //같은 카테고리 상품인 상품과 카테고리를 카테고리 상품 제거
     public CategoryProduct removeCategoryProduct(Category category) {
-        for (CategoryProduct categoryProduct : category.getCategoryProducts()) {
-            if (categoryProduct.getProduct() == null) {
-                throw new IllegalArgumentException("카테고리에 상품이 없습니다.");
+        if (categoryProducts.isEmpty()) {
+            throw new IllegalArgumentException("상품과 연결된 카테고리가 없습니다.");
+        }
+
+        for (CategoryProduct categoryProduct : categoryProducts) {
+            if (categoryProduct.getCategory() == null) {
+                throw new IllegalArgumentException("상품에 카테고리가 제대로 들어가지 않았습니다.");
             }
 
-            if (this.getId().equals(categoryProduct.getProduct().getId())) {
+            if (category.getId().equals(categoryProduct.getCategory().getId())) {
                 this.categoryProducts.remove(categoryProduct);
                 category.getCategoryProducts().remove(categoryProduct);
                 return categoryProduct;
             }
         }
 
-        throw new IllegalArgumentException("해당 상품의 카테고리가 아닙니다.");
+        throw new IllegalArgumentException("상품이 해당 카테고리에 없습니다.");
     }
 }

@@ -8,25 +8,50 @@ import lsk.commerce.repository.CategoryProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CategoryProductService {
 
     private final CategoryProductRepository categoryProductRepository;
+    private final CategoryService categoryService;
+    private final ProductService productService;
 
-    //상품 삭제할 때 사용
-    public void disconnect(CategoryProduct categoryProduct) {
-        categoryProductRepository.delete(categoryProduct);
-    }
-
-    //연결만 끊을 때 사용
-    public void disconnect(Category category, Product product) {
+    public Category disconnect(String categoryName, String productName) {
+        Category category = categoryService.findCategoryByName(categoryName);
+        Product product = productService.findProductWithCategoryProduct(productName);
         CategoryProduct categoryProduct = product.removeCategoryProduct(category);
         categoryProductRepository.delete(categoryProduct);
+        return category;
     }
 
-    public void connect(Product product, Category category) {
+    public Category disconnectAll(String categoryName) {
+        Category category = categoryService.findCategoryByName(categoryName);
+        List<CategoryProduct> categoryProducts = new ArrayList<>(category.getCategoryProducts());
+        if (categoryProducts.isEmpty()) {
+            throw new IllegalArgumentException("카테고리에 상품이 없습니다.");
+        }
+
+        for (CategoryProduct categoryProduct : categoryProducts) {
+            categoryProduct.getProduct().removeCategoryProduct(category);
+            categoryProductRepository.delete(categoryProduct);
+        }
+
+        return category;
+    }
+
+    public Product connect(String productName, String categoryName) {
+        Product product = productService.findProductWithCategoryProduct(productName);
+        Category category = categoryService.findCategoryByName(categoryName);
+
+        if (product.getCategoryProducts().stream().anyMatch(c -> category.equals(c.getCategory()))) {
+            throw new IllegalArgumentException("이미 상품이 해당 카테고리에 연결되어 있습니다.");
+        }
+
         product.connectCategory(category);
+        return product;
     }
 }

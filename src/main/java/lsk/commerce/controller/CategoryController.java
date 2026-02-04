@@ -77,20 +77,13 @@ public class CategoryController {
 
     @PostMapping("/categories/{categoryName}/{productName}")
     public CategoryDisconnectResponse disconnectProduct(@PathVariable("categoryName") String categoryName, @PathVariable("productName") String productName) {
-        Category category = categoryService.findCategoryByName(categoryName);
-        Product product = productService.findProductByName(productName);
-        categoryProductService.disconnect(category, product);
-
+        Category category = categoryProductService.disconnect(categoryName, productName);
         return categoryService.getCategoryDisconnectResponse(category);
     }
 
     @PostMapping("/categories/{categoryName}/products")
     public CategoryDisconnectResponse disconnectProducts(@PathVariable("categoryName") String categoryName) {
-        Category category = categoryService.findCategoryByName(categoryName);
-        for (CategoryProduct categoryProduct : new ArrayList<>(category.getCategoryProducts())) {
-            categoryProductService.disconnect(category, categoryProduct.getProduct());
-        }
-
+        Category category = categoryProductService.disconnectAll(categoryName);
         return categoryService.getCategoryDisconnectResponse(category);
     }
 }

@@ -10,6 +10,7 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.ProductUpdateRequest;
 import lsk.commerce.dto.response.ProductResponse;
+import lsk.commerce.dto.response.ProductWithCategoryResponse;
 import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
@@ -74,24 +75,13 @@ public class ProductController {
 
     @DeleteMapping("/products/{productName}")
     public String delete(@PathVariable("productName") String productName) {
-        Product product = productService.findProductByName(productName);
-        productService.deleteProduct(product);
+        productService.deleteProduct(productName);
         return "delete";
     }
 
     @PostMapping("/products/{productName}/{categoryName}")
-    public List<ProductResponse> connectCategory(@PathVariable("productName") String productName, @PathVariable("categoryName") String categoryName) {
-        Product product = productService.findProductByName(productName);
-        Category category = categoryService.findCategoryByName(categoryName);
-        categoryProductService.connect(product, category);
-
-        List<Product> products = categoryService.findProductsByCategoryName(categoryName);
-        List<ProductResponse> productResponses = new ArrayList<>();
-        for (Product findProduct : products) {
-            ProductResponse productDto = productService.getProductDto(findProduct);
-            productResponses.add(productDto);
-        }
-
-        return productResponses;
+    public ProductWithCategoryResponse connectCategory(@PathVariable("productName") String productName, @PathVariable("categoryName") String categoryName) {
+        Product product = categoryProductService.connect(productName, categoryName);
+        return productService.getProductWithCategoryDto(product);
     }
 }
