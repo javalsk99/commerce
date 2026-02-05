@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.query.OrderQueryService;
+import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ public class OrderController {
 
     private final OrderService orderService;
     private final PaymentService paymentService;
+    private final OrderQueryService orderQueryService;
 
     @PostMapping("/orders")
     public String create(String memberLoginId, @RequestBody Map<String, Integer> productMap) {
@@ -29,46 +32,35 @@ public class OrderController {
     }
 
     @GetMapping("/orders/{orderNumber}")
-    public OrderResponse findOrder(@PathVariable("orderNumber") String orderNumber) {
-        Order order = orderService.findOrderByOrderNumber(orderNumber);
-        return orderService.getOrderResponse(order);
+    public OrderQueryDto findOrder(@PathVariable("orderNumber") String orderNumber) {
+        return orderQueryService.findOrder(orderNumber);
     }
 
     @PostMapping("/orders/{orderNumber}")
     public OrderResponse changeOrder(@PathVariable("orderNumber") String orderNumber, @RequestBody Map<String, Integer> productMap) {
         if (productMap.isEmpty()) {
-            throw new IllegalArgumentException("주문 상품이 없습니다.");
+            throw new IllegalArgumentException("주문을 수정할 주문 상품이 없습니다.");
         }
 
-        Order order = orderService.findOrderByOrderNumber(orderNumber);
-        if (order.getPayment() != null) {
-            if (order.getPayment().getPaymentStatus() == PaymentStatus.COMPLETED) {
-                throw new IllegalStateException("결제가 완료돼서 수정할 수 없습니다.");
-            }
-        }
-
-        orderService.updateOrder(orderNumber, productMap);
+        Order order = orderService.updateOrder(orderNumber, productMap);
         return orderService.getOrderResponse(order);
     }
 
     @DeleteMapping("/orders/{orderNumber}")
     public String delete(@PathVariable("orderNumber") String orderNumber) {
-        Order order = orderService.findOrderByOrderNumber(orderNumber);
-        orderService.deleteOrder(order);
+        orderService.deleteOrder(orderNumber);
         return "delete";
     }
 
     @PostMapping("/orders/{orderNumber}/payments")
     public OrderResponse requestPayment(@PathVariable("orderNumber") String orderNumber) {
-        Order order = orderService.findOrderByOrderNumber(orderNumber);
-        paymentService.request(order);
+        Order order = paymentService.request(orderNumber);
         return orderService.getOrderResponse(order);
     }
 
     @PostMapping("/orders/{orderNumber}/cancel")
     public OrderResponse cancelOrder(@PathVariable("orderNumber") String orderNumber) {
-        Order order = orderService.findOrderByOrderNumber(orderNumber);
-        orderService.cancelOrder(order);
-        return orderService.getOrderResponse(order);
+        Order canceledOrder = orderService.cancelOrder(orderNumber);
+        return orderService.getOrderResponse(canceledOrder);
     }
 }

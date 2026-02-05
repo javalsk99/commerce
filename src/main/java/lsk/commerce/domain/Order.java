@@ -43,16 +43,16 @@ public class Order {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToOne(fetch = LAZY, cascade = ALL, orphanRemoval = true)
+    @OneToOne(fetch = LAZY, cascade = ALL)
     @JoinColumn(name = "delivery_id")
     private Delivery delivery;
 
-    @OneToOne(fetch = LAZY)
+    @OneToOne(fetch = LAZY, cascade = ALL)
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
     //양방향 매핑으로 변경
-    @OneToMany(mappedBy = "order", cascade = ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order")
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
     private int totalAmount;
@@ -124,6 +124,10 @@ public class Order {
     }
 
     public void cancel() {
+        if (this.orderStatus == CANCELED) {
+            throw new IllegalStateException("이미 취소된 주문입니다.");
+        }
+
         for (OrderProduct orderProduct : this.orderProducts) {
             orderProduct.getProduct().addStock(orderProduct.getCount());
         }
@@ -136,6 +140,7 @@ public class Order {
             this.payment.canceled();
         }
 
+        this.getDelivery().canceled();
         this.orderStatus = CANCELED;
     }
 }

@@ -17,15 +17,17 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PaymentService {
 
+    private final OrderService orderService;
     private final PaymentRepository paymentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     //이후 결제 진행은 다른 비즈니스 로직 다 생성 후 진행
-    public Long request(Order order) {
+    public Order request(String orderNumber) {
+        Order order = orderService.findOrderWithAll(orderNumber);
         Payment.requestPayment(order);
         CompletePaymentRequest completePaymentRequest = new CompletePaymentRequest(order.getPayment().getPaymentId());
         paymentRepository.save(order.getPayment());
-        return order.getPayment().getId();
+        return order;
     }
 
     @Transactional(readOnly = true)

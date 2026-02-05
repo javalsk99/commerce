@@ -48,7 +48,7 @@ public class ProductRepository {
         return em.createQuery(
                         "select p from Product p" +
                                 " left join fetch p.categoryProducts cp" +
-                                " left join fetch cp.category c" +
+                                " left join fetch cp.category" +
                                 " where p.name = :name", Product.class)
                 .setParameter("name", productName)
                 .getResultStream()

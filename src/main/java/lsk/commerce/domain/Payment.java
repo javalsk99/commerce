@@ -3,6 +3,8 @@ package lsk.commerce.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +18,8 @@ import static lsk.commerce.domain.PaymentStatus.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = PROTECTED)
+@SQLRestriction("deleted = false")
+@SQLDelete(sql = "UPDATE payment SET deleted = true WHERE payment_id = ?")
 public class Payment {
 
     @Id @GeneratedValue(strategy = IDENTITY)
@@ -36,7 +40,13 @@ public class Payment {
     @Enumerated(STRING)
     private PaymentStatus paymentStatus;
 
+    private boolean deleted = false;
+
     public static void requestPayment(Order order) {
+        if (order.getOrderStatus() == OrderStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다.");
+        }
+
         if (order.getOrderStatus() != OrderStatus.CREATED) {
             throw new IllegalStateException("이미 결제된 주문입니다.");
         }

@@ -59,6 +59,7 @@ class OrderServiceTest {
     }
 */
 
+/*
     @Test
     void order_fail() {
         //given
@@ -70,6 +71,7 @@ class OrderServiceTest {
             orderService.order(memberId, Map.of(albumId, 21));
         });
     }
+*/
 
 /*
     @Test

@@ -72,4 +72,8 @@ public class Delivery {
     protected void setDeliveryStatus(DeliveryStatus deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
     }
+
+    protected void canceled() {
+        this.deliveryStatus = CANCELED;
+    }
 }
