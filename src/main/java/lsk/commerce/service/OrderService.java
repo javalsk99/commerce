@@ -65,7 +65,7 @@ public class OrderService {
     }
 
     public Order updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
-        Order order = findOrderWithAll(orderNumber);
+        Order order = findOrderWithAllExceptMember(orderNumber);
 
         //결제가 됐는지 검증
         if (order.getOrderStatus() != CREATED) {
@@ -116,8 +116,20 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public Order findOrderWithDelivery(String orderNumber) {
+        return orderRepository.findWithDelivery(orderNumber)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+    }
+
+    @Transactional(readOnly = true)
     public Order findOrderWithDeliveryPayment(String orderNumber) {
         return orderRepository.findWithDeliveryPayment(orderNumber)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public Order findOrderWithAllExceptMember(String orderNumber) {
+        return orderRepository.findWithAllExceptMember(orderNumber)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
     }
 
@@ -142,7 +154,7 @@ public class OrderService {
     //결제 로직 검증용
     @Transactional(readOnly = true)
     public OrderRequest getOrderRequest(String orderNumber) {
-        Order order = orderRepository.findByOrderNumber(orderNumber);
+        Order order = findOrderWithAll(orderNumber);
         return OrderRequest.orderChangeRequest(order);
     }
 
@@ -153,7 +165,7 @@ public class OrderService {
     }
 
     public Order cancelOrder(String orderNumber) {
-        Order order = findOrderWithAll(orderNumber);
+        Order order = findOrderWithAllExceptMember(orderNumber);
         order.cancel();
         return order;
     }

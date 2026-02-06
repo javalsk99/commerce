@@ -170,6 +170,7 @@ class OrderServiceTest {
         return member.getId();
     }
 
+/*
     private Long createAlbum() {
         Album album = new Album("하얀 그리움", 15000, 20, "fromis_9", "ASND");
         productService.register(album);
@@ -187,6 +188,7 @@ class OrderServiceTest {
         productService.register(movie);
         return movie.getId();
     }
+*/
 
 /*
     private Long createOrder() {

@@ -29,11 +29,34 @@ public class OrderRepository {
                 .orElse(null);
     }
 
+    public Optional<Order> findWithDelivery(String orderNumber) {
+        return em.createQuery(
+                        "select o from Order o" +
+                                " join fetch o.delivery" +
+                                " where o.orderNumber = :orderNumber", Order.class)
+                .setParameter("orderNumber", orderNumber)
+                .getResultStream()
+                .findFirst();
+    }
+
     public Optional<Order> findWithDeliveryPayment(String orderNumber) {
         return em.createQuery(
                         "select o from Order o" +
                                 " join fetch o.delivery" +
                                 " left join fetch o.payment" +
+                                " where o.orderNumber = :orderNumber", Order.class)
+                .setParameter("orderNumber", orderNumber)
+                .getResultStream()
+                .findFirst();
+    }
+
+    public Optional<Order> findWithAllExceptMember(String orderNumber) {
+        return em.createQuery(
+                        "select o from Order o" +
+                                " join fetch o.delivery" +
+                                " left join fetch o.payment" +
+                                " left join fetch o.orderProducts op" +
+                                " join fetch op.product" +
                                 " where o.orderNumber = :orderNumber", Order.class)
                 .setParameter("orderNumber", orderNumber)
                 .getResultStream()
@@ -47,6 +70,7 @@ public class OrderRepository {
                                 " left join fetch o.payment" +
                                 " left join fetch o.orderProducts op" +
                                 " join fetch op.product" +
+                                " join fetch o.member" +
                                 " where o.orderNumber = :orderNumber", Order.class)
                 .setParameter("orderNumber", orderNumber)
                 .getResultStream()

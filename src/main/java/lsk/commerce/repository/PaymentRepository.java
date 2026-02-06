@@ -21,11 +21,21 @@ public class PaymentRepository {
         return em.find(Payment.class, paymentId);
     }
 
-    public Payment findByPaymentId(String paymentId) {
+    public Optional<Payment> findByPaymentId(String paymentId) {
         return em.createQuery("select p from Payment p where p.paymentId = :paymentId", Payment.class)
                 .setParameter("paymentId", paymentId)
                 .getResultStream()
-                .findFirst()
-                .orElse(null);
+                .findFirst();
+    }
+
+    public Optional<Payment> findWithOrderDelivery(String paymentId) {
+        return em.createQuery(
+                        "select p from Payment p" +
+                                " join fetch p.order o" +
+                                " join fetch o.delivery" +
+                                " where p.paymentId = :paymentId", Payment.class)
+                .setParameter("paymentId", paymentId)
+                .getResultStream()
+                .findFirst();
     }
 }

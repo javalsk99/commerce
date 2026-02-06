@@ -4,3 +4,5 @@
 - [category](category.md)
 - [product](product.md)
 - [order](order.md)
+- [payment](payment.md)
+- [delivery](delivery.md)

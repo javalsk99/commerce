@@ -18,14 +18,14 @@ public class DeliveryService {
     private final OrderService orderService;
 
     public void startDelivery(String orderNumber) {
-        Order order = orderService.findOrderByOrderNumber(orderNumber);
+        Order order = orderService.findOrderWithDelivery(orderNumber);
         order.getDelivery().startDelivery();
 
         eventPublisher.publishEvent(new DeliveryStartedEvent(orderNumber));
     }
 
     public void completeDelivery(String orderNumber) {
-        Order order = orderService.findOrderByOrderNumber(orderNumber);
+        Order order = orderService.findOrderWithDelivery(orderNumber);
         order.getDelivery().completeDelivery();
     }
 }

@@ -20,11 +20,11 @@ public class DeliveryEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void startDelivery(PaymentCompletedEvent event) {
-        scheduler.schedule(() -> deliveryService.startDelivery(event.orderNumber()), Instant.now().plusSeconds(5));
+        scheduler.schedule(() -> deliveryService.startDelivery(event.orderNumber()), Instant.now().plusSeconds(20));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void completeDelivery(DeliveryStartedEvent event) {
-        scheduler.schedule(() -> deliveryService.completeDelivery(event.orderNumber()), Instant.now().plusSeconds(5));
+        scheduler.schedule(() -> deliveryService.completeDelivery(event.orderNumber()), Instant.now().plusSeconds(20));
     }
 }

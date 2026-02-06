@@ -29,6 +29,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @RestController
 public class PaymentController {
@@ -85,8 +86,6 @@ public class PaymentController {
 
     //서버의 결제 데이터베이스를 따라하는 샘플 / syncPayment 호출시에 포트원의 결제 건을 조회하여 상태를 동기화하고 결제 완료시에 완료 처리를 한다 (실제 데이터베이스 사용시에는 결제건 단위 락을 잡아 동시성 문제 피하기 / 수정해야 함)
     private Mono<PaymentRequest> syncPayment(String paymentId) {
-        Payment payment = paymentService.findPaymentByPaymentId(paymentId);
-        PaymentRequest paymentForm = PaymentRequest.paymentChangeDto(payment);
         return Mono.fromFuture(portone.getPayment(paymentId))
                 .onErrorMap(e -> {
                         logger.error("포트원 조회 중 에러 발생: {}", e.getMessage()); // 진짜 에러 이유 출력
@@ -102,11 +101,11 @@ public class PaymentController {
 
                             return Mono.fromCallable(() -> paymentService.completePayment(paymentId, paymentDate))
                                     .subscribeOn(Schedulers.boundedElastic())
-                                    .map(updatePayment -> PaymentRequest.paymentChangeDto(updatePayment));
+                                    .map(updatePayment -> paymentService.getPaymentRequest(updatePayment));
                         default:
                             return Mono.fromCallable(() -> paymentService.failedPayment(paymentId))
                                     .subscribeOn(Schedulers.boundedElastic())
-                                    .map(updatePayment -> PaymentRequest.paymentChangeDto(updatePayment));
+                                    .map(updatePayment -> paymentService.getPaymentRequest(updatePayment));
                     }
                 });
     }
@@ -127,9 +126,10 @@ public class PaymentController {
         }
 
         OrderRequest orderRequest = orderService.getOrderRequest(customDataDecoded.orderNumber());
+        List<Product> products = productService.findProducts();
         for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
-            Product product = productService.findProductByName(orderProduct.getName());
-            if (product == null) return false;
+            return products.stream()
+                    .anyMatch(p -> p.getName().equals(orderProduct.getName()));
         }
 
         if (orderRequest.getOrderProducts().size() == 1) {

@@ -2,6 +2,7 @@ package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
+import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.ProductWithCategoryResponse;
@@ -17,12 +18,6 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
-
-    public Long register(Product product, Category... categories) {
-        product.addCategoryProduct(categories);
-        productRepository.save(product);
-        return product.getId();
-    }
 
     public Long register(Product product, List<Category> categories) {
         product.addCategoryProduct(categories);
@@ -75,5 +70,12 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductWithCategoryResponse getProductWithCategoryDto(Product product) {
         return ProductWithCategoryResponse.productChangeResponse(product);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsProduct(OrderProduct orderProduct) {
+        List<Product> products = findProducts();
+        return products.stream()
+                .anyMatch(p -> p.getId().equals(orderProduct.getProduct().getId()));
     }
 }

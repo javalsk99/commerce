@@ -83,5 +83,5 @@
 
 
 - DELETE /orders/{orderNumber} 주문에서 배송과 결제를 Fetch Join으로 가져오게 변경
-- POST /orders/{orderNumber}/cancel 주문에서 연관된 모든 엔티티들을 Fetch Join으로 가져오게 변경
-- POST /orders/{orderNumber}/payments 주문에서 연관된 모든 엔티티들을 Fetch Join으로 가져오게 변경
+- POST /orders/{orderNumber}/cancel 주문에서 연관된 모든 엔티티들을 Fetch Join으로 가져오게 변경 (회원 제외)
+- POST /orders/{orderNumber}/payments 주문에서 연관된 모든 엔티티들을 Fetch Join으로 가져오게 변경 (회원 제외)

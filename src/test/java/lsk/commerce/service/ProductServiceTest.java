@@ -1,4 +1,3 @@
-/*
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
@@ -32,10 +31,14 @@ class ProductServiceTest {
         Book book = createBook();
         Movie movie = createMovie();
 
+        Category category1 = createCategory1();
+        Category category2 = createCategory2();
+        Category category3 = createCategory3();
+
         //when
-        Long albumId = productService.register(album);
-        Long bookId = productService.register(book);
-        Long movieId = productService.register(movie);
+        Long albumId = productService.register(album, List.of(category1));
+        Long bookId = productService.register(book, List.of(category2));
+        Long movieId = productService.register(movie, List.of(category3));
 
         //then
         assertThat(albumId).isEqualTo(album.getId());
@@ -53,14 +56,18 @@ class ProductServiceTest {
         Book book = createBook();
         Movie movie = createMovie();
 
-        Long albumId = productService.register(album);
-        Long bookId = productService.register(book);
-        Long movieId = productService.register(movie);
+        Category category1 = createCategory1();
+        Category category2 = createCategory2();
+        Category category3 = createCategory3();
+
+        Long albumId = productService.register(album, List.of(category1));
+        productService.register(book, List.of(category2));
+        productService.register(movie, List.of(category3));
 
         //when
         Product findAlbum = productService.findProduct(albumId);
-        Product findBook = productService.findProduct(bookId);
-        Product findMovie = productService.findProduct(movieId);
+        Product findBook = productService.findProductByName(book.getName());
+        Product findMovie = productService.findProductWithCategoryProduct(movie.getName());
         List<Product> findProducts = productService.findProducts();
 
         //then
@@ -68,6 +75,16 @@ class ProductServiceTest {
                 .isInstanceOf(Album.class)
                 .extracting("name", "artist")
                 .contains("하얀 그리움", "fromis_9");
+
+        assertThat(findBook)
+                .isInstanceOf(Book.class)
+                .extracting("name", "author")
+                .contains("자바 ORM 표준 JPA 프로그래밍", "김영한");
+
+        assertThat(findMovie)
+                .isInstanceOf(Movie.class)
+                .extracting("name", "actor")
+                .contains("굿뉴스", "설경구");
 
         assertThat(findProducts)
                 .extracting("name")
@@ -78,7 +95,8 @@ class ProductServiceTest {
     void update() {
         //given
         Album album = createAlbum();
-        Long albumId = productService.register(album);
+        Category category1 = createCategory1();
+        Long albumId = productService.register(album, List.of(category1));
 
         //when
         productService.updateProduct(albumId, 20000, 30);
@@ -90,6 +108,7 @@ class ProductServiceTest {
                 .contains(20000, 30);
     }
 
+/*
     @Test
     void register_product_to_category() {
         //given
@@ -108,7 +127,9 @@ class ProductServiceTest {
                 .extracting(CategoryProduct::getCategory)
                 .contains(parentCategory, childCategory1, childCategory2);
     }
+*/
 
+/*
     @Test
     void connect_category() {
         //given
@@ -128,7 +149,9 @@ class ProductServiceTest {
                 .extracting(CategoryProduct::getCategory)
                 .contains(parentCategory, childCategory);
     }
+*/
 
+/*
     @Test
     void delete() {
         //given
@@ -147,6 +170,7 @@ class ProductServiceTest {
         assertThat(parentCategory.getCategoryProducts().size()).isEqualTo(0);
         assertThat(childCategory.getCategoryProducts().size()).isEqualTo(0);
     }
+*/
 
     private Album createAlbum() {
         return new Album("하얀 그리움", 15000, 20, "fromis_9", "ASND");
@@ -160,13 +184,15 @@ class ProductServiceTest {
         return new Movie("굿뉴스", 7000, 15, "변성현", "설경구");
     }
 
-    private Category createParentCategory(String name) {
-        Category category = Category.createParentCategory(name);
-        return categoryService.findCategory(categoryService.create(category));
+    private Category createCategory1() {
+        return categoryService.findCategoryByName(categoryService.create("K-POP", null));
     }
 
-    private Category createChildCategory(Category parentCategory, String name) {
-        Category category = Category.createChildCategory(parentCategory, name);
-        return categoryService.findCategory(categoryService.create(category));
+    private Category createCategory2() {
+        return categoryService.findCategoryByName(categoryService.create("IT/컴퓨터", null));
     }
-}*/
+
+    private Category createCategory3() {
+        return categoryService.findCategoryByName(categoryService.create("Comedy", null));
+    }
+}
