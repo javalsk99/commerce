@@ -52,7 +52,7 @@ public class MemberController {
 
     @DeleteMapping("/members/{memberLoginId}")
     public String delete(@PathVariable("memberLoginId") String memberLoginId) {
-        memberService.deleteMember(memberService.findMemberByLoginId(memberLoginId));
+        memberService.deleteMember(memberLoginId);
         return "delete";
     }
 }

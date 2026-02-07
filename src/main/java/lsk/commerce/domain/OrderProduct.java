@@ -1,5 +1,6 @@
 package lsk.commerce.domain;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
@@ -23,24 +24,30 @@ public class OrderProduct {
     @Column(name = "order_product_id")
     private Long id;
 
+    @NotNull
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @NotNull
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
 
-    private int count;
-    private int orderPrice;
+    @NotNull
+    private Integer orderPrice;
 
+    @NotNull
+    private Integer count;
+
+    @Column(nullable = false)
     private boolean deleted = false;
 
     public static OrderProduct createOrderProduct(Product product, int count) {
         OrderProduct orderProduct = new OrderProduct();
         orderProduct.product = product;
-        orderProduct.count = count;
         orderProduct.orderPrice = product.getPrice() * count;
+        orderProduct.count = count;
 
         product.removeStock(count);
         return orderProduct;

@@ -2,6 +2,8 @@ package lsk.commerce.domain;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -37,12 +39,16 @@ public class Order {
     @Column(name = "order_id")
     private Long id;
 
+    @NotBlank
+    @Column(length = 12)
     private String orderNumber;
 
+    @NotNull
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @NotNull
     @OneToOne(fetch = LAZY, cascade = ALL)
     @JoinColumn(name = "delivery_id")
     private Delivery delivery;
@@ -55,14 +61,18 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
-    private int totalAmount;
+    @NotNull
+    private Integer totalAmount;
 
+    @NotNull
     @Column(name = "ordered_at")
     private LocalDateTime orderDate;
 
+    @NotNull
     @Enumerated(STRING)
     private OrderStatus orderStatus;
 
+    @Column(nullable = false)
     private boolean deleted = false;
 
     private void addDelivery(Delivery delivery) {

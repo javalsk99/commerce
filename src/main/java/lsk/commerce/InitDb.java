@@ -26,7 +26,7 @@ public class InitDb {
         private final MemberService memberService;
 
         public void dbInit() {
-            Long memberId = memberService.adminJoin(new Member("test", "testId", "testPassword", "seoul", "Gangbuk", "11111"));
+            memberService.adminJoin(new Member("test", "testId", "testPassword", "seoul", "Gangbuk", "11111"));
         }
     }
 }

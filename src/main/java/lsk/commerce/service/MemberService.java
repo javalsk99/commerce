@@ -17,22 +17,18 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public Long join(Member member) {
+    public String join(Member member) {
         validateMember(member);
         memberRepository.save(member);
-        return member.getId();
+        return member.getLoginId();
     }
 
     @Transactional
-    public Long adminJoin(Member member) {
+    public String adminJoin(Member member) {
         validateMember(member);
         member.setAdmin();
         memberRepository.save(member);
-        return member.getId();
-    }
-
-    public Member findMember(Long memberId) {
-        return memberRepository.findOne(memberId);
+        return member.getLoginId();
     }
 
     public Member findMemberByLoginId(String loginId) {
@@ -50,7 +46,9 @@ public class MemberService {
     }
 
     @Transactional
-    public void deleteMember(Member member) {
+    public void deleteMember(String memberLoginId) {
+        Member member = findMemberByLoginId(memberLoginId);
+
         memberRepository.delete(member);
     }
 

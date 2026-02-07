@@ -7,7 +7,7 @@
 
 - Official Docs  
   Spring Data JPA 에서 null 파라미터 담는 법 https://www.baeldung.com/spring-data-jpa-null-parameters (jpql로 적용)
-
+  JUnit Parameterized Test https://docs.junit.org/5.14.2/writing-tests/parameterized-classes-and-tests.html#tests-consuming-arguments-methods
 
 - 도구 - AI  
   기획 추천, 설계 검증 및 다듬기, 파일 정리 구조 추천, 메서드 이름 추천  

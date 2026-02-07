@@ -1,6 +1,8 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -26,20 +28,24 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
-    @Column(name = "payment_number")
+    @NotBlank
+    @Column(name = "payment_number", length = 36)
     private String paymentId;
 
     @OneToOne(mappedBy = "payment", fetch = LAZY)
     private Order order;
 
-    private int paymentAmount;
+    @NotNull
+    private Integer paymentAmount;
 
     @Column(name = "paid_at")
     private LocalDateTime paymentDate;
 
+    @NotNull
     @Enumerated(STRING)
     private PaymentStatus paymentStatus;
 
+    @Column(nullable = false)
     private boolean deleted = false;
 
     public static void requestPayment(Order order) {

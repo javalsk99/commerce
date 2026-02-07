@@ -1,17 +1,23 @@
 package lsk.commerce.service;
 
-import lsk.commerce.domain.Grade;
+import jakarta.validation.ConstraintViolationException;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.response.MemberResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Stream;
 
+import static lsk.commerce.domain.Grade.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.params.provider.Arguments.*;
 
 @SpringBootTest
 @Transactional
@@ -23,29 +29,25 @@ class MemberServiceTest {
     @Test
     void join() {
         //given
-        Member member = createMember1();
+        Member member1 = createMember1();
+        Member member2 = createMember3();
 
         //when
-        Long memberId = memberService.join(member);
+        String loginId1 = memberService.join(member1);
+        String loginId2 = memberService.adminJoin(member2);
 
         //then
-        Member findMember = memberService.findMember(memberId);
-        assertThat(memberId).isEqualTo(member.getId());
-        assertThat(findMember.getGrade()).isEqualTo(Grade.USER);
+        Member findMember1 = memberService.findMemberByLoginId(loginId1);
+        Member findMember2 = memberService.findMemberByLoginId(loginId2);
+        assertThat(findMember1.getGrade()).isEqualTo(USER);
+        assertThat(findMember2.getGrade()).isEqualTo(ADMIN);
     }
 
-    @Test
-    void adminJoin() {
-        //given
-        Member member = createMember1();
-
-        //when
-        Long memberId = memberService.adminJoin(member);
-
-        //then
-        Member findMember = memberService.findMember(memberId);
-        assertThat(memberId).isEqualTo(member.getId());
-        assertThat(findMember.getGrade()).isEqualTo(Grade.ADMIN);
+    @ParameterizedTest(name = "[{index}] {1}")
+    @MethodSource("memberProvider")
+    void failed_join(Member member, String reason) {
+        assertThrows(ConstraintViolationException.class, () ->
+                memberService.join(member));
     }
 
     @Test
@@ -58,9 +60,8 @@ class MemberServiceTest {
         memberService.join(member1);
 
         //then
-        assertThrows(IllegalArgumentException.class, () -> {
-            memberService.join(member2);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+                memberService.join(member2));
     }
 
     @Test
@@ -68,54 +69,97 @@ class MemberServiceTest {
         //given
         Member member1 = createMember1();
         Member member2 = createMember3();
-        Member member3 = createMember4();
 
-        Long memberId1 = memberService.join(member1);
+        String loginId1 = memberService.join(member1);
         memberService.join(member2);
-        memberService.join(member3);
 
         //when
-        Member findMember1 = memberService.findMember(memberId1);
-        Member findMember2 = memberService.findMemberByLoginId(member2.getLoginId());
-        Member findMember3 = memberService.findMemberForLogin(member3.getLoginId());
+        Member findMember1 = memberService.findMemberByLoginId(loginId1);
+        Member findMember2 = memberService.findMemberForLogin(member2.getLoginId());
         List<Member> findMembers = memberService.findMembers();
 
         //then
-        assertThat(findMember1.getLoginId()).isEqualTo("idA");
-        assertThat(findMember2.getLoginId()).isEqualTo("idC");
-        assertThat(findMember3.getLoginId()).isEqualTo("idD");
+        assertThat(findMember1.getLoginId()).isEqualTo("id_A");
+        assertThat(findMember2.getLoginId()).isEqualTo("id_C");
         assertThat(findMembers)
                 .extracting("loginId")
-                .containsExactlyInAnyOrder("idA", "idC", "idD", "testId");
+                .containsExactlyInAnyOrder("id_A", "id_C", "testId");
+    }
+
+    @Test
+    void failed_find() {
+        //given
+        Member member = createMember1();
+        memberService.join(member);
+
+        //then
+        assertThrows(IllegalArgumentException.class, () ->
+                memberService.findMemberByLoginId("id_B"));
     }
 
     @Test
     void delete() {
         //given
         Member member = createMember1();
-        Long memberId = memberService.join(member);
+        String loginId = memberService.join(member);
 
         //when
-        memberService.deleteMember(member);
-        Member findMember = memberService.findMember(memberId);
+        memberService.deleteMember(loginId);
 
         //then
-        assertThat(findMember).isNull();
+        assertThrows(IllegalArgumentException.class, () ->
+                memberService.findMemberByLoginId(loginId));
     }
 
     @Test
-    void change() {
+    void failed_delete() {
         //given
         Member member = createMember1();
-        Long memberId = memberService.join(member);
-        Member findMember = memberService.findMember(memberId);
+        String loginId = memberService.join(member);
+        memberService.deleteMember(loginId);
 
         //when
-        memberService.changePassword(findMember.getLoginId(), "1234");
+        assertThrows(IllegalArgumentException.class, () ->
+                memberService.deleteMember(loginId));
+    }
+
+    @Test
+    void change_password() {
+        //given
+        Member member = createMember1();
+        String loginId = memberService.join(member);
+        Member findMember = memberService.findMemberByLoginId(loginId);
+
+        //when
+        memberService.changePassword(findMember.getLoginId(), "12345678");
+
+        //then
+        assertThat(findMember.getPassword()).isEqualTo("12345678");
+    }
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @MethodSource("passwordProvider")
+    void failed_change_password(String newPassword, String reason) {
+        //given
+        Member member = createMember1();
+        String loginId = memberService.join(member);
+
+        //then
+        assertThrows(ConstraintViolationException.class, () ->
+                memberService.changePassword(loginId, newPassword));
+    }
+
+    @Test
+    void change_address() {
+        //given
+        Member member = createMember1();
+        String loginId = memberService.join(member);
+        Member findMember = memberService.findMemberByLoginId(loginId);
+
+        //when
         memberService.changeAddress(findMember.getLoginId(), "seoul", "Gangseo", "01237");
 
         //then
-        assertThat(findMember.getPassword()).isEqualTo("1234");
         assertThat(findMember.getAddress().getStreet()).isEqualTo("Gangseo");
     }
 
@@ -123,30 +167,54 @@ class MemberServiceTest {
     void change_dto() {
         //given
         Member member = createMember1();
-        Long memberId = memberService.join(member);
-        Member findMember = memberService.findMember(memberId);
+        String loginId = memberService.join(member);
+        Member findMember = memberService.findMemberByLoginId(loginId);
 
         //when
         MemberResponse memberDto = memberService.getMemberDto(findMember);
 
         //then
-        assertThat(memberDto.getLoginId()).isEqualTo("idA");
-        assertThat(memberDto.getGrade()).isEqualTo(Grade.USER);
+        assertThat(memberDto.getLoginId()).isEqualTo("id_A");
+        assertThat(memberDto.getGrade()).isEqualTo(USER);
     }
 
     private Member createMember1() {
-        return new Member("userA", "idA", "0000", "Seoul", "Gangnam", "01234");
+        return new Member("userA", "id_A", "00000000", "Seoul", "Gangnam", "01234");
     }
 
     private Member createMember2() {
-        return new Member("userB", "idA", "1111", "Seoul", "Gangbuk", "01235");
+        return new Member("userB", "id_A", "11111111", "Seoul", "Gangbuk", "01235");
     }
 
     private Member createMember3() {
-        return new Member("userC", "idC", "2222", "Seoul", "Gangdong", "01236");
+        return new Member("userC", "id_C", "22222222", "Seoul", "Gangdong", "01236");
     }
 
     private Member createMember4() {
-        return new Member("userD", "idD", "3333", "Seoul", "Gangseo", "01237");
+        return new Member("userD", "id_D", "33333333", "Seoul", "Gangseo", "01237");
+    }
+
+    static Stream<Arguments> memberProvider() {
+        return Stream.of(
+                arguments(new Member(null, "loginId", "password", "city", "street", "zipcode"), "이름 null"),
+                arguments(new Member("name", null, "password", "city", "street", "zipcode"), "아이디 null"),
+                arguments(new Member("name", "", "password", "city", "street", "zipcode"), "아이디 빈 문자열"),
+                arguments(new Member("name", "    ", "password", "city", "street", "zipcode"), "아이디 공백 4칸"),
+                arguments(new Member("name", "abc", "password", "city", "street", "zipcode"), "아이디 4자 미만"),
+                arguments(new Member("name", "abcdefghijklmnopqrstuvwxyz", "password", "city", "street", "zipcode"), "아이디 20자 초과"),
+                arguments(new Member("name", "loginId", null, "city", "street", "zipcode"), "비밀번호 null"),
+                arguments(new Member("name", "loginId", "password", null, "street", "zipcode"), "도시 null"),
+                arguments(new Member("name", "loginId", "password", "city", null, "zipcode"), "거리명 null"),
+                arguments(new Member("name", "loginId", "password", "city", "street", null), "우편번호 null")
+        );
+    }
+
+    static Stream<Arguments> passwordProvider() {
+        return Stream.of(
+                arguments(null, "비밀번호 null"),
+                arguments("", "비밀번호 빈 문자열"),
+                arguments(" ", "비밀번호 공백"),
+                arguments("abcdefg", "비밀번호 8자리 미만")
+        );
     }
 }

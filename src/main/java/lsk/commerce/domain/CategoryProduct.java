@@ -1,5 +1,6 @@
 package lsk.commerce.domain;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,10 +18,12 @@ public class CategoryProduct {
     @Column(name = "category_product_id")
     private Long id;
 
+    @NotNull
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @NotNull
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "product_id")
     private Product product;

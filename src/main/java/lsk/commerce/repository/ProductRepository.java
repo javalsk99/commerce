@@ -58,4 +58,40 @@ public class ProductRepository {
     public void delete(Product product) {
         em.remove(product);
     }
+
+    public boolean existsAlbum(String name, String artist, String studio) {
+        return em.createQuery(
+                        "select count(a) > 0 from Album a" +
+                                " where a.name = :name" +
+                                " and a.artist = :artist" +
+                                " and a.studio = :studio", Boolean.class)
+                .setParameter("name", name)
+                .setParameter("artist", artist)
+                .setParameter("studio", studio)
+                .getSingleResult();
+    }
+
+    public boolean existsBook(String name, String author, String isbn) {
+        return em.createQuery(
+                        "select count(b) > 0 from Book b" +
+                                " where b.name = :name" +
+                                " and b.author = :author" +
+                                " and b.isbn = :isbn", Boolean.class)
+                .setParameter("name", name)
+                .setParameter("author", author)
+                .setParameter("isbn", isbn)
+                .getSingleResult();
+    }
+
+    public boolean existsMovie(String name, String actor, String director) {
+        return em.createQuery(
+                        "select count(m) > 0 from Movie m" +
+                                " where m.name = :name" +
+                                " and m.actor = :actor" +
+                                " and m.director = :director", Boolean.class)
+                .setParameter("name", name)
+                .setParameter("actor", actor)
+                .setParameter("director", director)
+                .getSingleResult();
+    }
 }

@@ -1,6 +1,7 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,6 +25,8 @@ public class Category {
     @OneToMany(mappedBy = "category")
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
 
+    @NotBlank
+    @Column(unique = true, length = 20)
     private String name;
 
     @ManyToOne(fetch = LAZY)

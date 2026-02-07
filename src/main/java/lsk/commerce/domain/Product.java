@@ -1,6 +1,8 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,7 +16,12 @@ import static lombok.AccessLevel.*;
 
 @Entity
 @Inheritance(strategy = SINGLE_TABLE)
-@DiscriminatorColumn(name = "dtype")
+@DiscriminatorColumn(name = "dtype", length = 1)
+@Table(uniqueConstraints = {
+        @UniqueConstraint(name = "UniqueAlbum", columnNames = {"name", "artist", "studio"}),
+        @UniqueConstraint(name = "UniqueBook", columnNames = {"name", "author", "isbn"}),
+        @UniqueConstraint(name = "UniqueMovie", columnNames = {"name", "actor", "director"})
+})
 @Getter
 @NoArgsConstructor(access = PUBLIC)
 public abstract class Product {
@@ -27,9 +34,14 @@ public abstract class Product {
     @OneToMany(mappedBy = "product", cascade = ALL)
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
 
+    @NotBlank
     private String name;
-    private int price;
-    private int stockQuantity;
+
+    @NotNull
+    private Integer price;
+
+    @NotNull
+    private Integer stockQuantity;
 
     public Product(String name, int price, int stockQuantity) {
         this.name = name;
@@ -75,7 +87,6 @@ public abstract class Product {
         category.getCategoryProducts().add(categoryProduct);
     }
 
-    //CategoryProduct에서 protected 생성자, 메서드를 사용하기 위해서 패키지 이동
     public void addCategoryProduct(Category... categories) {
         for (Category category : categories) {
             while (category != null) {

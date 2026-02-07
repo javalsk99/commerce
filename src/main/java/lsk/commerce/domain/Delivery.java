@@ -1,6 +1,8 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -29,6 +31,7 @@ public class Delivery {
     @OneToOne(mappedBy = "delivery", fetch = LAZY, cascade = ALL)
     private Order order;
 
+    @NotNull
     @Enumerated(STRING)
     private DeliveryStatus deliveryStatus;
 
@@ -38,9 +41,11 @@ public class Delivery {
     @Column(name = "delivered_at")
     private LocalDateTime deliveredDate;
 
+    @Valid
     @Embedded
     private Address address;
 
+    @Column(nullable = false)
     private boolean deleted = false;
 
     protected void setOrder(Order order) {
