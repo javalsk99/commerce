@@ -20,17 +20,16 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryService categoryService;
 
     @Transactional
-    public Long register(Product product, List<Category> categories) {
+    public String register(Product product, List<Category> categories) {
         validateProduct(product);
+        categoryService.validateCategories(categories);
+
         product.addCategoryProduct(categories);
         productRepository.save(product);
-        return product.getId();
-    }
-
-    public Product findProduct(Long productId) {
-        return productRepository.findOne(productId);
+        return product.getName();
     }
 
     public List<Product> findProducts() {
@@ -59,9 +58,10 @@ public class ProductService {
     }
 
     @Transactional
-    public void updateProduct(Long productId, int newPrice, int newStockQuantity) {
-        Product product = productRepository.findOne(productId);
+    public Product updateProduct(String productName, int newPrice, int newStockQuantity) {
+        Product product = findProductByName(productName);
         product.updateProduct(newPrice, newStockQuantity);
+        return product;
     }
 
     public ProductResponse getProductDto(Product product) {
@@ -72,15 +72,20 @@ public class ProductService {
         return ProductWithCategoryResponse.productChangeResponse(product);
     }
 
-    public boolean validateProduct(Product product) {
+    public void validateProduct(Product product) {
+        boolean result;
         if (product instanceof Album a) {
-            return productRepository.existsAlbum(a.getName(), a.getArtist(), a.getStudio());
+            result = productRepository.existsAlbum(a.getName(), a.getArtist(), a.getStudio());
         } else if (product instanceof Book b) {
-            return productRepository.existsBook(b.getName(), b.getAuthor(), b.getIsbn());
+            result = productRepository.existsBook(b.getName(), b.getAuthor(), b.getIsbn());
         } else if (product instanceof Movie m) {
-            return productRepository.existsMovie(m.getName(), m.getActor(), m.getDirector());
+            result = productRepository.existsMovie(m.getName(), m.getActor(), m.getDirector());
         } else {
             throw new IllegalArgumentException("잘못된 상품입니다.");
+        }
+
+        if (result) {
+            throw new IllegalArgumentException("이미 존재하는 상품입니다.");
         }
     }
 }

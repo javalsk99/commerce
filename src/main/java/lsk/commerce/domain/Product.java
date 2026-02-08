@@ -1,8 +1,10 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -37,23 +39,23 @@ public abstract class Product {
     @NotBlank
     private String name;
 
-    @NotNull
+    @NotNull @Min(100)
     private Integer price;
 
-    @NotNull
+    @NotNull @Min(0)
     private Integer stockQuantity;
 
-    public Product(String name, int price, int stockQuantity) {
+    public Product(String name, Integer price, Integer stockQuantity) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
     }
 
-    protected void addStock(int quantity) {
+    protected void addStock(Integer quantity) {
         this.stockQuantity += quantity;
     }
 
-    protected void removeStock(int quantity) {
+    protected void removeStock(Integer quantity) {
         int restStock = this.stockQuantity - quantity;
         if (restStock < 0) {
             throw new IllegalArgumentException("재고가 부족합니다.");
@@ -62,7 +64,7 @@ public abstract class Product {
         this.stockQuantity = restStock;
     }
 
-    protected void updateStock(int quantity, int newQuantity) {
+    protected void updateStock(Integer quantity, Integer newQuantity) {
         this.stockQuantity += quantity;
 
         int restStock = this.stockQuantity - newQuantity;
@@ -74,7 +76,7 @@ public abstract class Product {
     }
 
     //가격, 수량만 변경
-    public void updateProduct(int newPrice, int newStockQuantity) {
+    public void updateProduct(Integer newPrice, Integer newStockQuantity) {
         this.price = newPrice;
         this.stockQuantity = newStockQuantity;
     }
@@ -87,17 +89,12 @@ public abstract class Product {
         category.getCategoryProducts().add(categoryProduct);
     }
 
-    public void addCategoryProduct(Category... categories) {
-        for (Category category : categories) {
-            while (category != null) {
-                connectCategory(category);
-                category = category.getParent();
-            }
-        }
-    }
-
     public void addCategoryProduct(List<Category> categories) {
         for (Category category : categories) {
+            if (category.getId() == null) {
+                throw new IllegalArgumentException("존재하지 않는 카테고리입니다.");
+            }
+
             while (category != null) {
                 Category finalCategory = category;
                 if (categoryProducts.stream().anyMatch(categoryProduct -> categoryProduct.getCategory() == finalCategory)) {

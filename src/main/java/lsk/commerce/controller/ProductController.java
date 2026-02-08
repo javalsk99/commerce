@@ -68,8 +68,7 @@ public class ProductController {
 
     @PostMapping("/products/{productName}")
     public ProductResponse updateProduct(@PathVariable("productName") String productName, ProductUpdateRequest request) {
-        Product product = productService.findProductByName(productName);
-        productService.updateProduct(product.getId(), request.getPrice(), request.getStockQuantity());
+        Product product = productService.updateProduct(productName, request.getPrice(), request.getStockQuantity());
         return productService.getProductDto(product);
     }
 

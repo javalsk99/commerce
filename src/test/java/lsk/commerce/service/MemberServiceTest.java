@@ -1,5 +1,6 @@
 package lsk.commerce.service;
 
+import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.response.MemberResponse;
@@ -22,6 +23,9 @@ import static org.junit.jupiter.params.provider.Arguments.*;
 @SpringBootTest
 @Transactional
 class MemberServiceTest {
+
+    @Autowired
+    EntityManager em;
 
     @Autowired
     MemberService memberService;
@@ -132,6 +136,7 @@ class MemberServiceTest {
 
         //when
         memberService.changePassword(findMember.getLoginId(), "12345678");
+        em.flush();
 
         //then
         assertThat(findMember.getPassword()).isEqualTo("12345678");
@@ -145,8 +150,10 @@ class MemberServiceTest {
         String loginId = memberService.join(member);
 
         //then
-        assertThrows(ConstraintViolationException.class, () ->
-                memberService.changePassword(loginId, newPassword));
+        assertThrows(ConstraintViolationException.class, () -> {
+            memberService.changePassword(loginId, newPassword);
+            em.flush();
+        });
     }
 
     @Test
@@ -158,6 +165,7 @@ class MemberServiceTest {
 
         //when
         memberService.changeAddress(findMember.getLoginId(), "seoul", "Gangseo", "01237");
+        em.flush();
 
         //then
         assertThat(findMember.getAddress().getStreet()).isEqualTo("Gangseo");

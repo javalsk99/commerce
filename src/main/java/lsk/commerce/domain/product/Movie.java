@@ -24,7 +24,7 @@ public class Movie extends Product {
     @Column(length = 50)
     private String actor;
 
-    public Movie(String name, int price, int stockQuantity, String director, String actor) {
+    public Movie(String name, Integer price, Integer stockQuantity, String director, String actor) {
         super(name, price, stockQuantity);
         this.director = director;
         this.actor = actor;

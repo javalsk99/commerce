@@ -2,6 +2,7 @@ package lsk.commerce.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,7 +26,7 @@ public class Category {
     @OneToMany(mappedBy = "category")
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
 
-    @NotBlank
+    @NotBlank @Size(max = 20)
     @Column(unique = true, length = 20)
     private String name;
 

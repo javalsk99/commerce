@@ -1,5 +1,6 @@
 package lsk.commerce.domain;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -34,16 +35,16 @@ public class OrderProduct {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @NotNull
+    @NotNull @Min(100)
     private Integer orderPrice;
 
-    @NotNull
+    @NotNull @Min(1)
     private Integer count;
 
     @Column(nullable = false)
     private boolean deleted = false;
 
-    public static OrderProduct createOrderProduct(Product product, int count) {
+    public static OrderProduct createOrderProduct(Product product, Integer count) {
         OrderProduct orderProduct = new OrderProduct();
         orderProduct.product = product;
         orderProduct.orderPrice = product.getPrice() * count;
@@ -54,7 +55,7 @@ public class OrderProduct {
     }
 
     //수량만 변경
-    public static void updateCountOrderProduct(OrderProduct orderProduct, Product product, int newCount) {
+    public static void updateCountOrderProduct(OrderProduct orderProduct, Product product, Integer newCount) {
         if (orderProduct.product.equals(product)) {
             product.updateStock(orderProduct.count, newCount);
             orderProduct.count = newCount;

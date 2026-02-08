@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.stream.Collectors.*;
 
@@ -125,5 +126,20 @@ public class CategoryService {
         }
 
         return parentCategory;
+    }
+
+    protected void validateCategories(List<Category> categories) {
+        if (categories == null || categories.isEmpty()) {
+            throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
+        }
+
+        Set<Long> categoriesIds = categories.stream()
+                .map(c -> c.getId())
+                .collect(toSet());
+
+        Long findCategoryCount = categoryRepository.countCategories(categoriesIds);
+        if (categoriesIds.size() != findCategoryCount) {
+            throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다.");
+        }
     }
 }

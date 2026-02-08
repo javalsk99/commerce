@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -67,5 +68,13 @@ public class CategoryRepository {
                 .setParameter("name", categoryName)
                 .setParameter("parentName", parentCategoryName)
                 .getResultList();
+    }
+
+    public Long countCategories(Set<Long> categoryIds) {
+        return em.createQuery(
+                        "select count(c) from Category c" +
+                                " where c.id in :categoryIds", Long.class)
+                .setParameter("categoryIds", categoryIds)
+                .getSingleResult();
     }
 }

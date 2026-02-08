@@ -45,3 +45,34 @@
 
       CategoryNameResponse
       private String categoryName;
+
+## 테스트
+- wrongCategory_register 저장되지 않은 카테고리를 상품에 넣을 때 InvalidDataAccessApiUsageException 예외가 발생한다.  
+  @ParameterizedTest를 사용하려면 IllegalArgumentException으로 바꿔야 한다.  
+  시도한 방법: findCategories.containsAll(categories) - Call to 'list. containsAll(collection)' may have poor performance 성능이 저하될 수 있다.  
+  해결: set으로 바꿔서 찾은 카테고리 수가 일치하지 않으면 저장되지 않은 카테고리가 있으므로 IllegalArgumentException 예외가 발생하게 한다.
+
+      CategoryService
+      protected void validateCategories(List<Category> categories) {
+          if (categories == null || categories.isEmpty()) {
+              throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
+          }
+
+          Set<Long> categoriesIds = categories.stream()
+                  .map(c -> c.getId())
+                  .collect(toSet());
+
+          Long findCategoryCount = categoryRepository.countCategories(categoriesIds);
+          if (categoriesIds.size() != findCategoryCount) {
+              throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다.");
+          }
+      }
+
+      CategoryRepository
+      public Long countCategories(Set<Long> categoryIds) {
+          return em.createQuery(
+                          "select count(c) from Category c" +
+                                  " where c.id in :categoryIds", Long.class)
+                  .setParameter("categoryIds", categoryIds)
+                  .getSingleResult();
+      }
