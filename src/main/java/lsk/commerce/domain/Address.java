@@ -3,25 +3,26 @@ package lsk.commerce.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import static lombok.AccessLevel.*;
+import static lombok.AccessLevel.PROTECTED;
 
 @Embeddable
 @Getter
 @NoArgsConstructor(access = PROTECTED)
 public class Address {
 
-    @NotBlank
-    @Column(nullable = false)
+    @NotBlank @Size(max = 50)
+    @Column(nullable = false, length = 50)
     private String city;
 
-    @NotBlank
-    @Column(nullable = false)
+    @NotBlank @Size(max = 50)
+    @Column(nullable = false, length = 50)
     private String street;
 
-    @NotBlank
+    @NotBlank @Size(max = 10)
     @Column(nullable = false, length = 10)
     private String zipcode;
 

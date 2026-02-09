@@ -16,15 +16,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static jakarta.persistence.CascadeType.*;
-import static jakarta.persistence.EnumType.*;
-import static jakarta.persistence.FetchType.*;
-import static jakarta.persistence.GenerationType.*;
-import static lombok.AccessLevel.*;
-import static lsk.commerce.domain.DeliveryStatus.*;
+import static jakarta.persistence.CascadeType.ALL;
+import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.LAZY;
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static lombok.AccessLevel.PROTECTED;
+import static lsk.commerce.domain.DeliveryStatus.PREPARING;
 import static lsk.commerce.domain.OrderStatus.CANCELED;
 import static lsk.commerce.domain.OrderStatus.PAID;
-import static lsk.commerce.domain.PaymentStatus.*;
+import static lsk.commerce.domain.PaymentStatus.COMPLETED;
 
 @Entity
 @Table(name = "orders")

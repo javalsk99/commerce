@@ -4,11 +4,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.domain.Product;
 
-import static lombok.AccessLevel.*;
+import static lombok.AccessLevel.PUBLIC;
 
 @Entity
 @DiscriminatorValue("M")
@@ -16,11 +17,11 @@ import static lombok.AccessLevel.*;
 @NoArgsConstructor(access = PUBLIC)
 public class Movie extends Product {
 
-    @NotBlank
+    @NotBlank @Size(max = 50)
     @Column(length = 50)
     private String director;
 
-    @NotBlank
+    @NotBlank @Size(max = 50)
     @Column(length = 50)
     private String actor;
 

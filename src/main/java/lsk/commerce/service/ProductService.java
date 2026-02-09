@@ -47,6 +47,13 @@ public class ProductService {
     }
 
     @Transactional
+    public Product updateProduct(String productName, Integer newPrice, Integer newStockQuantity) {
+        Product product = findProductByName(productName);
+        product.updateProduct(newPrice, newStockQuantity);
+        return product;
+    }
+
+    @Transactional
     public void deleteProduct(String productName) {
         Product product = productRepository.findWithCategoryProductCategory(productName)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
@@ -57,13 +64,6 @@ public class ProductService {
         productRepository.delete(product);
     }
 
-    @Transactional
-    public Product updateProduct(String productName, int newPrice, int newStockQuantity) {
-        Product product = findProductByName(productName);
-        product.updateProduct(newPrice, newStockQuantity);
-        return product;
-    }
-
     public ProductResponse getProductDto(Product product) {
         return ProductResponse.productChangeDto(product);
     }
@@ -72,7 +72,7 @@ public class ProductService {
         return ProductWithCategoryResponse.productChangeResponse(product);
     }
 
-    public void validateProduct(Product product) {
+    private void validateProduct(Product product) {
         boolean result;
         if (product instanceof Album a) {
             result = productRepository.existsAlbum(a.getName(), a.getArtist(), a.getStudio());

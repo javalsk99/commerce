@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static jakarta.persistence.CascadeType.*;
-import static jakarta.persistence.GenerationType.*;
-import static jakarta.persistence.InheritanceType.*;
-import static lombok.AccessLevel.*;
+import static jakarta.persistence.CascadeType.ALL;
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
+import static lombok.AccessLevel.PUBLIC;
 
 @Entity
 @Inheritance(strategy = SINGLE_TABLE)
@@ -36,7 +36,8 @@ public abstract class Product {
     @OneToMany(mappedBy = "product", cascade = ALL)
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
 
-    @NotBlank
+    @NotBlank @Size(max = 50)
+    @Column(length = 50)
     private String name;
 
     @NotNull @Min(100)

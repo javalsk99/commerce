@@ -1,28 +1,27 @@
 package lsk.commerce.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 @Getter
 public class MemberRequest {
 
-    @NotNull
+    @NotBlank @Size(min = 2, max = 50)
     private String name;
 
-    @NotNull
+    @NotBlank @Size(min = 4, max = 20)
     private String loginId;
 
-    @NotNull
+    @NotBlank @Size(min = 8, max = 20)
     private String password;
 
-    @NotNull
+    @NotBlank @Size(max = 50)
     private String city;
 
-    @NotNull
+    @NotBlank @Size(max = 50)
     private String street;
 
-    @NotNull
+    @NotBlank @Size(max = 10)
     private String zipcode;
 
     public MemberRequest(String name, String loginId, String password, String city, String street, String zipcode) {

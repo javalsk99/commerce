@@ -1,8 +1,10 @@
 package lsk.commerce.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -10,11 +12,11 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
-import static jakarta.persistence.EnumType.*;
-import static jakarta.persistence.FetchType.*;
-import static jakarta.persistence.GenerationType.*;
+import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.LAZY;
+import static jakarta.persistence.GenerationType.IDENTITY;
 import static java.util.UUID.randomUUID;
-import static lombok.AccessLevel.*;
+import static lombok.AccessLevel.PROTECTED;
 import static lsk.commerce.domain.PaymentStatus.*;
 
 @Entity
@@ -28,14 +30,14 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
-    @NotBlank
+    @NotBlank @Size(min = 36, max = 36)
     @Column(name = "payment_number", length = 36)
     private String paymentId;
 
     @OneToOne(mappedBy = "payment", fetch = LAZY)
     private Order order;
 
-    @NotNull
+    @NotNull @Min(100)
     private Integer paymentAmount;
 
     @Column(name = "paid_at")

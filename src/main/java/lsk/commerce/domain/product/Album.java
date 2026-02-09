@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.domain.Product;
 
-import static lombok.AccessLevel.*;
+import static lombok.AccessLevel.PUBLIC;
 
 @Entity
 @DiscriminatorValue("A")
@@ -17,11 +17,11 @@ import static lombok.AccessLevel.*;
 @NoArgsConstructor(access = PUBLIC)
 public class Album extends Product {
 
-    @NotBlank @Size(min = 1, max = 50)
+    @NotBlank @Size(max = 50)
     @Column(length = 50)
     private String artist;
 
-    @NotBlank @Size(min = 1, max = 50)
+    @NotBlank @Size(max = 50)
     @Column(length = 50)
     private String studio;
 

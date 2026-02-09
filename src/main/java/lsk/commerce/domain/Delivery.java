@@ -10,12 +10,15 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
-import static jakarta.persistence.CascadeType.*;
-import static jakarta.persistence.EnumType.*;
-import static jakarta.persistence.FetchType.*;
-import static jakarta.persistence.GenerationType.*;
-import static lombok.AccessLevel.*;
-import static lsk.commerce.domain.DeliveryStatus.*;
+import static jakarta.persistence.CascadeType.ALL;
+import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.LAZY;
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static lombok.AccessLevel.PROTECTED;
+import static lsk.commerce.domain.DeliveryStatus.CANCELED;
+import static lsk.commerce.domain.DeliveryStatus.DELIVERED;
+import static lsk.commerce.domain.DeliveryStatus.SHIPPED;
+import static lsk.commerce.domain.DeliveryStatus.WAITING;
 
 @Entity
 @Getter
@@ -42,6 +45,7 @@ public class Delivery {
     private LocalDateTime deliveredDate;
 
     @Valid
+    @NotNull
     @Embedded
     private Address address;
 

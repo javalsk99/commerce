@@ -4,10 +4,12 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Member;
 import lsk.commerce.service.MemberService;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Profile("!test")
 @RequiredArgsConstructor
 public class InitDb {
 

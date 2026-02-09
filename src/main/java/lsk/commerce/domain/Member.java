@@ -11,10 +11,11 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static jakarta.persistence.EnumType.*;
-import static jakarta.persistence.GenerationType.*;
-import static lombok.AccessLevel.*;
-import static lsk.commerce.domain.Grade.*;
+import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static lombok.AccessLevel.PROTECTED;
+import static lsk.commerce.domain.Grade.ADMIN;
+import static lsk.commerce.domain.Grade.USER;
 
 @Entity
 @Getter
@@ -44,6 +45,7 @@ public class Member {
     private Grade grade;
 
     @Valid
+    @NotNull
     @Embedded
     private Address address;
 

@@ -7,6 +7,8 @@ import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.response.ProductResponse;
+import lsk.commerce.dto.response.ProductWithCategoryResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -23,8 +25,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.*;
 
-@SpringBootTest
 @Transactional
+@SpringBootTest
 class ProductServiceTest {
 
     @Autowired
@@ -41,13 +43,14 @@ class ProductServiceTest {
         Category category1 = createCategory1();
         Category category2 = createCategory2();
         Category category3 = createCategory3();
+        Category category4 = createCategory4();
 
         Album album = createAlbum();
         Book book = createBook();
         Movie movie = createMovie();
 
         //when
-        String albumName = productService.register(album, List.of(category1));
+        String albumName = productService.register(album, List.of(category4));
         String bookName = productService.register(book, List.of(category2));
         String movieName = productService.register(movie, List.of(category3));
 
@@ -55,9 +58,12 @@ class ProductServiceTest {
         Product findAlbum = productService.findProductByName(albumName);
         Product findBook = productService.findProductByName(bookName);
         Product findMovie = productService.findProductByName(movieName);
+
         assertThat(findAlbum.getName()).isEqualTo("하얀 그리움");
         assertThat(findBook.getName()).isEqualTo("자바 ORM 표준 JPA 프로그래밍");
         assertThat(findMovie.getName()).isEqualTo("굿뉴스");
+        assertThat(category1.getCategoryProducts().size()).isEqualTo(1);
+        assertThat(category4.getCategoryProducts().size()).isEqualTo(1);
     }
 
     @ParameterizedTest(name = "[{index}] {1}")
@@ -68,7 +74,7 @@ class ProductServiceTest {
         Category category2 = createCategory2();
         Category category3 = createCategory3();
 
-        //then
+        //when
         assertThrows(ConstraintViolationException.class, () ->
                 productService.register(product, List.of(category1, category2, category3)));
     }
@@ -79,7 +85,7 @@ class ProductServiceTest {
         //given
         Album album = createAlbum();
 
-        //then
+        //when
         assertThrows(IllegalArgumentException.class, () ->
                 productService.register(album, categories));
     }
@@ -156,7 +162,7 @@ class ProductServiceTest {
         Album album = createAlbum();
         productService.register(album, List.of(category));
 
-        //then
+        //when
         assertThrows(IllegalArgumentException.class, () ->
                 productService.findProductByName("굿뉴스"));
     }
@@ -178,6 +184,73 @@ class ProductServiceTest {
         assertThat(findAlbum)
                 .extracting("price", "stockQuantity")
                 .contains(20000, 30);
+    }
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @MethodSource("priceStockQuantityProvider")
+    void failed_update(Integer newPrice, Integer newStockQuantity, String reason) {
+        //given
+        Category category = createCategory1();
+        Album album = createAlbum();
+        String albumName = productService.register(album, List.of(category));
+
+        //when
+        assertThrows(ConstraintViolationException.class, () -> {
+            productService.updateProduct(albumName, newPrice, newStockQuantity);
+            em.flush();
+        });
+    }
+
+    @Test
+    void delete() {
+        //given
+        Category parentCategory = createCategory1();
+        Category childCategory = createCategory4();
+        Album album = createAlbum();
+        String albumName = productService.register(album, List.of(childCategory));
+
+        //when
+        productService.deleteProduct(albumName);
+
+        //then
+        assertThrows(IllegalArgumentException.class, () ->
+                productService.findProductByName(albumName));
+        assertThat(parentCategory.getCategoryProducts().size()).isEqualTo(0);
+        assertThat(childCategory.getCategoryProducts().size()).isEqualTo(0);
+    }
+
+    @Test
+    void failed_delete() {
+        //given
+        Category category = createCategory1();
+        Album album = createAlbum();
+        String albumName = productService.register(album, List.of(category));
+        productService.deleteProduct(albumName);
+
+        //when
+        assertThrows(IllegalArgumentException.class, () ->
+                productService.deleteProduct(albumName));
+    }
+
+    @Test
+    void change_dto() {
+        //given
+        Category category = createCategory1();
+        Album album = createAlbum();
+        String albumName = productService.register(album, List.of(category));
+        Product findAlbum = productService.findProductByName(albumName);
+
+        //when
+        ProductResponse productDto = productService.getProductDto(findAlbum);
+        ProductWithCategoryResponse productWithCategoryDto = productService.getProductWithCategoryDto(findAlbum);
+
+        //then
+        assertThat(productDto.getDtype()).isEqualTo("A");
+        assertThat(productDto.getArtist()).isEqualTo("fromis_9");
+        assertThat(productDto.getIsbn()).isNull();
+
+        assertThat(productWithCategoryDto.getName()).isEqualTo("하얀 그리움");
+        assertThat(productWithCategoryDto.getCategoryNames().size()).isEqualTo(1);
     }
 
 /*
@@ -202,27 +275,6 @@ class ProductServiceTest {
     }
 */
 
-/*
-    @Test
-    void delete() {
-        //given
-        Category parentCategory = createParentCategory("Dance");
-        Category childCategory = createChildCategory(parentCategory, "Girl Group");
-
-        Album album = createAlbum();
-        Long albumId = productService.register(album, childCategory);
-
-        //when
-        productService.deleteProduct(album);
-        Product findAlbum = productService.findProduct(albumId);
-
-        //then
-        assertThat(findAlbum).isNull();
-        assertThat(parentCategory.getCategoryProducts().size()).isEqualTo(0);
-        assertThat(childCategory.getCategoryProducts().size()).isEqualTo(0);
-    }
-*/
-
     private Album createAlbum() {
         return new Album("하얀 그리움", 15000, 20, "fromis_9", "ASND");
     }
@@ -236,7 +288,7 @@ class ProductServiceTest {
     }
 
     private Category createCategory1() {
-        return categoryService.findCategoryByName(categoryService.create("K-POP", null));
+        return categoryService.findCategoryByName(categoryService.create("가요", null));
     }
 
     private Category createCategory2() {
@@ -245,6 +297,10 @@ class ProductServiceTest {
 
     private Category createCategory3() {
         return categoryService.findCategoryByName(categoryService.create("Comedy", null));
+    }
+
+    private Category createCategory4() {
+        return categoryService.findCategoryByName(categoryService.create("댄스", "가요"));
     }
 
     static Stream<Arguments> productProvider() {
@@ -277,6 +333,15 @@ class ProductServiceTest {
                 arguments(new Album("하얀 그리움", 10000, 30, "fromis_9", "ASND"), "이미 있는 앨범"),
                 arguments(new Book("자바 ORM 표준 JPA 프로그래밍", 40000, 15, "김영한", "9788960777330"), "이미 있는 책"),
                 arguments(new Movie("굿뉴스", 5000, 20, "변성현", "설경구"), "이미 있는 영화")
+        );
+    }
+
+    static Stream<Arguments> priceStockQuantityProvider() {
+        return Stream.of(
+                arguments(null, 0, "가격 null"),
+                arguments(99, 0, "가격 100원 미만"),
+                arguments(100, null, "재고 수량 null"),
+                arguments(100, -1, "재고 수량 0개 미만")
         );
     }
 }

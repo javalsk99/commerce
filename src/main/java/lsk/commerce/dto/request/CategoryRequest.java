@@ -1,12 +1,12 @@
 package lsk.commerce.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 @Getter
 public class CategoryRequest {
 
-    @NotNull
+    @NotBlank @Size(max = 20)
     private String name;
 
     private String parentName;

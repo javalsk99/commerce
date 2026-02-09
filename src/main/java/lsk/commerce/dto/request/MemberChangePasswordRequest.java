@@ -1,13 +1,12 @@
 package lsk.commerce.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 @Getter
 public class MemberChangePasswordRequest {
 
-    @NotNull
+    @NotBlank @Size(min = 8, max = 20)
     private String password;
 
     public MemberChangePasswordRequest(String password) {

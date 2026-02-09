@@ -1,18 +1,18 @@
 package lsk.commerce.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 @Getter
 public class MemberChangeAddressRequest {
 
-    @NotNull
+    @NotBlank @Size(max = 50)
     private String city;
 
-    @NotNull
+    @NotBlank @Size(max = 50)
     private String street;
 
-    @NotNull
+    @NotBlank @Size(max = 10)
     private String zipcode;
 
     public MemberChangeAddressRequest(String city, String street, String zipcode) {

@@ -1,5 +1,7 @@
 package lsk.commerce.dto.request;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lsk.commerce.dto.OrderProductDto;
 import lsk.commerce.domain.*;
@@ -11,17 +13,34 @@ import java.util.List;
 @Getter
 public class OrderRequest {
 
+    @NotBlank @Size(min = 12, max = 12)
     private String orderNumber;
+
+    @NotBlank @Size(min = 4, max = 20)
     private String memberLoginId;
-    private int totalAmount;
+
+    @NotNull @Min(100)
+    private Integer totalAmount;
+
+    @NotNull
     private LocalDateTime orderDate;
+
+    @Valid
+    @NotEmpty
     private List<OrderProductDto> orderProducts;
+
+    @NotBlank @Size(min = 12, max = 12)
     private String paymentId;
+
+    @NotNull
     private OrderStatus orderStatus;
+
+    @NotNull
     private DeliveryStatus deliveryStatus;
+
     private PaymentStatus paymentStatus;
 
-    public OrderRequest(String orderNumber, String memberLoginId, int totalAmount, LocalDateTime orderDate, List<OrderProductDto> orderProducts, String paymentId, OrderStatus orderStatus, DeliveryStatus deliveryStatus, PaymentStatus paymentStatus) {
+    public OrderRequest(String orderNumber, String memberLoginId, Integer totalAmount, LocalDateTime orderDate, List<OrderProductDto> orderProducts, String paymentId, OrderStatus orderStatus, DeliveryStatus deliveryStatus, PaymentStatus paymentStatus) {
         this.orderNumber = orderNumber;
         this.memberLoginId = memberLoginId;
         this.totalAmount = totalAmount;

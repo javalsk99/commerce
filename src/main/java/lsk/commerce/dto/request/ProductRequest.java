@@ -1,24 +1,21 @@
 package lsk.commerce.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
-import org.hibernate.validator.constraints.Range;
 
 @Getter
 public class ProductRequest {
 
-    @NotNull
+    @NotBlank @Size(max = 50)
     private String name;
 
-    @NotNull
-    @Range(min = 1, max = 100000)
+    @NotNull @Min(100)
     private Integer price;
 
-    @NotNull
-    @Range(min = 0, max = 1000)
+    @NotNull @Min(0)
     private Integer stockQuantity;
 
-    @NotNull
+    @NotBlank @Size(min = 1, max = 1)
     private String dtype;
 
     private String artist;

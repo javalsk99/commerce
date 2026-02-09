@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.*;
 
-@SpringBootTest
 @Transactional
+@SpringBootTest
 class MemberServiceTest {
 
     @Autowired
@@ -50,6 +50,7 @@ class MemberServiceTest {
     @ParameterizedTest(name = "[{index}] {1}")
     @MethodSource("memberProvider")
     void failed_join(Member member, String reason) {
+        //when
         assertThrows(ConstraintViolationException.class, () ->
                 memberService.join(member));
     }
@@ -96,7 +97,7 @@ class MemberServiceTest {
         Member member = createMember1();
         memberService.join(member);
 
-        //then
+        //when
         assertThrows(IllegalArgumentException.class, () ->
                 memberService.findMemberByLoginId("id_B"));
     }
@@ -149,7 +150,7 @@ class MemberServiceTest {
         Member member = createMember1();
         String loginId = memberService.join(member);
 
-        //then
+        //when
         assertThrows(ConstraintViolationException.class, () -> {
             memberService.changePassword(loginId, newPassword);
             em.flush();
