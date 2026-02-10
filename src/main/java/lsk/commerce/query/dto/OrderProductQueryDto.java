@@ -1,9 +1,11 @@
 package lsk.commerce.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lsk.commerce.domain.OrderProduct;
 
-@Data
+@Getter @Setter
 public class OrderProductQueryDto {
 
     @JsonIgnore
@@ -13,11 +15,16 @@ public class OrderProductQueryDto {
     private int count;
     private int orderPrice;
 
-    public OrderProductQueryDto(String orderNumber, String name, int price, int count, int totalPrice) {
+    public OrderProductQueryDto(String orderNumber, String name, int price, int count, int orderPrice) {
         this.orderNumber = orderNumber;
         this.name = name;
         this.price = price;
         this.count = count;
-        this.orderPrice = totalPrice;
+        this.orderPrice = orderPrice;
+    }
+
+    public static OrderProductQueryDto changeQueryDto(OrderProduct orderProduct) {
+        return new OrderProductQueryDto(orderProduct.getOrder().getOrderNumber(), orderProduct.getProduct().getName(),
+                orderProduct.getProduct().getPrice(), orderProduct.getCount(), orderProduct.getOrderPrice());
     }
 }

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.dto.request.MemberLoginRequest;
 import lsk.commerce.dto.response.MemberLoginResponse;
 import lsk.commerce.domain.Member;
-import lsk.commerce.provider.JwtProvider;
+import lsk.commerce.util.JwtProvider;
 import lsk.commerce.service.AuthService;
 import lsk.commerce.service.MemberService;
 import org.springframework.web.bind.annotation.GetMapping;

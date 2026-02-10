@@ -1,11 +1,14 @@
 package lsk.commerce.query;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.domain.Member;
 import lsk.commerce.query.dto.MemberQueryDto;
+import lsk.commerce.query.dto.MemberSearchCond;
 import lsk.commerce.query.dto.OrderQueryDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,4 +44,25 @@ public class MemberQueryService {
         return members;
     }
 
+    public List<MemberQueryDto> searchMembers(MemberSearchCond cond) {
+        List<Member> members = memberQueryRepository.search(cond);
+        List<MemberQueryDto> memberQueryDtoList = memberChangeQueryDtoList(members);
+        List<String> loginIds = toMemberLoginIds(memberQueryDtoList);
+
+        Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMap(loginIds);
+
+        memberQueryDtoList.forEach(m -> m.setOrders(orderMap.get(m.getLoginId())));
+
+        return memberQueryDtoList;
+    }
+
+    private List<MemberQueryDto> memberChangeQueryDtoList(List<Member> members) {
+        List<MemberQueryDto> memberQueryDtoList = new ArrayList<>();
+        for (Member member : members) {
+            MemberQueryDto memberQueryDto = MemberQueryDto.changeQueryDto(member);
+            memberQueryDtoList.add(memberQueryDto);
+        }
+
+        return memberQueryDtoList;
+    }
 }

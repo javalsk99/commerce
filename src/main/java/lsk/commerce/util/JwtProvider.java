@@ -1,4 +1,4 @@
-package lsk.commerce.provider;
+package lsk.commerce.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

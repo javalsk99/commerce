@@ -1,12 +1,14 @@
 package lsk.commerce.query;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.domain.Order;
 import lsk.commerce.query.dto.OrderProductQueryDto;
 import lsk.commerce.query.dto.OrderQueryDto;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -53,5 +55,15 @@ public class OrderQueryService {
         Map<String, List<OrderQueryDto>> orderMap = orders.stream()
                 .collect(groupingBy(orderQueryDto -> orderQueryDto.getLoginId()));
         return orderMap;
+    }
+
+    private List<OrderQueryDto> orderChangeQueryDtoList(List<Order> orders) {
+        List<OrderQueryDto> orderQueryDtoList = new ArrayList<>();
+        for (Order order : orders) {
+            OrderQueryDto orderQueryDto = OrderQueryDto.changeQueryDto(order);
+            orderQueryDtoList.add(orderQueryDto);
+        }
+
+        return orderQueryDtoList;
     }
 }

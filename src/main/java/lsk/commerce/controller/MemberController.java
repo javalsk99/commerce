@@ -8,6 +8,7 @@ import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.response.MemberResponse;
+import lsk.commerce.query.dto.MemberSearchCond;
 import lsk.commerce.service.MemberService;
 import lsk.commerce.query.MemberQueryService;
 import org.springframework.web.bind.annotation.*;
@@ -54,5 +55,10 @@ public class MemberController {
     public String delete(@PathVariable("memberLoginId") String memberLoginId) {
         memberService.deleteMember(memberLoginId);
         return "delete";
+    }
+
+    @GetMapping("/members/search")
+    public List<MemberQueryDto> searchMemberList(@ModelAttribute MemberSearchCond cond) {
+        return memberQueryService.searchMembers(cond);
     }
 }

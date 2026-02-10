@@ -1,7 +1,7 @@
 package lsk.commerce.config;
 
 import lsk.commerce.interceptor.LoginCheckInterceptor;
-import lsk.commerce.provider.JwtProvider;
+import lsk.commerce.util.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
