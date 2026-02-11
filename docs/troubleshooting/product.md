@@ -1,5 +1,5 @@
 # Product에서 해결한 문제
-## 중복 쿼리, N+1 문제
+## 중복 쿼리, N+1 문제, 중복 트랜잭션
 - POST /products PK 생성에 쿼리가 많이 나온다.  
   원인: PK 생성 전략을 설정하지 않아서 생긴 문제
 
@@ -12,11 +12,45 @@
   추가 문제: 카테고리가 여러 개 들어오면 카테고리 수만큼의 select 쿼리가 나온다.  
   원인: for each문으로 카테고리 수만큼 카테고리 조회해서 생긴 문제
 
+
 - DELETE /products/{productName} select 쿼리가 네 개가 나온다.  
   원인: 상품을 조회하고 -> 카테고리 상품 -> 카테고리 -> 카테고리 상품으로 접근해서 생긴 문제  
   해결: 상품에서 연결되는 카테고리의 수는 적으므로 카테고리 상품과 카테고리를 left join fetch해서 select 쿼리를 두 개로 줄였다.  
   추가 문제: 카테고리 상품 수 + 1만큼의 delete 쿼리가 나온다. (상품 저장에서는 카테고리 상품 수 + 1만큼의 select 쿼리가 나온다.)  
   유지: 상품 저장과 삭제는 일반 회원이 사용하는 기능이 아니고, 관리자가 사용하는 기능이므로 자주 발생하는 작업이 아니므로 성능에 큰 부담을 주지 않는다.
+
+
+- GET /products 검색으로 조회되는 상품 수만큼 트랜잭션이 시작된다.
+  원인: 상품을 for each문으로 DTO로 변환해서 생긴 문제
+
+      ProductQueryService
+      public List<ProductResponse> searchProducts(ProductSearchCond cond) {
+      List<Product> products = productQueryRepository.search(cond);
+
+          List<ProductResponse> productResponseList = new ArrayList<>();
+          for (Product product : products) {
+              ProductResponse productResponse = productService.getProductDto(product);
+              productResponseList.add(productResponse);
+          }
+
+          return productResponseList;
+      }
+
+  해결: QueryDSL에서 바로 DTO로 반환받는다.
+
+      ProductQueryRepository
+      return query.select(new QProductResponse(product.name, product.price, product.stockQuantity,
+                      new CaseBuilder()
+                              .when(product.instanceOf(Album.class)).then("A")
+                              .when(product.instanceOf(Book.class)).then("B")
+                              .when(product.instanceOf(Movie.class)).then("M")
+                              .otherwise(Expressions.nullExpression(String.class)),
+                      album.artist, album.studio, book.author, book.isbn, movie.actor, movie.director))
+
+      ProductQueryService
+      public List<ProductResponse> searchProducts(ProductSearchCond cond) {
+          return productQueryRepository.search(cond);
+      }
 
 ## 로직
 - 상품을 만들 때, 카테고리의 부모가 겹치면 부모 카테고리가 중복해서 저장되던 문제  

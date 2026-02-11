@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Order;
-import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.PaymentStatus;
 
@@ -45,29 +44,8 @@ public class OrderQueryDto {
         this.deliveredDate = deliveredDate;
     }
 
-    public OrderQueryDto(String loginId, String orderNumber, List<OrderProductQueryDto> orderProducts, int totalAmount, OrderStatus orderStatus, LocalDateTime orderDate,
-                         PaymentStatus paymentStatus, LocalDateTime paymentDate, DeliveryStatus deliveryStatus, LocalDateTime shippedDate, LocalDateTime deliveredDate) {
-        this.loginId = loginId;
-        this.orderNumber = orderNumber;
-        this.orderProducts = orderProducts;
-        this.totalAmount = totalAmount;
-        this.orderStatus = orderStatus;
-        this.orderDate = orderDate;
-        this.paymentStatus = paymentStatus;
-        this.paymentDate = paymentDate;
-        this.deliveryStatus = deliveryStatus;
-        this.shippedDate = shippedDate;
-        this.deliveredDate = deliveredDate;
-    }
-
     public static OrderQueryDto changeQueryDto(Order order) {
-        List<OrderProductQueryDto> orderProductQueryDtoList = new ArrayList<>();
-        for (OrderProduct orderProduct : order.getOrderProducts()) {
-            OrderProductQueryDto orderProductQueryDto = OrderProductQueryDto.changeQueryDto(orderProduct);
-            orderProductQueryDtoList.add(orderProductQueryDto);
-        }
-
-        return new OrderQueryDto(order.getMember().getLoginId(), order.getOrderNumber(), orderProductQueryDtoList, order.getTotalAmount(), order.getOrderStatus(), order.getOrderDate(),
-                order.getPayment().getPaymentStatus(), order.getPayment().getPaymentDate(), order.getDelivery().getDeliveryStatus(), order.getDelivery().getShippedDate(), order.getDelivery().getDeliveredDate());
+        return new OrderQueryDto(order.getMember().getLoginId(), order.getOrderNumber(), order.getTotalAmount(), order.getOrderStatus(), order.getOrderDate(), order.getPayment().getPaymentStatus(),
+                order.getPayment().getPaymentDate(), order.getDelivery().getDeliveryStatus(), order.getDelivery().getShippedDate(), order.getDelivery().getDeliveredDate());
     }
 }

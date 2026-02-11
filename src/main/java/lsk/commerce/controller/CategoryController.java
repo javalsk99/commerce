@@ -9,6 +9,7 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.dto.response.ProductResponse;
+import lsk.commerce.query.dto.ProductSearchCond;
 import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
@@ -60,19 +61,6 @@ public class CategoryController {
     public String delete(@PathVariable("categoryName") String categoryName) {
         categoryService.deleteCategory(categoryName);
         return "delete";
-    }
-
-    @GetMapping("/categories/{categoryName}/products")
-    public List<ProductResponse> findProductsByCategory(@PathVariable("categoryName") String categoryName) {
-        List<Product> products = categoryService.findProductsByCategoryName(categoryName);
-        List<ProductResponse> productResponses = new ArrayList<>();
-
-        for (Product product : products) {
-            ProductResponse productDto = productService.getProductDto(product);
-            productResponses.add(productDto);
-        }
-
-        return productResponses;
     }
 
     @PostMapping("/categories/{categoryName}/{productName}")

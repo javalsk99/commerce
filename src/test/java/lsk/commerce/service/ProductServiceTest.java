@@ -284,7 +284,7 @@ class ProductServiceTest {
     }
 
     private Movie createMovie() {
-        return new Movie("굿뉴스", 7000, 15, "변성현", "설경구");
+        return new Movie("굿뉴스", 7000, 15, "설경구", "변성현");
     }
 
     private Category createCategory1() {
@@ -332,7 +332,7 @@ class ProductServiceTest {
         return Stream.of(
                 arguments(new Album("하얀 그리움", 10000, 30, "fromis_9", "ASND"), "이미 있는 앨범"),
                 arguments(new Book("자바 ORM 표준 JPA 프로그래밍", 40000, 15, "김영한", "9788960777330"), "이미 있는 책"),
-                arguments(new Movie("굿뉴스", 5000, 20, "변성현", "설경구"), "이미 있는 영화")
+                arguments(new Movie("굿뉴스", 5000, 20, "설경구", "변성현"), "이미 있는 영화")
         );
     }
 

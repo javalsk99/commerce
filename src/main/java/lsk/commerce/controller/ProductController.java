@@ -11,6 +11,8 @@ import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.ProductUpdateRequest;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.ProductWithCategoryResponse;
+import lsk.commerce.query.ProductQueryService;
+import lsk.commerce.query.dto.ProductSearchCond;
 import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
@@ -26,6 +28,7 @@ public class ProductController {
     private final CategoryService categoryService;
     private final ProductService productService;
     private final CategoryProductService categoryProductService;
+    private final ProductQueryService productQueryService;
 
     @PostMapping("/products")
     public String create(@Valid ProductRequest request, String... categoryNames) {
@@ -38,7 +41,7 @@ public class ProductController {
             Book book = new Book(request.getName(), request.getPrice(), request.getStockQuantity(), request.getAuthor(), request.getIsbn());
             productService.register(book, categories);
         } else if (request.getDtype().equals("M")) {
-            Movie movie = new Movie(request.getName(), request.getPrice(), request.getStockQuantity(), request.getDirector(), request.getActor());
+            Movie movie = new Movie(request.getName(), request.getPrice(), request.getStockQuantity(), request.getActor(), request.getDirector());
             productService.register(movie, categories);
         } else {
             throw new IllegalArgumentException("잘못된 양식입니다. dtype: " + request.getDtype());
@@ -48,22 +51,19 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public List<ProductResponse> productList() {
-        List<Product> products = productService.findProducts();
-        List<ProductResponse> productResponses = new ArrayList<>();
-
-        for (Product product : products) {
-            ProductResponse productDto = productService.getProductDto(product);
-            productResponses.add(productDto);
-        }
-
-        return productResponses;
+    public List<ProductResponse> productList(@ModelAttribute ProductSearchCond cond) {
+        return productQueryService.searchProducts(cond);
     }
 
     @GetMapping("/products/{productName}")
     public ProductResponse findProduct(@PathVariable("productName") String productName) {
         Product product = productService.findProductByName(productName);
         return productService.getProductDto(product);
+    }
+
+    @GetMapping("/products/search/{categoryName}")
+    public List<ProductResponse> productListByCategoryName(@PathVariable("categoryName") String categoryName, @ModelAttribute ProductSearchCond cond) {
+        return productQueryService.searchProductsByCategoryName(categoryName, cond);
     }
 
     @PostMapping("/products/{productName}")

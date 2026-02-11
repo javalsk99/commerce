@@ -2,11 +2,19 @@ package lsk.commerce;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Member;
+import lsk.commerce.domain.product.Album;
+import lsk.commerce.domain.product.Book;
+import lsk.commerce.domain.product.Movie;
+import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.MemberService;
+import lsk.commerce.service.ProductService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Component
 @Profile("!test")
@@ -26,9 +34,54 @@ public class InitDb {
     static class InitService {
 
         private final MemberService memberService;
+        private final CategoryService categoryService;
+        private final ProductService productService;
 
         public void dbInit() {
+            createMember();
+            createCategoriesAndProducts();
+        }
+
+        private void createMember() {
             memberService.adminJoin(new Member("test", "testId", "testPassword", "seoul", "Gangbuk", "11111"));
+            memberService.join(new Member("userA", "userAId", "userAPassword", "seoul", "Gangbuk", "11111"));
+            memberService.join(new Member("userB", "userBId", "userBPassword", "seoul", "Gangbuk", "11111"));
+        }
+
+        private void createCategoriesAndProducts() {
+            categoryService.create("가요", null);
+            String albumCategoryName2 = categoryService.create("댄스", "가요");
+            String albumCategoryName3 = categoryService.create("발라드", "가요");
+            categoryService.create("컴퓨터/IT", null);
+            categoryService.create("프로그래밍 언어", "컴퓨터/IT");
+            String bookCategoryName3 = categoryService.create("Java", "프로그래밍 언어");
+            String bookCategoryName4 = categoryService.create("Python", "프로그래밍 언어");
+            String bookCategoryName5 = categoryService.create("프로그래밍 일반", "프로그래밍 언어");
+            categoryService.create("국내 영화", null);
+            String movieCategoryName2 = categoryService.create("액션 영화", "국내 영화");
+            String movieCategoryName3 = categoryService.create("코미디 영화", "국내 영화");
+
+            Category albumCategory2 = categoryService.findCategoryByName(albumCategoryName2);
+            Category albumCategory3 = categoryService.findCategoryByName(albumCategoryName3);
+            Category bookCategory3 = categoryService.findCategoryByName(bookCategoryName3);
+            Category bookCategory4 = categoryService.findCategoryByName(bookCategoryName4);
+            Category bookCategory5 = categoryService.findCategoryByName(bookCategoryName5);
+            Category movieCategory2 = categoryService.findCategoryByName(movieCategoryName2);
+            Category movieCategory3 = categoryService.findCategoryByName(movieCategoryName3);
+
+            productService.register(new Album("BANG BANG", 15000, 100, "IVE", "STARSHIP"), List.of(albumCategory2));
+            productService.register(new Album("Blue Valentine", 15000, 100, "NMIXX", "JYP"), List.of(albumCategory2));
+            productService.register(new Album("404", 15000, 100, "KiiiKiii", "STARSHIP"), List.of(albumCategory2));
+            productService.register(new Album("타임 캡슐", 15000, 100, "다비치", "씨에이엠위더스"), List.of(albumCategory3));
+            productService.register(new Album("너의 모든 순간", 15000, 100, "성시경", "에스케이재원"), List.of(albumCategory3));
+            productService.register(new Album("천상연", 15000, 100, "이창섭", "판타지오"), List.of(albumCategory3));
+            productService.register(new Book("자바 ORM 표준 JPA 프로그래밍", 15000, 100, "김영한", "9788960777330"), List.of(bookCategory3, bookCategory5));
+            productService.register(new Book("면접을 위한 CS 전공지식 노트", 15000, 100, "주홍철", "9791165219529"), List.of(bookCategory5));
+            productService.register(new Book("Do it! 점프 투 파이썬", 15000, 100, "박응용", "9791163034735"), List.of(bookCategory4));
+            productService.register(new Movie("범죄도시", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
+            productService.register(new Movie("범죄도시2", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
+            productService.register(new Movie("범죄도시3", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
+            productService.register(new Movie("범죄도시4", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
         }
     }
 }

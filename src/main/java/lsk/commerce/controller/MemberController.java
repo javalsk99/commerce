@@ -30,8 +30,8 @@ public class MemberController {
     }
 
     @GetMapping("/members")
-    public List<MemberQueryDto> memberList() {
-        return memberQueryService.findMembers();
+    public List<MemberQueryDto> memberList(@ModelAttribute MemberSearchCond cond) {
+        return memberQueryService.searchMembers(cond);
     }
 
     @GetMapping("/members/{memberLoginId}")
@@ -55,10 +55,5 @@ public class MemberController {
     public String delete(@PathVariable("memberLoginId") String memberLoginId) {
         memberService.deleteMember(memberLoginId);
         return "delete";
-    }
-
-    @GetMapping("/members/search")
-    public List<MemberQueryDto> searchMemberList(@ModelAttribute MemberSearchCond cond) {
-        return memberQueryService.searchMembers(cond);
     }
 }

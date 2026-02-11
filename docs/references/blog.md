@@ -12,3 +12,5 @@
 - [LEFT JOIN FETCH](https://velog.io/@tkguswls1106/JPA-N1-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0-Fetch-Join-Inner-Left-vs-EntityGraph-%EB%B9%84%EA%B5%90%EB%B6%84%EC%84%9D)
 - [IDENTITY 전략일 때 Bulk Insert 하는 법](https://velog.io/@ogu1208/Spring-JPA-JPA-%EC%97%90%EC%84%9C-ID-%EC%83%9D%EC%84%B1-%EC%A0%84%EB%9E%B5%EC%9D%B4-IDENTITY%EC%9D%BC-%EB%95%8C-Bulk-Insert-%EB%A5%BC-%ED%95%98%EB%8A%94-%EB%B0%A9%EB%B2%95)
 - [초성 추출](https://seeminglyjs.tistory.com/463)
+- [QueryDSL DTO로 반환](https://doing7.tistory.com/129)
+- [new CaseBuilder()](https://ssow93.tistory.com/84)

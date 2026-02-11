@@ -1,6 +1,9 @@
 package lsk.commerce.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 @Getter
@@ -19,18 +22,15 @@ public class ProductRequest {
     private String dtype;
 
     private String artist;
-
     private String studio;
 
     private String author;
-
     private String isbn;
 
+    private String actor;
     private String director;
 
-    private String actor;
-
-    public ProductRequest(String name, Integer price, Integer stockQuantity, String dtype, String artist, String studio, String author, String isbn, String director, String actor) {
+    public ProductRequest(String name, Integer price, Integer stockQuantity, String dtype, String artist, String studio, String author, String isbn, String actor, String director) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
@@ -39,7 +39,7 @@ public class ProductRequest {
         this.studio = studio;
         this.author = author;
         this.isbn = isbn;
-        this.director = director;
         this.actor = actor;
+        this.director = director;
     }
 }
