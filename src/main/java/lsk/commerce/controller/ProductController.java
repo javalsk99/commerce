@@ -2,12 +2,12 @@ package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.dto.request.ProductRequest;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.ProductRequest;
 import lsk.commerce.dto.request.ProductUpdateRequest;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.ProductWithCategoryResponse;
@@ -16,9 +16,13 @@ import lsk.commerce.query.dto.ProductSearchCond;
 import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -59,11 +63,6 @@ public class ProductController {
     public ProductResponse findProduct(@PathVariable("productName") String productName) {
         Product product = productService.findProductByName(productName);
         return productService.getProductDto(product);
-    }
-
-    @GetMapping("/products/search/{categoryName}")
-    public List<ProductResponse> productListByCategoryName(@PathVariable("categoryName") String categoryName, @ModelAttribute ProductSearchCond cond) {
-        return productQueryService.searchProductsByCategoryName(categoryName, cond);
     }
 
     @PostMapping("/products/{productName}")

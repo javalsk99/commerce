@@ -1,6 +1,14 @@
 package lsk.commerce.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -34,13 +42,14 @@ public class Member {
     @Column(length = 50)
     private String name;
 
+    @Column(nullable = false, length = 50)
     private String initial;
 
     @NotBlank @Size(min = 4, max = 20)
     @Column(unique = true, length = 20)
     private String loginId;
 
-    @NotBlank @Size(min = 8, max = 20)
+    @NotBlank
     private String password;
 
     @NotNull

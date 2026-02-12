@@ -1,10 +1,18 @@
 package lsk.commerce.dto.request;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lsk.commerce.domain.DeliveryStatus;
+import lsk.commerce.domain.Order;
+import lsk.commerce.domain.OrderProduct;
+import lsk.commerce.domain.OrderStatus;
+import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.dto.OrderProductDto;
-import lsk.commerce.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

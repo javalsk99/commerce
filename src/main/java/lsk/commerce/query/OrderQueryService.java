@@ -1,14 +1,13 @@
 package lsk.commerce.query;
 
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.domain.Order;
 import lsk.commerce.query.dto.OrderProductQueryDto;
 import lsk.commerce.query.dto.OrderQueryDto;
+import lsk.commerce.query.dto.OrderSearchCond;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,12 +33,27 @@ public class OrderQueryService {
         return order;
     }
 
-    protected Map<String, List<OrderQueryDto>> findOrderMap(String loginId) {
+    public List<OrderQueryDto> searchOrders(OrderSearchCond cond) {
+        List<OrderQueryDto> orders = orderQueryRepository.search(cond);
+        if (orders.isEmpty()) {
+            return orders;
+        }
+
+        List<String> orderNumbers = toOrderNumbers(orders);
+
+        Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductList(orderNumbers);
+
+        orders.forEach(orderQueryDto -> orderQueryDto.setOrderProducts(orderProductMap.get(orderQueryDto.getOrderNumber())));
+
+        return orders;
+    }
+
+    protected Map<String, List<OrderQueryDto>> findOrderMapByLoginId(String loginId) {
         List<OrderQueryDto> orders = orderQueryRepository.findOrdersByLoginId(loginId);
         return assembleOrders(orders);
     }
 
-    protected Map<String, List<OrderQueryDto>> findOrderMap(List<String> loginIds) {
+    protected Map<String, List<OrderQueryDto>> findOrderMapByLoginIds(List<String> loginIds) {
         List<OrderQueryDto> orders = orderQueryRepository.findOrdersByLoginIds(loginIds);
         return assembleOrders(orders);
     }
@@ -55,15 +69,5 @@ public class OrderQueryService {
         Map<String, List<OrderQueryDto>> orderMap = orders.stream()
                 .collect(groupingBy(orderQueryDto -> orderQueryDto.getLoginId()));
         return orderMap;
-    }
-
-    private List<OrderQueryDto> orderChangeQueryDtoList(List<Order> orders) {
-        List<OrderQueryDto> orderQueryDtoList = new ArrayList<>();
-        for (Order order : orders) {
-            OrderQueryDto orderQueryDto = OrderQueryDto.changeQueryDto(order);
-            orderQueryDtoList.add(orderQueryDto);
-        }
-
-        return orderQueryDtoList;
     }
 }

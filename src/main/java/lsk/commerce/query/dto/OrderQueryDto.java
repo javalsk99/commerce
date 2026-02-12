@@ -1,6 +1,7 @@
 package lsk.commerce.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,7 @@ public class OrderQueryDto {
     private LocalDateTime shippedDate;
     private LocalDateTime deliveredDate;
 
+    @QueryProjection
     public OrderQueryDto(String loginId, String orderNumber, int totalAmount, OrderStatus orderStatus, LocalDateTime orderDate, PaymentStatus paymentStatus,
                          LocalDateTime paymentDate, DeliveryStatus deliveryStatus, LocalDateTime shippedDate, LocalDateTime deliveredDate) {
         this.loginId = loginId;

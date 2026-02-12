@@ -18,8 +18,4 @@ public class ProductQueryService {
     public List<ProductResponse> searchProducts(ProductSearchCond cond) {
         return productQueryRepository.search(cond);
     }
-
-    public List<ProductResponse> searchProductsByCategoryName(String categoryName, ProductSearchCond cond) {
-        return productQueryRepository.searchByCategoryName(categoryName, cond);
-    }
 }

@@ -52,6 +52,23 @@
           return productQueryRepository.search(cond);
       }
 
+  추가 문제: 이름으로 검색하면 상품이 여러 번 나온다.  
+  원인: CategoryProduct를 .join으로 넣어서 생긴 문제  
+  해결: join을 제거하고 서브쿼리로 category를 가져온다.
+
+      return JPAExpressions.select(categoryProduct)
+                .from(categoryProduct)
+                .join(categoryProduct.category, category)
+                .where(
+                        categoryProduct.product.eq(product),
+                        category.name.eq(categoryName)
+                )
+                .exists();
+
+  추가 문제: 이름을 초성으로 검색하면 상품이 나오지 않는다.
+  원인: Product에서 @PrePersist, @PreUpdate를 사용하고 자식 엔티티에서도 사용해서 생긴 문제
+  해결: public으로 열고 자식 엔티티에서 오버라이딩했다.
+
 ## 로직
 - 상품을 만들 때, 카테고리의 부모가 겹치면 부모 카테고리가 중복해서 저장되던 문제  
   해결: stream().anyMatch()로 상품에 카테고리가 연결됐는지 확인하고 연결됐으면 루프를 벗어난다.

@@ -3,8 +3,6 @@ package lsk.commerce.domain.product;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -24,12 +22,14 @@ public class Album extends Product {
     @Column(length = 50)
     private String artist;
 
+    @Column(length = 50)
     private String artistInitial;
 
     @NotBlank @Size(max = 50)
     @Column(length = 50)
     private String studio;
 
+    @Column(length = 50)
     private String studioInitial;
 
     public Album(String name, Integer price, Integer stockQuantity, String artist, String studio) {
@@ -38,8 +38,9 @@ public class Album extends Product {
         this.studio = studio;
     }
 
-    @PrePersist @PreUpdate
-    private void preHandler() {
+    @Override
+    public void preHandler() {
+        super.preHandler();
         this.artistInitial = InitialExtractor.extract(this.artist);
         this.studioInitial = InitialExtractor.extract(this.studio);
     }

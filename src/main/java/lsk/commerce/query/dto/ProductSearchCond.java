@@ -2,15 +2,13 @@ package lsk.commerce.query.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import lsk.commerce.domain.Product;
-import lsk.commerce.domain.product.Album;
-import lsk.commerce.domain.product.Book;
-import lsk.commerce.domain.product.Movie;
 
 @Getter @Setter
 public class ProductSearchCond {
 
-    private String name;
+    private String categoryName;
+
+    private String productName;
     private Integer minPrice;
     private Integer maxPrice;
 
@@ -25,9 +23,10 @@ public class ProductSearchCond {
     private String actor;
     private String director;
 
-    public ProductSearchCond(String name, Integer minPrice, Integer maxPrice, String dtype, String artist,
-                             String studio, String author, String isbn, String actor, String director) {
-        this.name = name;
+    public ProductSearchCond(String categoryName, String productName, Integer minPrice, Integer maxPrice, String dtype,
+                             String artist, String studio, String author, String isbn, String actor, String director) {
+        this.categoryName = categoryName;
+        this.productName = productName;
         this.minPrice = minPrice;
         this.maxPrice = maxPrice;
         this.dtype = dtype;

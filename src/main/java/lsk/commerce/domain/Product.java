@@ -1,6 +1,16 @@
 package lsk.commerce.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -41,6 +51,7 @@ public abstract class Product {
     @Column(length = 50)
     private String name;
 
+    @Column(nullable = false, length = 50)
     private String nameInitial;
 
     @NotNull @Min(100)
@@ -143,9 +154,8 @@ public abstract class Product {
         throw new IllegalArgumentException("상품이 해당 카테고리에 없습니다.");
     }
 
-    @PrePersist
-    @PreUpdate
-    private void preHandler() {
+    @PrePersist @PreUpdate
+    public void preHandler() {
         this.nameInitial = InitialExtractor.extract(this.name);
     }
 }

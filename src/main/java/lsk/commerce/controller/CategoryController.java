@@ -2,18 +2,17 @@ package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.domain.CategoryProduct;
-import lsk.commerce.dto.request.CategoryRequest;
 import lsk.commerce.domain.Category;
-import lsk.commerce.domain.Product;
+import lsk.commerce.dto.request.CategoryRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
-import lsk.commerce.dto.response.ProductResponse;
-import lsk.commerce.query.dto.ProductSearchCond;
 import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.CategoryService;
-import lsk.commerce.service.ProductService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,6 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
-    private final ProductService productService;
     private final CategoryProductService categoryProductService;
 
     @PostMapping("/categories")

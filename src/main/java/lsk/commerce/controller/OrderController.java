@@ -2,14 +2,21 @@ package lsk.commerce.controller;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Order;
-import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.query.OrderQueryService;
 import lsk.commerce.query.dto.OrderQueryDto;
+import lsk.commerce.query.dto.OrderSearchCond;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -29,6 +36,11 @@ public class OrderController {
         String orderNumber = orderService.order(memberLoginId, productMap);
 
         return orderNumber + " created";
+    }
+
+    @GetMapping("/orders")
+    public List<OrderQueryDto> orderList(@ModelAttribute OrderSearchCond cond) {
+        return orderQueryService.searchOrders(cond);
     }
 
     @GetMapping("/orders/{orderNumber}")

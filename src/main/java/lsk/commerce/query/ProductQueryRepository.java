@@ -3,6 +3,7 @@ package lsk.commerce.query;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lsk.commerce.domain.product.Album;
@@ -46,7 +47,8 @@ public class ProductQueryRepository {
                         album.artist, album.studio, book.author, book.isbn, movie.actor, movie.director))
                 .from(product)
                 .where(
-                        containsProductName(cond.getName()),
+                        eqCategoryName(cond.getCategoryName()),
+                        containsProductName(cond.getProductName()),
                         minPrice(cond.getMinPrice()),
                         maxPrice(cond.getMaxPrice()),
                         containsArtist(cond.getArtist()),
@@ -59,43 +61,31 @@ public class ProductQueryRepository {
                 .fetch();
     }
 
-    public List<ProductResponse> searchByCategoryName(String categoryName, ProductSearchCond cond) {
-        return query.select(new QProductResponse(
-                        product.name, product.price, product.stockQuantity,
-                        new CaseBuilder()
-                                .when(product.instanceOf(Album.class)).then("A")
-                                .when(product.instanceOf(Book.class)).then("B")
-                                .when(product.instanceOf(Movie.class)).then("M")
-                                .otherwise(Expressions.nullExpression(String.class)),
-                        album.artist, album.studio, book.author, book.isbn, movie.actor, movie.director))
-                .from(product)
-                .join(product.categoryProducts, categoryProduct)
-                .join(categoryProduct.category, category)
-                .where(
-                        category.name.eq(categoryName),
-                        containsProductName(cond.getName()),
-                        minPrice(cond.getMinPrice()),
-                        maxPrice(cond.getMaxPrice()),
-                        containsArtist(cond.getArtist()),
-                        containsStudio(cond.getStudio()),
-                        containsAuthor(cond.getAuthor()),
-                        containsIsbn(cond.getIsbn()),
-                        containsActor(cond.getActor()),
-                        containsDirector(cond.getDirector())
-                )
-                .fetch();
-    }
-
-    private BooleanExpression containsProductName(String name) {
-        if (!StringUtils.hasText(name)) {
+    private BooleanExpression eqCategoryName(String categoryName) {
+        if (!StringUtils.hasText(categoryName)) {
             return null;
         }
 
-        if (name.matches("^[ㄱ-ㅎ]+$")) {
-            return product.nameInitial.contains(name);
+        return JPAExpressions.select(categoryProduct)
+                .from(categoryProduct)
+                .join(categoryProduct.category, category)
+                .where(
+                        categoryProduct.product.eq(product),
+                        category.name.eq(categoryName)
+                )
+                .exists();
+    }
+
+    private BooleanExpression containsProductName(String productName) {
+        if (!StringUtils.hasText(productName)) {
+            return null;
         }
 
-        return product.name.containsIgnoreCase(name);
+        if (productName.matches("^[ㄱ-ㅎ]+$")) {
+            return product.nameInitial.contains(productName);
+        }
+
+        return product.name.containsIgnoreCase(productName);
     }
 
     private BooleanExpression minPrice(Integer minPrice) {

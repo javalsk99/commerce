@@ -3,8 +3,6 @@ package lsk.commerce.domain.product;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -24,12 +22,14 @@ public class Movie extends Product {
     @Column(length = 50)
     private String actor;
 
+    @Column(length = 50)
     private String actorInitial;
 
     @NotBlank @Size(max = 50)
     @Column(length = 50)
     private String director;
 
+    @Column(length = 50)
     private String directorInitial;
 
     public Movie(String name, Integer price, Integer stockQuantity, String actor, String director) {
@@ -38,8 +38,9 @@ public class Movie extends Product {
         this.director = director;
     }
 
-    @PrePersist @PreUpdate
-    private void preHandler() {
+    @Override
+    public void preHandler() {
+        super.preHandler();
         this.actorInitial = InitialExtractor.extract(this.actor);
         this.directorInitial = InitialExtractor.extract(this.director);
     }

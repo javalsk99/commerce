@@ -2,9 +2,12 @@ package lsk.commerce.service;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.dto.request.OrderRequest;
-import lsk.commerce.domain.*;
+import lsk.commerce.domain.Delivery;
+import lsk.commerce.domain.Member;
+import lsk.commerce.domain.Order;
+import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.repository.OrderProductJdbcRepository;
 import lsk.commerce.repository.OrderRepository;
@@ -15,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static lsk.commerce.domain.OrderStatus.*;
+import static lsk.commerce.domain.OrderStatus.CREATED;
+import static lsk.commerce.domain.OrderStatus.PAID;
 
 @Service
 @Transactional

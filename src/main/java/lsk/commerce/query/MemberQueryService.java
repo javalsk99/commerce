@@ -24,7 +24,7 @@ public class MemberQueryService {
         MemberQueryDto member = memberQueryRepository.findMember(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
 
-        Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMap(loginId);
+        Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginId(loginId);
 
         member.setOrders(orderMap.get(member.getLoginId()));
 
@@ -35,7 +35,7 @@ public class MemberQueryService {
         List<MemberQueryDto> members = memberQueryRepository.search(cond);
         List<String> loginIds = toMemberLoginIds(members);
 
-        Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMap(loginIds);
+        Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginIds(loginIds);
 
         members.forEach(m -> m.setOrders(orderMap.get(m.getLoginId())));
 

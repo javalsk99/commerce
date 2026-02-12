@@ -28,3 +28,6 @@
 
 
 - 주문, 배송, 주문 상품에서 Soft Delete를 관리할 deleted 추가
+
+
+- 회원, 상품에서 initial 추가

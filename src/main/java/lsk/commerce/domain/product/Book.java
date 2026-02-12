@@ -3,8 +3,6 @@ package lsk.commerce.domain.product;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -24,6 +22,7 @@ public class Book extends Product {
     @Column(length = 50)
     private String author;
 
+    @Column(length = 50)
     private String authorInitial;
 
     @NotBlank @Size(min = 10, max = 13)
@@ -36,8 +35,9 @@ public class Book extends Product {
         this.isbn = isbn;
     }
 
-    @PrePersist @PreUpdate
-    private void preHandler() {
+    @Override
+    public void preHandler() {
+        super.preHandler();
         this.authorInitial = InitialExtractor.extract(this.author);
     }
 }

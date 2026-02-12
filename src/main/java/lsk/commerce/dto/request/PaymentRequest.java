@@ -1,6 +1,8 @@
 package lsk.commerce.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.PaymentStatus;

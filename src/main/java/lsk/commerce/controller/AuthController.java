@@ -9,7 +9,6 @@ import lsk.commerce.dto.response.MemberLoginResponse;
 import lsk.commerce.domain.Member;
 import lsk.commerce.util.JwtProvider;
 import lsk.commerce.service.AuthService;
-import lsk.commerce.service.MemberService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final MemberService memberService;
     private final AuthService authService;
     private final JwtProvider jwtProvider;
 

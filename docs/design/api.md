@@ -13,12 +13,11 @@
   POST /categories/{categoryName} 카테고리 수정  
   DELETE /categories/{categoryName} 카테고리 삭제  
   POST /categories/{categoryName}/{productName} 카테고리에 소속된 상품 제거  
-  GET /categories/{categoryName}/products 카테고리에 소속된 상품들 조회  
   POST /categories/{categoryName}/products 카테고리에 소속된 상품들 제거
 
 
 - Member  
-  GET /members 회원 목록 조회  
+  GET /members 회원 검색  
   POST /members 회원 가입  
   GET /members/{memberLoginId} 회원 조회  
   DELETE /members/{memberLoginId} 회원 삭제  
@@ -27,6 +26,7 @@
 
 
 - Order  
+  GET /orders 주문 검색  
   POST /orders 주문 생성  
   GET /orders/{orderNumber} 주문 조회  
   POST /orders/{orderNumber} 주문 수정  
@@ -42,7 +42,7 @@
 
 
 - Product  
-  GET /products 상품 목록 조회  
+  GET /products 상품 검색  
   POST /products 상품 등록  
   GET /products/{productName} 상품 조회  
   POST /products/{productName} 상품 수정  
@@ -80,3 +80,7 @@
 
 - DELETE /orders/{orderNumber}를 주문 삭제로 변경, POST /orders/{orderNumber}/cancel을 주문 취소로 추가  
   주문 삭제는 Soft Delete로 DB에는 남아있지만 사용자가 조회할 때 안 보이게 하는 기능이고, 주문 취소는 결제 전 주문을 취소하는 기능이다.
+
+
+- 주문 검색 추가, 회원과 상품 목록 조회를 검색으로 변경, 카테고리로 상품 조회를 상품 검색에 포함  
+  검색 조건을 사용하지 않으면 전체 조회로 사용할 수 있고, 검색 조건을 사용하면 세부 조회가 가능하다.

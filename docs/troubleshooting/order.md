@@ -85,3 +85,56 @@
 - DELETE /orders/{orderNumber} 주문에서 배송과 결제를 Fetch Join으로 가져오게 변경
 - POST /orders/{orderNumber}/cancel 주문에서 연관된 모든 엔티티들을 Fetch Join으로 가져오게 변경 (회원 제외)
 - POST /orders/{orderNumber}/payments 주문에서 연관된 모든 엔티티들을 Fetch Join으로 가져오게 변경 (회원 제외)
+
+
+- GET /orders 상품 수만큼 주문이 검색 결과로 나온다.  
+  원인: 상품 이름을 조건으로 넣기 위해 OrderProduct와 Product를 .join으로 넣어서 생긴 문제
+
+      .join(order.orderProducts, orderProduct)
+      .join(orderProduct.product, product)
+
+  시도한 방법: OrderProductQueryRepository에도 검색을 추가해 상품 검색 조건 추가 - 주문에서 해당 상품만 나오고, 주문에 해당 상품이 없는 경우 상품 없이 주문만 나온다.
+
+      OrderProductQueryRepository
+      protected Map<String, List<OrderProductQueryDto>> search(List<String> orderNumbers, String productName) {
+          List<OrderProductQueryDto> orderProducts = query.select(Projections.constructor(OrderProductQueryDto.class,
+                          order.orderNumber,
+                          product.name,
+                          product.price,
+                          orderProduct.count,
+                          orderProduct.orderPrice))
+                  .from(orderProduct)
+                  .join(orderProduct.order, order)
+                  .join(orderProduct.product, product)
+                  .where(
+                          inOrderNumbers(orderNumbers),
+                          eqProductName(productName)
+                  )
+                  .fetch();
+
+          return orderProducts.stream()
+                  .collect(groupingBy(orderProductQueryDto -> orderProductQueryDto.getOrderNumber()));
+      }
+
+  해결: OrderProductQueryRepository의 검색을 제거하고, OrderQueryRepository에서 서브쿼리를 이용해 상품 검색 조건 추가
+
+      OrderQueryRepository
+      private BooleanExpression containsProductName(String productName) {
+          if (!StringUtils.hasText(productName)) {
+              return null;
+          }
+
+          QOrderProduct subOrderProduct = orderProduct;
+          return JPAExpressions.select(Projections.constructor(OrderProductQueryDto.class,
+                          order.orderNumber,
+                          product.name,
+                          product.price,
+                          orderProduct.count,
+                          orderProduct.orderPrice))
+                  .from(subOrderProduct)
+                  .where(
+                          subOrderProduct.order.eq(order),
+                          containsProductNameAndInitial(productName, subOrderProduct)
+                  )
+                  .exists();
+      }
