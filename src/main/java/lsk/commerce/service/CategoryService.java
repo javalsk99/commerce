@@ -2,7 +2,6 @@ package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
-import lsk.commerce.domain.Product;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.repository.CategoryRepository;
@@ -10,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -31,10 +32,6 @@ public class CategoryService {
         return category.getName();
     }
 
-    public Category findCategory(Long categoryId) {
-        return categoryRepository.findOne(categoryId);
-    }
-
     public Category findCategoryByName(String categoryName) {
         List<Category> categories = categoryRepository.findAll();
 
@@ -46,9 +43,10 @@ public class CategoryService {
 
     public List<Category> findCategoryByNames(String... categoryNames) {
         List<Category> categories = categoryRepository.findAll();
+        Set<String> uniqueNames = new HashSet<>(Arrays.asList(categoryNames));
 
         List<Category> categoryList = new ArrayList<>();
-        for (String categoryName : categoryNames) {
+        for (String categoryName : uniqueNames) {
             categoryList.add(categories.stream()
                     .filter(c -> c.getName().equals(categoryName))
                     .findFirst()
@@ -64,10 +62,6 @@ public class CategoryService {
         return categories.stream()
                 .filter(c -> c.getParent() == null)
                 .collect(toList());
-    }
-
-    public List<Product> findProductsByCategoryName(String categoryName) {
-        return categoryRepository.findProductsByCategoryName(categoryName);
     }
 
     @Transactional

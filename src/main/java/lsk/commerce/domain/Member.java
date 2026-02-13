@@ -49,7 +49,7 @@ public class Member {
     @Column(unique = true, length = 20)
     private String loginId;
 
-    @NotBlank
+    @NotBlank @Size(min = 8)
     private String password;
 
     @NotNull

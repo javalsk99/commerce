@@ -41,10 +41,6 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
     }
 
-    public List<Member> findMembers() {
-        return memberRepository.findAll();
-    }
-
     @Transactional
     public void deleteMember(String memberLoginId) {
         Member member = findMemberByLoginId(memberLoginId);

@@ -18,10 +18,6 @@ public class ProductRepository {
         em.persist(product);
     }
 
-    public Product findOne(Long productId) {
-        return em.find(Product.class, productId);
-    }
-
     public List<Product> findAll() {
         return em.createQuery("select p from Product p", Product.class)
                 .getResultList();

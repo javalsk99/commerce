@@ -81,14 +81,10 @@ class MemberServiceTest {
         //when
         Member findMember1 = memberService.findMemberByLoginId(loginId1);
         Member findMember2 = memberService.findMemberForLogin(member2.getLoginId());
-        List<Member> findMembers = memberService.findMembers();
 
         //then
         assertThat(findMember1.getLoginId()).isEqualTo("id_A");
         assertThat(findMember2.getLoginId()).isEqualTo("id_C");
-        assertThat(findMembers)
-                .extracting("loginId")
-                .containsExactlyInAnyOrder("id_A", "id_C", "testId");
     }
 
     @Test
@@ -117,7 +113,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void failed_delete() {
+    void failed_delete_alreadyDeleted() {
         //given
         Member member = createMember1();
         String loginId = memberService.join(member);

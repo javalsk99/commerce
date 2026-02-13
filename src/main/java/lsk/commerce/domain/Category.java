@@ -50,7 +50,9 @@ public class Category {
 
     //CategoryService에서 사용해서 public
     public void unConnectParent() {
-        this.parent.child.remove(this);
+        if (this.parent != null) {
+            this.parent.child.remove(this);
+        }
     }
 
     public static Category createCategory(Category parentCategory, String name) {
@@ -64,8 +66,13 @@ public class Category {
     }
 
     public Category changeParentCategory(Category newParentCategory) {
-        if (!this.getChild().isEmpty()) {
-            throw new IllegalStateException("자식 카테고리가 있어서 부모 카테고리를 변경할 수 없습니다.");
+        Category check = newParentCategory;
+        while (check != null) {
+            if (this.getId().equals(check.getId())) {
+                throw new IllegalArgumentException("자신 또는 자식을 부모로 설정할 수 없습니다.");
+            }
+
+            check = check.parent;
         }
 
         this.unConnectParent();

@@ -220,7 +220,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void failed_delete() {
+    void failed_delete_alreadyDeleted() {
         //given
         Category category = createCategory1();
         Album album = createAlbum();
@@ -253,27 +253,21 @@ class ProductServiceTest {
         assertThat(productWithCategoryDto.getCategoryNames().size()).isEqualTo(1);
     }
 
-/*
-    @Test
-    void connect_category() {
-        //given
-        Album album = createAlbum();
-        Long albumId = productService.register(album);
-        Product findAlbum = productService.findProduct(albumId);
-
-        Category parentCategory = createParentCategory("Dance");
-        Category childCategory = createChildCategory(parentCategory, "Girl Group");
-
-        //when
-        findAlbum.addCategoryProduct(childCategory);
-
-        //then
-        assertThat(findAlbum.getCategoryProducts().size()).isEqualTo(2);
-        assertThat(findAlbum.getCategoryProducts())
-                .extracting(CategoryProduct::getCategory)
-                .contains(parentCategory, childCategory);
+    private Category createCategory1() {
+        return categoryService.findCategoryByName(categoryService.create("가요", null));
     }
-*/
+
+    private Category createCategory2() {
+        return categoryService.findCategoryByName(categoryService.create("컴퓨터/IT", null));
+    }
+
+    private Category createCategory3() {
+        return categoryService.findCategoryByName(categoryService.create("Comedy", null));
+    }
+
+    private Category createCategory4() {
+        return categoryService.findCategoryByName(categoryService.create("댄스", "가요"));
+    }
 
     private Album createAlbum() {
         return new Album("하얀 그리움", 15000, 20, "fromis_9", "ASND");
@@ -285,22 +279,6 @@ class ProductServiceTest {
 
     private Movie createMovie() {
         return new Movie("굿뉴스", 7000, 15, "설경구", "변성현");
-    }
-
-    private Category createCategory1() {
-        return categoryService.findCategoryByName(categoryService.create("가요", null));
-    }
-
-    private Category createCategory2() {
-        return categoryService.findCategoryByName(categoryService.create("IT/컴퓨터", null));
-    }
-
-    private Category createCategory3() {
-        return categoryService.findCategoryByName(categoryService.create("Comedy", null));
-    }
-
-    private Category createCategory4() {
-        return categoryService.findCategoryByName(categoryService.create("댄스", "가요"));
     }
 
     static Stream<Arguments> productProvider() {
