@@ -46,7 +46,13 @@ public class OrderService {
 
         for (Map.Entry<String, Integer> productNameCountEntry : productNamesCount.entrySet()) {
             String productName = productNameCountEntry.getKey();
-            int count = productNameCountEntry.getValue();
+            Integer count = productNameCountEntry.getValue();
+
+            if (productName == null) {
+                throw new IllegalArgumentException("상품이 존재하지 않습니다.");
+            } else if (count == null) {
+                throw new IllegalArgumentException("수량이 존재하지 않습니다.");
+            }
 
             //주문 상품 생성
             Product product = products.stream()
@@ -90,7 +96,13 @@ public class OrderService {
 
         for (Map.Entry<String, Integer> newProductNameCountEntry : newProductNamesCount.entrySet()) {
             String newProductName = newProductNameCountEntry.getKey();
-            int newCount = newProductNameCountEntry.getValue();
+            Integer newCount = newProductNameCountEntry.getValue();
+
+            if (newProductName == null) {
+                throw new IllegalArgumentException("상품이 존재하지 않습니다.");
+            } else if (newCount == null) {
+                throw new IllegalArgumentException("수량이 존재하지 않습니다.");
+            }
 
             Product newProduct = currentProducts.stream()
                     .filter(p -> newProductName.equals(p.getName()))
@@ -107,16 +119,6 @@ public class OrderService {
         orderProductJdbcRepository.saveAll(newOrderProducts);
 
         return currentOrder;
-    }
-
-    @Transactional(readOnly = true)
-    public Order findOrder(Long orderId) {
-        return orderRepository.findOne(orderId);
-    }
-
-    @Transactional(readOnly = true)
-    public Order findOrderByOrderNumber(String orderNumber) {
-        return orderRepository.findByOrderNumber(orderNumber);
     }
 
     @Transactional(readOnly = true)

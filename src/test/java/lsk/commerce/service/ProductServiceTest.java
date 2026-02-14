@@ -3,10 +3,10 @@ package lsk.commerce.service;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import lsk.commerce.domain.Category;
+import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.domain.Product;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.ProductWithCategoryResponse;
 import org.junit.jupiter.api.Test;
@@ -21,9 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.Arguments.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @Transactional
 @SpringBootTest

@@ -17,18 +17,6 @@ public class OrderRepository {
         em.persist(order);
     }
 
-    public Order findOne(Long orderId) {
-        return em.find(Order.class, orderId);
-    }
-
-    public Order findByOrderNumber(String orderNumber) {
-        return em.createQuery("select o from Order o where o.orderNumber = :orderNumber", Order.class)
-                .setParameter("orderNumber", orderNumber)
-                .getResultStream()
-                .findFirst()
-                .orElse(null);
-    }
-
     public Optional<Order> findWithDelivery(String orderNumber) {
         return em.createQuery(
                         "select o from Order o" +

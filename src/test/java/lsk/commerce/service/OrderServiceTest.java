@@ -1,126 +1,197 @@
 package lsk.commerce.service;
 
-import lsk.commerce.domain.*;
+import jakarta.persistence.EntityManager;
+import lsk.commerce.domain.Category;
+import lsk.commerce.domain.DeliveryStatus;
+import lsk.commerce.domain.Member;
+import lsk.commerce.domain.Order;
+import lsk.commerce.domain.OrderStatus;
+import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.domain.Product;
+import org.hibernate.TransientObjectException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
-import static lsk.commerce.domain.DeliveryStatus.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @SpringBootTest
 @Transactional
 class OrderServiceTest {
 
     @Autowired
+    EntityManager em;
+
+    @Autowired
     MemberService memberService;
+    @Autowired
+    CategoryService categoryService;
     @Autowired
     ProductService productService;
     @Autowired
     OrderService orderService;
 
-/*
+    String memberLoginId;
+    Category category1;
+    Category category2;
+    Category category3;
+    Album album;
+    Book book;
+    Movie movie;
+    String orderNumber;
+
+    @BeforeEach
+    void beforeEach() {
+        memberLoginId = createMember1();
+
+        category1 = createCategory1();
+        category2 = createCategory2();
+        category3 = createCategory3();
+
+        album = createAlbum();
+        book = createBook();
+        movie = createMovie();
+        productService.register(album, List.of(category1));
+        productService.register(book, List.of(category2));
+        productService.register(movie, List.of(category3));
+
+        orderNumber = orderService.order(memberLoginId, Map.of(album.getName(), 3, book.getName(), 2, movie.getName(), 5));
+        em.flush();
+        em.clear();
+    }
+
     @Test
     void order() {
         //given
-        Long memberId = createMember1();
-        Long albumId = createAlbum();
-        Long bookId = createBook();
-        Long movieId = createMovie();
-
-        Product album = productService.findProduct(albumId);
-        Product book = productService.findProduct(bookId);
-        Product movie = productService.findProduct(movieId);
+        Product findAlbum = productService.findProductByName(album.getName());
+        Product findBook = productService.findProductByName(book.getName());
+        Product findMovie = productService.findProductByName(movie.getName());
 
         //when
-        Long orderId = orderService.order(memberId, Map.of(albumId, 3, bookId, 5, movieId, 2));
-        Order findOrder = orderService.findOrder(orderId);
+        String number = orderService.order(memberLoginId, Map.of(findAlbum.getName(), 3, findBook.getName(), 5, findMovie.getName(), 2));
 
         //then
+        Order findOrder = orderService.findOrderWithAll(number);
         assertThat(findOrder.getOrderProducts().size()).isEqualTo(3);
         assertThat(findOrder.getTotalAmount()).isEqualTo(274000);
 
-        assertThat(album.getStockQuantity()).isEqualTo(17);
-        assertThat(book.getStockQuantity()).isEqualTo(5);
-        assertThat(movie.getStockQuantity()).isEqualTo(13);
+        assertThat(findAlbum.getStockQuantity()).isEqualTo(14);
+        assertThat(findBook.getStockQuantity()).isEqualTo(3);
+        assertThat(findMovie.getStockQuantity()).isEqualTo(8);
         assertThat(findOrder.getOrderProducts())
-                .extracting(OrderProduct::getProduct, OrderProduct::getCount, OrderProduct::getOrderPrice)
-                .contains(tuple(album, 3, 45000), tuple(book, 5, 215000), tuple(movie, 2, 14000));
+                .extracting("product", "count", "orderPrice")
+                .contains(tuple(findAlbum, 3, 45000), tuple(findBook, 5, 215000), tuple(findMovie, 2, 14000));
 
-        assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(WAITING);
+        assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
     }
-*/
 
-/*
-    @Test
-    void order_fail() {
+    @ParameterizedTest(name = "[{index}] {3}")
+    @MethodSource("memberProductCountProvider")
+    void failed_order(String memberLoginId, String productName, Integer count, String reason) {
         //given
-        Long memberId = createMember1();
-        Long albumId = createAlbum();
+        Map<String, Integer> productMap = new HashMap<>();
+        productMap.put(productName, count);
 
         //when
-        assertThrows(IllegalArgumentException.class, () -> {
-            orderService.order(memberId, Map.of(albumId, 21));
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+                orderService.order(memberLoginId, productMap));
     }
-*/
 
-/*
     @Test
-    void update_order() {
-        //given
-        Long memberId = createMember1();
-        Long albumId = createAlbum();
-        Long bookId = createBook();
-        Long movieId = createMovie();
-
-        Long orderId = orderService.order(memberId, Map.of(albumId, 3, bookId, 5, movieId, 2));
-        Order order = orderService.findOrder(orderId);
-
-        Product album = productService.findProduct(albumId);
-        Product book = productService.findProduct(bookId);
-        Product movie = productService.findProduct(movieId);
-
+    void find() {
         //when
-        orderService.updateOrder(order, Map.of(albumId, 1, bookId, 5));
-        Order findOrder = orderService.findOrder(orderId);
+        Order findOrder = orderService.findOrderWithAll(orderNumber);
 
         //then
+        assertThat(findOrder.getMember().getLoginId()).isEqualTo("id_A");
+        assertThat(findOrder.getOrderProducts())
+                .extracting("product.name", "count")
+                .containsExactlyInAnyOrder(tuple("하얀 그리움", 3), tuple("자바 ORM 표준 JPA 프로그래밍", 2), tuple("굿뉴스", 5));
+    }
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @MethodSource("orderNumberProvider")
+    void failed_find(String number, String reason) {
+        //when
+        assertThrows(IllegalArgumentException.class, () ->
+                orderService.findOrderWithAll(number));
+    }
+
+    @Test
+    void update() {
+        //when
+        orderService.updateOrder(orderNumber, Map.of(album.getName(), 4, movie.getName(), 2));
+        em.flush();
+        em.clear();
+
+        //then
+        Order findOrder = orderService.findOrderWithAll(orderNumber);
         assertThat(findOrder.getOrderProducts().size()).isEqualTo(2);
-        assertThat(findOrder.getTotalAmount()).isEqualTo(230000);
-
-        assertThat(album.getStockQuantity()).isEqualTo(19);
-        assertThat(book.getStockQuantity()).isEqualTo(5);
-        assertThat(movie.getStockQuantity()).isEqualTo(15);
-        assertThat(findOrder.getOrderProducts())
-                .extracting(OrderProduct::getProduct, OrderProduct::getCount, OrderProduct::getOrderPrice)
-                .contains(tuple(album, 1, 15000), tuple(book, 5, 215000));
+        assertThat(findOrder.getTotalAmount()).isEqualTo(74000);
     }
-*/
 
-/*
-    @Test
-    void delete_order() {
+    @ParameterizedTest(name = "[{index}] {2}")
+    @MethodSource("productMapProvider")
+    void failed_update(String productName, Integer count, String reason) {
         //given
-        Long orderId = createOrder();
-        Order order = orderService.findOrder(orderId);
+        Map<String, Integer> newProductMap = new HashMap<>();
+        newProductMap.put(productName, count);
 
         //when
-        orderService.DeleteOrder(order);
+        assertThrows(IllegalArgumentException.class, () ->
+                orderService.updateOrder(orderNumber, newProductMap));
+    }
+
+    @Test
+    void cancel() {
+        //when
+        orderService.cancelOrder(orderNumber);
 
         //then
-        Order findOrder = orderService.findOrder(orderId);
-        assertThat(findOrder).isNull();
+        Order findOrder = orderService.findOrderWithAll(orderNumber);
+        assertThat(findOrder.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED);
     }
-*/
+
+    @Test
+    void delete() {
+        //given
+        orderService.cancelOrder(orderNumber);
+
+        //when
+        orderService.deleteOrder(orderNumber);
+        em.flush(); //예상치 못한 문제 발생
+        em.clear();
+
+        //then
+        assertThrows(TransientObjectException.class, () ->
+                em.createQuery("select o from Order o where o.orderNumber = :orderNumber")
+                        .setParameter("orderNumber", orderNumber)
+                        .getResultStream()
+                        .findFirst());
+    }
+
+    @Test
+    void failed_delete() {
+        //when
+        assertThrows(IllegalStateException.class, () ->
+                orderService.deleteOrder(orderNumber));
+    }
 
 /*
     @Test
@@ -141,62 +212,76 @@ class OrderServiceTest {
     }
 */
 
-/*
-    @Test
-    void failed_order() {
-        //given
-        Long orderId = createOrder();
-        Order findOrder = orderService.findOrder(orderId);
-
-        Payment.requestPayment(findOrder);
-        findOrder.getPayment().testFailed();
-
-        //when
-        assertThrows(IllegalStateException.class, () -> {
-            findOrder.getDelivery().startShipping(findOrder);
-        });
-    }
-*/
-
-    private Long createMember1() {
-        Member member = new Member("userA", "idA", "0000", "Seoul", "Gangnam", "01234");
-        memberService.join(member);
-        return member.getId();
+    private String createMember1() {
+        Member member = new Member("userA", "id_A", "00000000", "Seoul", "Gangnam", "01234");
+        return memberService.join(member);
     }
 
-    private Long createMember2() {
-        Member member = new Member("userB", "idB", "1111", "Seoul", "Gangbuk", "01235");
-        memberService.join(member);
-        return member.getId();
+    private String createMember2() {
+        Member member = new Member("userB", "id_B", "11111111", "Seoul", "Gangbuk", "01235");
+        return memberService.join(member);
     }
 
-/*
-    private Long createAlbum() {
-        Album album = new Album("하얀 그리움", 15000, 20, "fromis_9", "ASND");
-        productService.register(album);
-        return album.getId();
+    private Category createCategory1() {
+        return categoryService.findCategoryByName(categoryService.create("가요", null));
     }
 
-    private Long createBook() {
-        Book book = new Book("자바 ORM 표준 JPA 프로그래밍", 43000, 10, "김영한", "9788960777330");
-        productService.register(book);
-        return book.getId();
+    private Category createCategory2() {
+        return categoryService.findCategoryByName(categoryService.create("컴퓨터/IT", null));
     }
 
-    private Long createMovie() {
-        Movie movie = new Movie("굿뉴스", 7000, 15, "변성현", "설경구");
-        productService.register(movie);
-        return movie.getId();
+    private Category createCategory3() {
+        return categoryService.findCategoryByName(categoryService.create("Comedy", null));
     }
-*/
 
-/*
-    private Long createOrder() {
-        Long memberId = createMember1();
-        Long albumId = createAlbum();
-        Long bookId = createBook();
-        Long movieId = createMovie();
-        return orderService.order(memberId, Map.of(albumId, 3, bookId, 5, movieId, 2));
+    private Category createCategory4() {
+        return categoryService.findCategoryByName(categoryService.create("댄스", "가요"));
     }
-*/
+
+    private Album createAlbum() {
+        return new Album("하얀 그리움", 15000, 20, "fromis_9", "ASND");
+    }
+
+    private Book createBook() {
+        return new Book("자바 ORM 표준 JPA 프로그래밍", 43000, 10, "김영한", "9788960777330");
+    }
+
+    private Movie createMovie() {
+        return new Movie("굿뉴스", 7000, 15, "설경구", "변성현");
+    }
+
+    static Stream<Arguments> memberProductCountProvider() {
+        return Stream.of(
+                arguments(null, "하얀 그리움", 3, "회원 아이디 null"),
+                arguments("", "하얀 그리움", 3, "회원 아이디 빈 문자열"),
+                arguments(" ", "하얀 그리움", 3, "회원 아이디 공백"),
+                arguments("id_B", "하얀 그리움", 3, "존재하지 않는 회원 아이디"),
+                arguments("id_A", null, 3, "상품 이름 null"),
+                arguments("id_A", "", 3, "상품 이름 빈 문자열"),
+                arguments("id_A", " ", 3, "상품 이름 공백"),
+                arguments("id_A", "BANG BANG", 3, "존재하지 않는 상품 이름"),
+                arguments("id_A", "하얀 그리움", null, "주문 수량 null"),
+                arguments(null, "하얀 그리움", 18, "재고 수량 초과")
+        );
+    }
+
+    static Stream<Arguments> orderNumberProvider() {
+        return Stream.of(
+                arguments(null, "주문 번호 null"),
+                arguments("", "주문 번호 빈 문자열"),
+                arguments(" ", "주문 번호 공백"),
+                arguments("12345", "존재하지 않는 주문 번호")
+        );
+    }
+
+    static Stream<Arguments> productMapProvider() {
+        return Stream.of(
+                arguments(null, 2, "상품 이름 null"),
+                arguments("", 2, "상품 이름 빈 문자열"),
+                arguments(" ", 2, "상품 이름 공백"),
+                arguments("BANG BANG", 2, "존재하지 않는 상품"),
+                arguments("하얀 그리움", null, "주문 수량 null"),
+                arguments("하얀 그리움", 21, "재고 수량 초과")
+        );
+    }
 }
