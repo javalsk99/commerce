@@ -67,14 +67,18 @@ public class OrderService {
 
         //주문 저장
         orderRepository.save(order);
+        em.flush();
 
         //주문 상품 저장
         registerOrderProducts(orderProducts);
 
-        return order.getOrderNumber();
+        String orderNumber = order.getOrderNumber();
+        em.clear();
+
+        return orderNumber;
     }
 
-    public Order updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
+    public void updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
         Order order = findOrderWithAllExceptMember(orderNumber);
 
         //결제가 됐는지 검증
@@ -111,14 +115,15 @@ public class OrderService {
             newOrderProducts.add(OrderProduct.createOrderProduct(newProduct, newCount));
         }
 
-        //새로운 주문 상품으로 변경 (나중에 주문의 주문 상품과 새로운 주문 상품을 비교해서, 같은 상품이면 수량만 변경, 새로운 상품이면 추가, 기존 상품이 새로운 주문 상품에 없으면 삭제로 변경)
+        //새로운 주문 상품으로 변경
         Order.updateOrder(currentOrder, newOrderProducts);
+        em.flush();
 
         //기존의 주문 상품 삭제와 새로운 주문 상품 저장
         orderProductJdbcRepository.deleteOrderProductsByOrderId(currentOrder.getId());
         orderProductJdbcRepository.saveAll(newOrderProducts);
 
-        return currentOrder;
+        em.clear();
     }
 
     @Transactional(readOnly = true)
@@ -154,7 +159,10 @@ public class OrderService {
         }
 
         orderProductJdbcRepository.softDeleteOrderProductsByOrderId(order.getId());
-        orderRepository.delete(order);
+
+        em.clear();
+        Order currentOrder = findOrderWithDelivery(orderNumber);
+        orderRepository.delete(currentOrder);
     }
 
     //결제 로직 검증용

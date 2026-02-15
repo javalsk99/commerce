@@ -10,6 +10,7 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.event.PaymentCompletedEvent;
 import org.hibernate.TransientObjectException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,10 @@ class OrderServiceTest {
     ProductService productService;
     @Autowired
     OrderService orderService;
+    @Autowired
+    PaymentService paymentService;
+    @Autowired
+    DeliveryService deliveryService;
 
     String memberLoginId;
     Category category1;
@@ -71,8 +77,6 @@ class OrderServiceTest {
         productService.register(movie, List.of(category3));
 
         orderNumber = orderService.order(memberLoginId, Map.of(album.getName(), 3, book.getName(), 2, movie.getName(), 5));
-        em.flush();
-        em.clear();
     }
 
     @Test
@@ -94,8 +98,8 @@ class OrderServiceTest {
         assertThat(findBook.getStockQuantity()).isEqualTo(3);
         assertThat(findMovie.getStockQuantity()).isEqualTo(8);
         assertThat(findOrder.getOrderProducts())
-                .extracting("product", "count", "orderPrice")
-                .contains(tuple(findAlbum, 3, 45000), tuple(findBook, 5, 215000), tuple(findMovie, 2, 14000));
+                .extracting("product.name", "count", "orderPrice")
+                .contains(tuple(findAlbum.getName(), 3, 45000), tuple(findBook.getName(), 5, 215000), tuple(findMovie.getName(), 2, 14000));
 
         assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
     }
@@ -136,8 +140,6 @@ class OrderServiceTest {
     void update() {
         //when
         orderService.updateOrder(orderNumber, Map.of(album.getName(), 4, movie.getName(), 2));
-        em.flush();
-        em.clear();
 
         //then
         Order findOrder = orderService.findOrderWithAll(orderNumber);
@@ -163,33 +165,77 @@ class OrderServiceTest {
         orderService.cancelOrder(orderNumber);
 
         //then
-        Order findOrder = orderService.findOrderWithAll(orderNumber);
+        Order findOrder = orderService.findOrderWithDeliveryPayment(orderNumber);
         assertThat(findOrder.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
         assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED);
     }
 
     @Test
-    void delete() {
+    void failed_cancel_paidOrder() {
+        //given
+        Order order = paymentService.request(orderNumber);
+        paymentService.completePayment(order.getPayment().getPaymentId(), LocalDateTime.now());
+
+        //when
+        assertThrows(IllegalStateException.class, () ->
+                orderService.cancelOrder(orderNumber));
+    }
+
+    @Test
+    void failed_cancel_alreadyCancel() {
+        //given
+        orderService.cancelOrder(orderNumber);
+
+        //when
+        assertThrows(IllegalStateException.class, () ->
+                orderService.cancelOrder(orderNumber));
+    }
+
+    @Test
+    void delete_canceledOrder() {
         //given
         orderService.cancelOrder(orderNumber);
 
         //when
         orderService.deleteOrder(orderNumber);
-        em.flush(); //예상치 못한 문제 발생
-        em.clear();
 
         //then
-        assertThrows(TransientObjectException.class, () ->
-                em.createQuery("select o from Order o where o.orderNumber = :orderNumber")
-                        .setParameter("orderNumber", orderNumber)
-                        .getResultStream()
-                        .findFirst());
+        assertThrows(IllegalArgumentException.class, () ->
+                orderService.findOrderWithDeliveryPayment(orderNumber));
     }
 
     @Test
-    void failed_delete() {
+    void delete_deliveredOrder() {
+        //given
+        Order order = paymentService.request(orderNumber);
+        paymentService.completePayment(order.getPayment().getPaymentId(), LocalDateTime.now());
+
+        deliveryService.startDelivery(orderNumber);
+        deliveryService.completeDelivery(orderNumber);
+
+        //when
+        orderService.deleteOrder(orderNumber);
+
+        //then
+        assertThrows(IllegalArgumentException.class, () ->
+                orderService.findOrderWithDeliveryPayment(orderNumber));
+    }
+
+    @Test
+    void failed_delete_uncanceled() {
         //when
         assertThrows(IllegalStateException.class, () ->
+                orderService.deleteOrder(orderNumber));
+    }
+
+    @Test
+    void failed_delete_alreadyDeleted() {
+        //given
+        orderService.cancelOrder(orderNumber);
+        orderService.deleteOrder(orderNumber);
+
+        //when
+        assertThrows(IllegalArgumentException.class, () ->
                 orderService.deleteOrder(orderNumber));
     }
 
@@ -232,10 +278,6 @@ class OrderServiceTest {
 
     private Category createCategory3() {
         return categoryService.findCategoryByName(categoryService.create("Comedy", null));
-    }
-
-    private Category createCategory4() {
-        return categoryService.findCategoryByName(categoryService.create("댄스", "가요"));
     }
 
     private Album createAlbum() {

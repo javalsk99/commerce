@@ -147,18 +147,16 @@ public class Order {
     public void cancel() {
         if (this.orderStatus == CANCELED) {
             throw new IllegalStateException("이미 취소된 주문입니다.");
-        }
-
-        for (OrderProduct orderProduct : this.orderProducts) {
-            orderProduct.getProduct().addStock(orderProduct.getCount());
-        }
-
-        if (this.payment != null) {
+        } else if (this.payment != null) {
             if (this.payment.getPaymentStatus() == COMPLETED) {
                 throw new IllegalStateException("결제가 완료돼서 취소할 수 없습니다.");
             }
 
             this.payment.canceled();
+        }
+
+        for (OrderProduct orderProduct : this.orderProducts) {
+            orderProduct.getProduct().addStock(orderProduct.getCount());
         }
 
         this.getDelivery().canceled();

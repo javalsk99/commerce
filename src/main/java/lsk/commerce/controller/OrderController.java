@@ -54,7 +54,8 @@ public class OrderController {
             throw new IllegalArgumentException("주문을 수정할 주문 상품이 없습니다.");
         }
 
-        Order order = orderService.updateOrder(orderNumber, productMap);
+        orderService.updateOrder(orderNumber, productMap);
+        Order order = orderService.findOrderWithDeliveryPayment(orderNumber);
         return orderService.getOrderResponse(order);
     }
 
