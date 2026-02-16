@@ -25,15 +25,14 @@ public class PaymentService {
     //이후 결제 진행은 다른 비즈니스 로직 다 생성 후 진행
     public Order request(String orderNumber) {
         Order order = orderService.findOrderWithAllExceptMember(orderNumber);
+        if (order.getPayment() != null) {
+            throw new IllegalStateException("이미 결제 요청된 주문입니다.");
+        }
+
         Payment.requestPayment(order);
         CompletePaymentRequest completePaymentRequest = new CompletePaymentRequest(order.getPayment().getPaymentId());
         paymentRepository.save(order.getPayment());
         return order;
-    }
-
-    @Transactional(readOnly = true)
-    public Payment findPayment(Long paymentId) {
-        return paymentRepository.findOne(paymentId);
     }
 
     @Transactional(readOnly = true)
@@ -49,14 +48,14 @@ public class PaymentService {
     }
 
     public Payment failedPayment(String paymentId) {
-        Payment payment = failedPayment(paymentId);
+        Payment payment = findPaymentByPaymentId(paymentId);
         payment.failed();
         return payment;
     }
 
-    public Payment completePayment(String paymentId, LocalDateTime paymentDate) {
+    public Payment completePayment(String paymentId) {
         Payment payment = findPaymentWithOrderDelivery(paymentId);
-        payment.complete(paymentDate);
+        payment.complete(LocalDateTime.now());
         payment.getOrder().completePaid();
 
         String orderNumber = payment.getOrder().getOrderNumber();

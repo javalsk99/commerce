@@ -29,3 +29,37 @@
       }
 
   GET /web/login에도 똑같이 적용
+
+## 로직
+- 토큰 생성을 서비스에서 진행
+
+      public String login(String loginId, String password) {
+          Member loginMember = memberService.findMemberForLogin(loginId);
+          if (!loginMember.getPassword().equals(password)) {
+              throw new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.");
+          }
+
+          return jwtProvider.createToken(loginMember);
+      }
+
+- JwtProvider의 토큰 검증 및 추출을 분리
+
+      public boolean validateToken(String token) {
+          try {
+              parseToken(token);
+              return true;
+          } catch (JwtException e) {
+              return false;
+          }
+      }
+
+      public Claims extractClaims(String token) {
+          return parseToken(token).getPayload();
+      }
+
+      private Jws<Claims> parseToken(String token) {
+          return Jwts.parser()
+                  .verifyWith(secretKey)
+                  .build()
+                  .parseSignedClaims(token);
+      }

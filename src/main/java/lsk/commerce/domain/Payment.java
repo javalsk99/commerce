@@ -89,6 +89,10 @@ public class Payment {
     }
 
     public void complete(LocalDateTime paymentDate) {
+        if (this.paymentStatus == COMPLETED) {
+            throw new IllegalStateException("이미 결제 완료된 주문입니다.");
+        }
+
         this.paymentStatus = COMPLETED;
         this.paymentDate = paymentDate;
     }

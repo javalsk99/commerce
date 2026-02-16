@@ -167,8 +167,7 @@ public class OrderService {
 
     //결제 로직 검증용
     @Transactional(readOnly = true)
-    public OrderRequest getOrderRequest(String orderNumber) {
-        Order order = findOrderWithAll(orderNumber);
+    public OrderRequest getOrderRequest(Order order) {
         return OrderRequest.orderChangeRequest(order);
     }
 

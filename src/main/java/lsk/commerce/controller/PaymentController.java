@@ -12,6 +12,7 @@ import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.PaymentCustomData;
 import lsk.commerce.api.portone.PortoneSecretProperties;
 import lsk.commerce.api.portone.SyncPaymentException;
+import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.OrderProductDto;
 import lsk.commerce.dto.request.OrderRequest;
@@ -59,7 +60,8 @@ public class PaymentController {
 
     @GetMapping("/api/payments/{orderNumber}")
     public OrderRequest getOrder(@PathVariable("orderNumber") String orderNumber) {
-        return orderService.getOrderRequest(orderNumber);
+        Order order = orderService.findOrderWithAll(orderNumber);
+        return orderService.getOrderRequest(order);
     }
 
     //브라우저에서 결제 완료 후 서버에 결제 완료를 알리는 용도 (결제 정보를 완전히 실시간으로 얻기 위해서는 웹훅 사용 / 수정할 곳 없음)
@@ -103,7 +105,7 @@ public class PaymentController {
                             Instant paidAt = paidPayment.getPaidAt();
                             LocalDateTime paymentDate = LocalDateTime.ofInstant(paidAt, ZoneId.of("Asia/Seoul"));
 
-                            return Mono.fromCallable(() -> paymentService.completePayment(paymentId, paymentDate))
+                            return Mono.fromCallable(() -> paymentService.completePayment(paymentId))
                                     .subscribeOn(Schedulers.boundedElastic())
                                     .map(updatePayment -> paymentService.getPaymentRequest(updatePayment));
                         default:
@@ -129,7 +131,8 @@ public class PaymentController {
             return false;
         }
 
-        OrderRequest orderRequest = orderService.getOrderRequest(customDataDecoded.orderNumber());
+        Order order = orderService.findOrderWithAll(customDataDecoded.orderNumber());
+        OrderRequest orderRequest = orderService.getOrderRequest(order);
         List<Product> products = productService.findProducts();
         for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
             return products.stream()

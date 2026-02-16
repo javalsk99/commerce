@@ -219,7 +219,7 @@ class MemberServiceTest {
                 arguments(null, "비밀번호 null"),
                 arguments("", "비밀번호 빈 문자열"),
                 arguments(" ", "비밀번호 공백"),
-                arguments("abcdefg", "비밀번호 8자리 미만")
+                arguments("abcdefg", "비밀번호 8자 미만")
         );
     }
 }

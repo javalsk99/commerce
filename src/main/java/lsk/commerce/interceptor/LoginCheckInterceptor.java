@@ -36,14 +36,11 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         String token = getToken(request, authorization);
 
-        Claims claims;
-
-        try {
-            claims = jwtProvider.extractClaims(token);
-        } catch (Exception e) {
+        if (!jwtProvider.validateToken(token)) {
             throw new JwtException("유효하지 않은 토큰입니다.");
         }
 
+        Claims claims = jwtProvider.extractClaims(token);
         String loginId = claims.getSubject();
         String grade = claims.get("grade", String.class);
 

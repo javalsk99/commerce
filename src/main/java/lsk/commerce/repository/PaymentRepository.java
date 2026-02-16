@@ -17,10 +17,6 @@ public class PaymentRepository {
         em.persist(payment);
     }
 
-    public Payment findOne(Long paymentId) {
-        return em.find(Payment.class, paymentId);
-    }
-
     public Optional<Payment> findByPaymentId(String paymentId) {
         return em.createQuery("select p from Payment p where p.paymentId = :paymentId", Payment.class)
                 .setParameter("paymentId", paymentId)

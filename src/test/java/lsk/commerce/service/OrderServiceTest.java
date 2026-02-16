@@ -10,8 +10,8 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.event.PaymentCompletedEvent;
-import org.hibernate.TransientObjectException;
+import lsk.commerce.dto.request.OrderRequest;
+import lsk.commerce.dto.response.OrderResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -101,7 +101,9 @@ class OrderServiceTest {
                 .extracting("product.name", "count", "orderPrice")
                 .contains(tuple(findAlbum.getName(), 3, 45000), tuple(findBook.getName(), 5, 215000), tuple(findMovie.getName(), 2, 14000));
 
+        assertThat(findOrder.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
         assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
+        assertThat(findOrder.getPayment()).isNull();
     }
 
     @ParameterizedTest(name = "[{index}] {3}")
@@ -174,7 +176,7 @@ class OrderServiceTest {
     void failed_cancel_paidOrder() {
         //given
         Order order = paymentService.request(orderNumber);
-        paymentService.completePayment(order.getPayment().getPaymentId(), LocalDateTime.now());
+        paymentService.completePayment(order.getPayment().getPaymentId());
 
         //when
         assertThrows(IllegalStateException.class, () ->
@@ -205,23 +207,6 @@ class OrderServiceTest {
     }
 
     @Test
-    void delete_deliveredOrder() {
-        //given
-        Order order = paymentService.request(orderNumber);
-        paymentService.completePayment(order.getPayment().getPaymentId(), LocalDateTime.now());
-
-        deliveryService.startDelivery(orderNumber);
-        deliveryService.completeDelivery(orderNumber);
-
-        //when
-        orderService.deleteOrder(orderNumber);
-
-        //then
-        assertThrows(IllegalArgumentException.class, () ->
-                orderService.findOrderWithDeliveryPayment(orderNumber));
-    }
-
-    @Test
     void failed_delete_uncanceled() {
         //when
         assertThrows(IllegalStateException.class, () ->
@@ -239,32 +224,26 @@ class OrderServiceTest {
                 orderService.deleteOrder(orderNumber));
     }
 
-/*
     @Test
-    void paid_order() {
+    void change_dto() {
         //given
-        Long orderId = createOrder();
-        Order findOrder = orderService.findOrder(orderId);
-
-        Payment.requestPayment(findOrder);
-        findOrder.getPayment().testCompleted();
-        findOrder.testPaid();
+        Order order = orderService.findOrderWithAll(orderNumber);
 
         //when
-        findOrder.getDelivery().startShipping(findOrder);
+        OrderRequest orderRequest = orderService.getOrderRequest(order);
+        OrderResponse orderResponse = orderService.getOrderResponse(order);
 
         //then
-        assertThat(findOrder.getDelivery().getDeliveryStatus()).isEqualTo(PREPARING);
+        assertThat(orderRequest)
+                .extracting("orderNumber", "memberLoginId")
+                .containsExactlyInAnyOrder(orderNumber, memberLoginId);
+        assertThat(orderResponse)
+                .extracting("paymentDate", "shippedDate", "deliveredDate")
+                .containsOnlyNulls();
     }
-*/
 
     private String createMember1() {
         Member member = new Member("userA", "id_A", "00000000", "Seoul", "Gangnam", "01234");
-        return memberService.join(member);
-    }
-
-    private String createMember2() {
-        Member member = new Member("userB", "id_B", "11111111", "Seoul", "Gangbuk", "01235");
         return memberService.join(member);
     }
 

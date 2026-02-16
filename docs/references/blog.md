@@ -14,3 +14,4 @@
 - [초성 추출](https://seeminglyjs.tistory.com/463)
 - [QueryDSL DTO로 반환](https://doing7.tistory.com/129)
 - [new CaseBuilder()](https://ssow93.tistory.com/84)
+- [테스트에서의 REQUIRES_NEW 이슈](https://blog.tetedo.com/368)

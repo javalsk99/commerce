@@ -1,6 +1,7 @@
 package lsk.commerce.util;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -32,16 +33,23 @@ public class JwtProvider {
                 .compact();
     }
 
-    public Claims extractClaims(String token) {
+    public boolean validateToken(String token) {
         try {
-            return Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-
+            parseToken(token);
+            return true;
         } catch (JwtException e) {
-            return null;
+            return false;
         }
+    }
+
+    public Claims extractClaims(String token) {
+        return parseToken(token).getPayload();
+    }
+
+    private Jws<Claims> parseToken(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token);
     }
 }

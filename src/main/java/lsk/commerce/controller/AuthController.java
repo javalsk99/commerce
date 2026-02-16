@@ -5,10 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.dto.request.MemberLoginRequest;
-import lsk.commerce.dto.response.MemberLoginResponse;
-import lsk.commerce.domain.Member;
-import lsk.commerce.util.JwtProvider;
 import lsk.commerce.service.AuthService;
+import lsk.commerce.util.JwtProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,10 +19,8 @@ public class AuthController {
     private final JwtProvider jwtProvider;
 
     @PostMapping("/login")
-    public MemberLoginResponse login(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
-        Member loginMember = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
-
-        String token = jwtProvider.createToken(loginMember);
+    public String login(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
+        String token = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
 
         Cookie cookie = new Cookie("jjwt", token);
         cookie.setMaxAge(3600);
@@ -32,7 +28,7 @@ public class AuthController {
         cookie.setHttpOnly(true);
         response.addCookie(cookie);
 
-        return new MemberLoginResponse(loginMember.getLoginId(), loginMember.getGrade());
+        return "login";
     }
 
     @PostMapping("/logout")
@@ -49,9 +45,7 @@ public class AuthController {
     //결제하기 위한 로그인 (인터셉터 통과)
     @GetMapping("/web/login")
     public String webLogin(@Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
-        Member loginMember = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
-
-        String token = jwtProvider.createToken(loginMember);
+        String token = authService.login(loginRequest.getLoginId(), loginRequest.getPassword());
 
         Cookie cookie = new Cookie("jjwt", token);
         cookie.setMaxAge(3600);

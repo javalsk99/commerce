@@ -236,4 +236,16 @@
   java.lang.IllegalArgumentException: 존재하지 않는 주문입니다.
 
   원인 추측: DeliveryService 트랜잭션에 있는 REQUIRES_NEW 때문으로 추측 (deliveryService.startDelivery(orderNumber) 위에 orderService.findOrderWithDelivery(orderNumber)를 돌려봐도 잘 작동한다.)  
-  의문: 애플리케이션에서는 이 부분에서 문제가 생기지 않는다.
+  의문: 애플리케이션에서는 이 부분에서 문제가 생기지 않는다.  
+  윈인: 테스트에서의 @Transaction은 테스트 완료 후 롤백시키기 위해 커밋을 바로 하지 않아서 REQUIRES_NEW에서 데이터를 찾을 수 없다.  
+  해결: TestTransaction.flagForCommit으로 강제로 커밋시킨다.
+
+      paymentService.completePayment(order.getPayment().getPaymentId(), LocalDateTime.now());
+
+      TestTransaction.flagForCommit();
+      TestTransaction.end();
+
+      deliveryService.startDelivery(orderNumber);
+
+  추가 문제: 강제로 커밋시켜서 데이터가 롤백되지 않아서 이 후의 테스트가 실패한다.  
+  해결: OrderServiceTest에는 테스트가 10개가 넘는다. 이 테스트 때문에 afterEach로 모든 테스트에 데이터를 지우는 것이 좋지 않으므로 새 테스트 클래스를 만들어서 테스트한다.

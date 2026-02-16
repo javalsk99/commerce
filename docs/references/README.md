@@ -7,8 +7,10 @@
 
 
 - Official Docs  
-  Spring Data JPA 에서 null 파라미터 담는 법 https://www.baeldung.com/spring-data-jpa-null-parameters (jpql로 적용)
-  JUnit Parameterized Test https://docs.junit.org/5.14.2/writing-tests/parameterized-classes-and-tests.html#tests-consuming-arguments-methods
+  [Spring Data JPA 에서 null 파라미터 담는 법](https://www.baeldung.com/spring-data-jpa-null-parameters) (jpql로 적용)  
+  [JUnit Parameterized Test](https://docs.junit.org/5.14.2/writing-tests/parameterized-classes-and-tests.html#tests-consuming-arguments-methods)  
+  [Spring TestTransaction](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/context/transaction/TestTransaction.html)
+
 
 - 도구 - AI  
   기획 추천, 설계 검증 및 다듬기, 파일 정리 구조 추천, 메서드 이름 추천  
@@ -21,9 +23,9 @@
 
 
 - GitHub  
-  포트원 결제 api https://github.com/portone-io/portone-sample?tab=readme-ov-file  
-  Java JWT https://github.com/jwtk/jjwt?tab=readme-ov-file#reading-a-jwt
+  [포트원 결제 api](https://github.com/portone-io/portone-sample?tab=readme-ov-file)  
+  [Java JWT](https://github.com/jwtk/jjwt?tab=readme-ov-file#reading-a-jwt)
 
 
 - Stack Overflow  
-  NoResultException 해결법 https://stackoverflow.com/questions/2002993/jpa-getsingleresult-or-null
+  [NoResultException 해결법](https://stackoverflow.com/questions/2002993/jpa-getsingleresult-or-null)

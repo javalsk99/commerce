@@ -35,7 +35,7 @@ public class OrderRequest {
 
     @Valid
     @NotEmpty
-    private List<OrderProductDto> orderProducts;
+    private List<OrderProductDto> orderProducts = new ArrayList<>();
 
     @NotBlank @Size(min = 12, max = 12)
     private String paymentId;
