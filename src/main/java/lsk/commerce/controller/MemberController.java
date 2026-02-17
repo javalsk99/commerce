@@ -29,9 +29,8 @@ public class MemberController {
 
     @PostMapping("/members")
     public String create(@Valid MemberRequest request) {
-        Member member = new Member(request.getName(), request.getLoginId(), request.getPassword(), request.getCity(), request.getStreet(), request.getZipcode());
-        memberService.join(member);
-        return member.getLoginId() + " created";
+        String loginId = memberService.join(request);
+        return loginId + " created";
     }
 
     @GetMapping("/members")

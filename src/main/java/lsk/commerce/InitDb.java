@@ -7,6 +7,7 @@ import lsk.commerce.domain.Member;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.MemberService;
 import lsk.commerce.service.OrderService;
@@ -45,10 +46,10 @@ public class InitDb {
         }
 
         private void createOrders() {
-            memberService.adminJoin(new Member("test", "testId", "testPassword", "seoul", "Gangbuk", "11111"));
-            String userAId = memberService.join(new Member("userA", "userAId", "userAPassword", "seoul", "Gangbuk", "11111"));
-            String userBId = memberService.join(new Member("userB", "userBId", "userBPassword", "seoul", "Gangbuk", "11111"));
-            String userCId = memberService.join(new Member("userC", "userCId", "userCPassword", "seoul", "Gangbuk", "11111"));
+            memberService.adminJoin(new MemberRequest("test", "testId", "testPassword", "Seoul", "Gangbuk", "11111"));
+            String userAId = memberService.join(new MemberRequest("userA", "userAId", "userAPassword", "Seoul", "Gangbuk", "11111"));
+            String userBId = memberService.join(new MemberRequest("userB", "userBId", "userBPassword", "Seoul", "Gangbuk", "11111"));
+            String userCId = memberService.join(new MemberRequest("userC", "userCId", "userCPassword", "Seoul", "Gangbuk", "11111"));
 
             categoryService.create("가요", null);
             String albumCategoryName2 = categoryService.create("댄스", "가요");

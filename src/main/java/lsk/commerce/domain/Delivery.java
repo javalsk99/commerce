@@ -74,14 +74,46 @@ public class Delivery {
     }
 
     public void startDelivery() {
+        validatePaidOrder();
+        validateCanShip();
+
         this.deliveryStatus = SHIPPED;
         this.shippedDate = LocalDateTime.now();
     }
 
     public void completeDelivery() {
+        validatePaidOrder();
+        validateShipped();
+
         this.deliveryStatus = DELIVERED;
         this.deliveredDate = LocalDateTime.now();
         this.order.setOrderStatus(OrderStatus.DELIVERED);
+    }
+
+    private void validatePaidOrder() {
+        if (this.order.getOrderStatus() == OrderStatus.CREATED || this.order.getOrderStatus() == OrderStatus.CANCELED) {
+            throw new IllegalStateException("결제가 완료된 주문이 아닙니다.");
+        } else if (this.order.getOrderStatus() == OrderStatus.DELIVERED) {
+            throw new IllegalStateException("이미 배송 완료된 주문입니다.");
+        }
+    }
+
+    private void validateCanShip() {
+        if (this.deliveryStatus == WAITING) {
+            throw new IllegalStateException("결제가 완료된 주문이 아닙니다.");
+        } else if (this.deliveryStatus == CANCELED) {
+            throw new IllegalStateException("취소된 주문입니다.");
+        } else if (this.deliveryStatus == SHIPPED || this.deliveryStatus == DELIVERED) {
+            throw new IllegalStateException("이미 발송된 주문입니다.");
+        }
+    }
+
+    private void validateShipped() {
+        if (this.deliveryStatus == DELIVERED) {
+            throw new IllegalStateException("이미 배송 완료된 주문입니다.");
+        } else if (this.deliveryStatus != SHIPPED) {
+            throw new IllegalStateException("발송된 주문이 아닙니다.");
+        }
     }
 
     protected void setDeliveryStatus(DeliveryStatus deliveryStatus) {

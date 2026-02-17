@@ -1,13 +1,13 @@
 package lsk.commerce.service;
 
+import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Member;
+import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.repository.MemberRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -15,20 +15,39 @@ import java.util.List;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public String join(Member member) {
+    public String join(MemberRequest request) {
+        Member member = getMember(request);
         validateMember(member);
         memberRepository.save(member);
         return member.getLoginId();
     }
 
     @Transactional
-    public String adminJoin(Member member) {
+    public String adminJoin(MemberRequest request) {
+        Member member = getMember(request);
         validateMember(member);
         member.setAdmin();
         memberRepository.save(member);
         return member.getLoginId();
+    }
+
+    private Member getMember(MemberRequest request) {
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
+        }
+
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        return Member.builder()
+                .name(request.getName())
+                .loginId(request.getLoginId())
+                .password(encodedPassword)
+                .city(request.getCity())
+                .street(request.getStreet())
+                .zipcode(request.getZipcode())
+                .build();
     }
 
     public Member findMemberByLoginId(String loginId) {
@@ -50,8 +69,18 @@ public class MemberService {
 
     @Transactional
     public Member changePassword(String memberLoginId, String newPassword) {
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
+        }
+
         Member member = findMemberByLoginId(memberLoginId);
-        member.changePassword(newPassword);
+
+        String newEncodedPassword = passwordEncoder.encode(newPassword);
+        if (passwordEncoder.matches(newEncodedPassword, member.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 기존과 달라야 합니다.");
+        }
+
+        member.changePassword(newEncodedPassword);
         return member;
     }
 

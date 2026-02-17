@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.util.InitialExtractor;
@@ -61,6 +62,7 @@ public class Member {
     @Embedded
     private Address address;
 
+    @Builder
     public Member(String name, String loginId, String password, String city, String street, String zipcode) {
         this.name = name;
         this.loginId = loginId;
@@ -73,11 +75,19 @@ public class Member {
         this.grade = ADMIN;
     }
 
-    public void changePassword(String newPassword) {
-        this.password = newPassword;
+    public void changePassword(String newEncodedPassword) {
+        if (!newEncodedPassword.startsWith("$2a$")) {
+            throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다.");
+        }
+
+        this.password = newEncodedPassword;
     }
 
     public void changeAddress(String newCity, String newStreet, String newZipcode) {
+        if (this.address.getCity().equals(newCity) && this.address.getStreet().equals(newStreet) && this.address.getZipcode().equals(newZipcode)) {
+            throw new IllegalArgumentException("주소가 기존과 달라야 합니다.");
+        }
+
         this.address = new Address(newCity, newStreet, newZipcode);
     }
 

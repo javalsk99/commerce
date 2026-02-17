@@ -1,6 +1,7 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Member;
+import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.util.JwtProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,9 +52,9 @@ class AuthServiceTest {
     }
 
     private Member createMember() {
-        Member member = new Member("userA", "id_A", "00000000", "Seoul", "Gangnam", "01234");
-        memberService.join(member);
-        return member;
+        MemberRequest request = new MemberRequest("userA", "id_A", "00000000", "Seoul", "Gangnam", "01234");
+        String loginId = memberService.join(request);
+        return memberService.findMemberByLoginId(loginId);
     }
 
     static Stream<Arguments> loginIdPasswordProvider() {

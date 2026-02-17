@@ -1,7 +1,6 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
-import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.Payment;
@@ -9,6 +8,7 @@ import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.MemberRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -55,7 +54,7 @@ class PaymentServiceTest {
 
     @BeforeEach
     void beforeEach() {
-        memberLoginId = createMember1();
+        memberLoginId = createMember();
 
         category1 = createCategory1();
         category2 = createCategory2();
@@ -191,9 +190,9 @@ class PaymentServiceTest {
                 paymentService.findPaymentByPaymentId(paymentId));
     }
 
-    private String createMember1() {
-        Member member = new Member("userA", "id_A", "00000000", "Seoul", "Gangnam", "01234");
-        return memberService.join(member);
+    private String createMember() {
+        MemberRequest request = new MemberRequest("userA", "id_A", "00000000", "Seoul", "Gangnam", "01234");
+        return memberService.join(request);
     }
 
     private Category createCategory1() {

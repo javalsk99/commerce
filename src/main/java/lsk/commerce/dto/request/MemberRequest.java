@@ -2,9 +2,11 @@ package lsk.commerce.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 public class MemberRequest {
 
     @NotBlank @Size(min = 2, max = 50)
