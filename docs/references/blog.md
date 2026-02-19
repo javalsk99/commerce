@@ -16,3 +16,5 @@
 - [new CaseBuilder()](https://ssow93.tistory.com/84)
 - [테스트에서의 REQUIRES_NEW 이슈](https://blog.tetedo.com/368)
 - [단위 테스트 Mockito](https://mangkyu.tistory.com/145)
+- [Mockito 소개](https://sun-22.tistory.com/94)  
+  Mockito는 given 절에서 when을 사용해서 when을 given으로 바꾼 BDDMockito로 변경 BDDMockito.class 참고

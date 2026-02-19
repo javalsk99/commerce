@@ -13,12 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final MemberService memberService;
-    private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
     public String login(String loginId, String password) {
         Member loginMember = memberService.findMemberForLogin(loginId);
-        if (!passwordEncoder.matches(passwordEncoder.encode(password), loginMember.getPassword())) {
+        if (!passwordEncoder.matches(password, loginMember.getPassword())) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.");
         }
 

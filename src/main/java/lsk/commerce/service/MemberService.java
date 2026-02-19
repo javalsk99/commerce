@@ -34,22 +34,6 @@ public class MemberService {
         return member.getLoginId();
     }
 
-    private Member getMember(MemberRequest request) {
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
-        }
-
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-        return Member.builder()
-                .name(request.getName())
-                .loginId(request.getLoginId())
-                .password(encodedPassword)
-                .city(request.getCity())
-                .street(request.getStreet())
-                .zipcode(request.getZipcode())
-                .build();
-    }
-
     public Member findMemberByLoginId(String loginId) {
         return memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
@@ -61,13 +45,6 @@ public class MemberService {
     }
 
     @Transactional
-    public void deleteMember(String memberLoginId) {
-        Member member = findMemberByLoginId(memberLoginId);
-
-        memberRepository.delete(member);
-    }
-
-    @Transactional
     public Member changePassword(String memberLoginId, String newPassword) {
         if (newPassword == null || newPassword.isBlank()) {
             throw new IllegalArgumentException("비밀번호가 비어있습니다.");
@@ -76,7 +53,9 @@ public class MemberService {
         Member member = findMemberByLoginId(memberLoginId);
 
         String newEncodedPassword = passwordEncoder.encode(newPassword);
-        if (passwordEncoder.matches(newEncodedPassword, member.getPassword())) {
+        if (!newEncodedPassword.startsWith("$2a$")) {
+            throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다.");
+        } else if (passwordEncoder.matches(newEncodedPassword, member.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 기존과 달라야 합니다.");
         }
 
@@ -91,8 +70,27 @@ public class MemberService {
         return member;
     }
 
+    @Transactional
+    public void deleteMember(String memberLoginId) {
+        Member member = findMemberByLoginId(memberLoginId);
+        memberRepository.delete(member);
+    }
+
     public MemberResponse getMemberDto(Member member) {
         return MemberResponse.memberChangeDto(member);
+    }
+
+    private Member getMember(MemberRequest request) {
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
+        }
+
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        if (!encodedPassword.startsWith("$2a$")) {
+            throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다.");
+        }
+
+        return new Member(request.getName(), request.getLoginId(), encodedPassword, request.getCity(), request.getStreet(), request.getZipcode());
     }
 
     private void validateMember(Member member) {

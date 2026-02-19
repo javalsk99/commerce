@@ -76,10 +76,6 @@ public class Member {
     }
 
     public void changePassword(String newEncodedPassword) {
-        if (!newEncodedPassword.startsWith("$2a$")) {
-            throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다.");
-        }
-
         this.password = newEncodedPassword;
     }
 

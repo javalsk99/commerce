@@ -4,20 +4,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Spy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class MemberTest {
 
-    @Spy
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
     @Test
     void setUser() {
@@ -50,17 +47,6 @@ class MemberTest {
 
         //then
         assertThat(passwordEncoder.matches("11111111", member.getPassword())).isTrue();
-    }
-
-    @Test
-    void failed_changePassword_notEncoded() {
-        //given
-        Member member = getMember();
-
-        //when
-        assertThatThrownBy(() -> member.changePassword("11111111"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("암호화되지 않은 비밀번호입니다.");
     }
 
     @ParameterizedTest(name = "[{index}] {3}")

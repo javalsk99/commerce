@@ -11,3 +11,5 @@
   [GHSA-6q3q-6v5j-h6vg](https://osv.dev/vulnerability/GHSA-6q3q-6v5j-h6vg) 8.2 Querydsl vulnerable to HQL injection trough orderBy 보안 취약성 메시지 발견  
   [maven central repository](https://central.sonatype.com/artifact/io.github.openfeign.querydsl/querydsl-jpa/7.1/overview)를 참고하여 io.github.openfeign.querydsl:querydsl-jpa:7.1 의존성 추가  
   기본적인 검색은 배웠던 내용에서 변한게 없으므로 초성으로 검색하는 기능을 추가했다.
+- 통합 테스트가 실제 서버를 사용해서 오래걸린다.  
+  가짜 객체를 사용해 단위 테스트로 테스트 시간을 단축시킨다.
