@@ -62,7 +62,6 @@ public class Category {
         this.parent = null;
     }
 
-    @Builder
     public static Category createCategory(Category parentCategory, String name) {
         Category category = new Category();
         category.name = name;

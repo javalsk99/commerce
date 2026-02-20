@@ -60,17 +60,25 @@ public abstract class Product {
     @NotNull @Min(0)
     private Integer stockQuantity;
 
-    public Product(String name, Integer price, Integer stockQuantity) {
+    protected Product(String name, Integer price, Integer stockQuantity) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
     }
 
     protected void addStock(Integer quantity) {
+        if (quantity == null) {
+            throw new IllegalArgumentException("재고가 추가될 수량이 없습니다.");
+        }
+
         this.stockQuantity += quantity;
     }
 
     protected void removeStock(Integer quantity) {
+        if (quantity == null) {
+            throw new IllegalArgumentException("재고가 감소될 수량이 없습니다.");
+        }
+
         int restStock = this.stockQuantity - quantity;
         if (restStock < 0) {
             throw new IllegalArgumentException("재고가 부족합니다.");
@@ -80,9 +88,13 @@ public abstract class Product {
     }
 
     protected void updateStock(Integer quantity, Integer newQuantity) {
-        this.stockQuantity += quantity;
+        if (quantity == null) {
+            throw new IllegalArgumentException("재고가 추가될 수량이 없습니다.");
+        } else if (newQuantity == null) {
+            throw new IllegalArgumentException("재고가 감소될 수량이 없습니다.");
+        }
 
-        int restStock = this.stockQuantity - newQuantity;
+        int restStock = this.stockQuantity + quantity - newQuantity;
         if (restStock < 0) {
             throw new IllegalArgumentException("재고가 부족합니다.");
         }
@@ -92,11 +104,25 @@ public abstract class Product {
 
     //가격, 수량만 변경
     public void updateProduct(Integer newPrice, Integer newStockQuantity) {
-        this.price = newPrice;
-        this.stockQuantity = newStockQuantity;
+        if (newPrice == null && newStockQuantity == null) {
+            throw new IllegalArgumentException("수정할 가격 또는 수량이 있어야 합니다.");
+        }
+
+        if (newPrice != null) {
+            this.price = newPrice;
+        }
+        if (newStockQuantity != null) {
+            this.stockQuantity = newStockQuantity;
+        }
     }
 
     public void connectCategory(Category category) {
+        if (category == null) {
+            throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
+        } else if (category.getId() == null) {
+            throw new IllegalArgumentException("저장되지 않은 카테고리입니다.");
+        }
+
         CategoryProduct categoryProduct = new CategoryProduct();
         categoryProduct.setProduct(this);
         categoryProduct.setCategory(category);
@@ -104,10 +130,14 @@ public abstract class Product {
         category.getCategoryProducts().add(categoryProduct);
     }
 
-    public void addCategoryProduct(List<Category> categories) {
+    public void connectCategories(List<Category> categories) {
+        if (categories == null || categories.isEmpty()) {
+            throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
+        }
+
         for (Category category : categories) {
             if (category.getId() == null) {
-                throw new IllegalArgumentException("존재하지 않는 카테고리입니다.");
+                throw new IllegalArgumentException("저장되지 않은 카테고리가 있습니다.");
             }
 
             while (category != null) {
@@ -135,11 +165,11 @@ public abstract class Product {
 
     //같은 카테고리 상품인 상품과 카테고리를 카테고리 상품 제거
     public CategoryProduct removeCategoryProduct(Category category) {
-        if (categoryProducts.isEmpty()) {
+        if (this.categoryProducts.isEmpty()) {
             throw new IllegalArgumentException("상품과 연결된 카테고리가 없습니다.");
         }
 
-        for (CategoryProduct categoryProduct : categoryProducts) {
+        for (CategoryProduct categoryProduct : this.categoryProducts) {
             if (categoryProduct.getCategory() == null) {
                 throw new IllegalArgumentException("상품에 카테고리가 제대로 들어가지 않았습니다.");
             }
@@ -155,7 +185,7 @@ public abstract class Product {
     }
 
     @PrePersist @PreUpdate
-    public void preHandler() {
+    protected void preHandler() {
         this.nameInitial = InitialExtractor.extract(this.name);
     }
 }

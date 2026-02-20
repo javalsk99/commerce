@@ -5,6 +5,7 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.domain.Product;
@@ -32,6 +33,7 @@ public class Album extends Product {
     @Column(length = 50)
     private String studioInitial;
 
+    @Builder
     public Album(String name, Integer price, Integer stockQuantity, String artist, String studio) {
         super(name, price, stockQuantity);
         this.artist = artist;
@@ -39,7 +41,7 @@ public class Album extends Product {
     }
 
     @Override
-    public void preHandler() {
+    protected void preHandler() {
         super.preHandler();
         this.artistInitial = InitialExtractor.extract(this.artist);
         this.studioInitial = InitialExtractor.extract(this.studio);

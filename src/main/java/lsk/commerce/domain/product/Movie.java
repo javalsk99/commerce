@@ -5,6 +5,7 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.domain.Product;
@@ -32,6 +33,7 @@ public class Movie extends Product {
     @Column(length = 50)
     private String directorInitial;
 
+    @Builder
     public Movie(String name, Integer price, Integer stockQuantity, String actor, String director) {
         super(name, price, stockQuantity);
         this.actor = actor;
@@ -39,7 +41,7 @@ public class Movie extends Product {
     }
 
     @Override
-    public void preHandler() {
+    protected void preHandler() {
         super.preHandler();
         this.actorInitial = InitialExtractor.extract(this.actor);
         this.directorInitial = InitialExtractor.extract(this.director);

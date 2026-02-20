@@ -1,30 +1,24 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Member;
-import lsk.commerce.dto.request.MemberRequest;
-import lsk.commerce.repository.MemberRepository;
 import lsk.commerce.util.JwtProvider;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.anyString;
+import static org.mockito.BDDMockito.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceUnitTest {
@@ -46,59 +40,67 @@ class AuthServiceUnitTest {
     String encodedPassword = "$2a$fdio8cv7xh2h98";
     String token = "eyJhfdlsji";
 
-    @Test
-    void login() {
-        //given
-        Member member = Member.builder().loginId(loginId).password(encodedPassword).build();
+    @Nested
+    class SuccessCase {
 
-        given(memberService.findMemberForLogin(any())).willReturn(member);
-        given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
-        given(jwtProvider.createToken(any())).willReturn(token);
+        @Test
+        void login() {
+            //given
+            Member member = Member.builder().loginId(loginId).password(encodedPassword).build();
 
-        //when
-        String jjwt = authService.login(loginId, rawPassword);
+            given(memberService.findMemberForLogin(any())).willReturn(member);
+            given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
+            given(jwtProvider.createToken(any())).willReturn(token);
 
-        //then
-        then(memberService).should().findMemberForLogin(any());
-        then(passwordEncoder).should().matches(anyString(), anyString());
-        then(jwtProvider).should().createToken(eq(member));
-        assertThat(jjwt).isEqualTo(token);
+            //when
+            String jjwt = authService.login(loginId, rawPassword);
+
+            //then
+            then(memberService).should().findMemberForLogin(any());
+            then(passwordEncoder).should().matches(anyString(), anyString());
+            then(jwtProvider).should().createToken(eq(member));
+            assertThat(jjwt).isEqualTo(token);
+        }
     }
 
-    @Test
-    void failed_login_wrongLoginId() {
-        //given
-        Member.builder().loginId("id_B").password(encodedPassword).build();
+    @Nested
+    class FailureCase {
 
-        willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.")).given(memberService).findMemberForLogin(any());
+        @Test
+        void failed_login_wrongLoginId() {
+            //given
+            Member.builder().loginId("id_B").password(encodedPassword).build();
 
-        //when
-        assertThatThrownBy(() -> authService.login(loginId, rawPassword))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+            willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.")).given(memberService).findMemberForLogin(any());
 
-        //then
-        then(memberService).should().findMemberForLogin(any());
-        then(passwordEncoder).should(never()).matches(anyString(), anyString());
-        then(jwtProvider).should(never()).createToken(any());
-    }
+            //when
+            assertThatThrownBy(() -> authService.login(loginId, rawPassword))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
 
-    @Test
-    void failed_login_wrongPassword() {
-        //given
-        Member member = Member.builder().loginId(loginId).password("11111111").build();
+            //then
+            then(memberService).should().findMemberForLogin(any());
+            then(passwordEncoder).should(never()).matches(anyString(), anyString());
+            then(jwtProvider).should(never()).createToken(any());
+        }
 
-        given(memberService.findMemberForLogin(any())).willReturn(member);
-        willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.")).given(passwordEncoder).matches(anyString(), anyString());
+        @Test
+        void failed_login_wrongPassword() {
+            //given
+            Member member = Member.builder().loginId(loginId).password("11111111").build();
 
-        //when
-        assertThatThrownBy(() -> authService.login(loginId, rawPassword))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+            given(memberService.findMemberForLogin(any())).willReturn(member);
+            willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.")).given(passwordEncoder).matches(anyString(), anyString());
 
-        //then
-        then(memberService).should().findMemberForLogin(any());
-        then(passwordEncoder).should().matches(anyString(), anyString());
-        then(jwtProvider).should(never()).createToken(any());
+            //when
+            assertThatThrownBy(() -> authService.login(loginId, rawPassword))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+
+            //then
+            then(memberService).should().findMemberForLogin(any());
+            then(passwordEncoder).should().matches(anyString(), anyString());
+            then(jwtProvider).should(never()).createToken(any());
+        }
     }
 }

@@ -282,7 +282,7 @@ class CategoryServiceUnitTest {
     class FailureCase {
 
         @Test
-        void failed_create_existsCategoryName() {
+        void create_existsName() {
             //given
             given(categoryRepository.existsByCategoryName(anyString(), any())).willReturn(categories1);
 
@@ -299,7 +299,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_createChild_notExistsParent() {
+        void createChild_notExistsParent() {
             //given
             given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(Collections.emptyList());
 
@@ -316,7 +316,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_findByName_notExistsName() {
+        void findByName_notExistsCategory() {
             //given
             given(categoryRepository.findAll()).willReturn(categories1);
 
@@ -330,7 +330,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_findByNames_notExistsName() {
+        void findByNames_notExistsCategory() {
             //given
             given(categoryRepository.findAll()).willReturn(categories1);
 
@@ -345,7 +345,7 @@ class CategoryServiceUnitTest {
 
         @ParameterizedTest(name = "[{index}] {1}")
         @MethodSource("nameProvider")
-        void failed_changeParent_notExistsCategory(String name, String reason) {
+        void changeParent_notExistsCategory(String name, String reason) {
             //given
             given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
 
@@ -364,7 +364,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_delete_notExistsName() {
+        void delete_notExistsCategory() {
             //given
             given(categoryRepository.findWithChild(anyString())).willReturn(Optional.empty());
 
@@ -381,7 +381,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_delete_hasChild() {
+        void delete_hasChild() {
             //given
             given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category2));
 
@@ -398,7 +398,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_delete_hasProduct() {
+        void delete_hasProduct() {
             //given
             ReflectionTestUtils.setField(category4, "categoryProducts", List.of(mock(CategoryProduct.class)));
 
@@ -417,7 +417,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_delete_alreadyDeleted() {
+        void delete_alreadyDeleted() {
             //given
             given(categoryRepository.findWithChild(anyString()))
                     .willReturn(Optional.of(category4))
@@ -445,7 +445,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_validateAndGet_notExistsName() {
+        void validateAndGet_notExistsCategory() {
             //when
             assertAll(
                     () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(null))
@@ -461,7 +461,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void failed_validateAndGet_sizeMismatch() {
+        void validateAndGet_sizeMismatch() {
             //given
             given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category2, category3, category4));
 

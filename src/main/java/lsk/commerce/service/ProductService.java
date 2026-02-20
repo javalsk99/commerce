@@ -27,7 +27,7 @@ public class ProductService {
         validateProduct(product);
         List<Category> categories = categoryService.validateAndGetCategories(categoryNames);
 
-        product.addCategoryProduct(categories);
+        product.connectCategories(categories);
         productRepository.save(product);
         return product.getName();
     }

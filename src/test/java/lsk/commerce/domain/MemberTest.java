@@ -25,7 +25,7 @@ class MemberTest {
         @Test
         void setUser() {
             //when
-            Member member = getMember();
+            Member member = Member.builder().build();
 
             //then
             assertThat(member.getGrade()).isEqualTo(Grade.USER);
@@ -34,7 +34,7 @@ class MemberTest {
         @Test
         void setAdmin() {
             //given
-            Member member = getMember();
+            Member member = Member.builder().build();
 
             //when
             member.setAdmin();
@@ -59,7 +59,11 @@ class MemberTest {
         @MethodSource("addressProvider")
         void changeAddress(String city, String street, String zipcode, String reason) {
             //given
-            Member member = getMember();
+            Member member = Member.builder()
+                    .city("Seoul")
+                    .street("Gangnam")
+                    .zipcode("01234")
+                    .build();
 
             //when
             member.changeAddress(city, street, zipcode);
@@ -87,7 +91,7 @@ class MemberTest {
 
         @ParameterizedTest(name = "[{index}] {1}")
         @MethodSource("passwordProvider")
-        void failed_changePassword_BlankPassword(String password, String reason) {
+        void changePassword_BlankPassword(String password, String reason) {
             //given
             Member member = getMember();
 
@@ -98,7 +102,7 @@ class MemberTest {
         }
 
         @Test
-        void failed_changePassword_samePassword() {
+        void changePassword_samePassword() {
             //given
             Member member = getMember();
 
@@ -109,9 +113,13 @@ class MemberTest {
         }
 
         @Test
-        void failed_changeAddress_sameAddress() {
+        void changeAddress_sameAddress() {
             //given
-            Member member = getMember();
+            Member member = Member.builder()
+                    .city("Seoul")
+                    .street("Gangnam")
+                    .zipcode("01234")
+                    .build();
 
             //when
             assertThatThrownBy(() -> member.changeAddress(member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode()))
@@ -131,12 +139,7 @@ class MemberTest {
     private Member getMember() {
         passwordEncoder = new BCryptPasswordEncoder();
         return Member.builder()
-                .name("userA")
-                .loginId("id_A")
                 .password(passwordEncoder.encode("00000000"))
-                .city("Seoul")
-                .street("Gangnam")
-                .zipcode("01234")
                 .build();
     }
 }

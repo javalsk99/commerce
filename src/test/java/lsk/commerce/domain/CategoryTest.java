@@ -90,7 +90,7 @@ class CategoryTest {
     class FailureCase {
 
         @Test
-        void failed_changeParent_notExistsParent() {
+        void changeParent_notExistsParent() {
             //given
             Category category = createCategory3();
 
@@ -101,7 +101,7 @@ class CategoryTest {
         }
 
         @Test
-        void failed_changeParent_selfOrChild() {
+        void changeParent_selfOrChild() {
             //given
             Category category1 = createCategory1();
             Category category2 = createCategory2(category1);

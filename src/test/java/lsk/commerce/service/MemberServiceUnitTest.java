@@ -191,7 +191,7 @@ class MemberServiceUnitTest {
     class FailureCase {
 
         @Test
-        void failed_join_existsLoginId() {
+        void join_existsLoginId() {
             //given
             MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
 
@@ -212,7 +212,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void failed_join_notExistsPassword() {
+        void join_notExistsPassword() {
             //given
             MemberRequest request1 = MemberRequest.builder().password(null).build();
             MemberRequest request2 = MemberRequest.builder().password(" ").build();
@@ -235,7 +235,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void failed_join_rawPassword() {
+        void join_rawPassword() {
             //given
             MemberRequest request = MemberRequest.builder().password(rawPassword).build();
 
@@ -254,7 +254,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void failed_findByLoginId() {
+        void findByLoginId_notExistsMember() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -268,7 +268,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void failed_findForLogin() {
+        void findForLogin_notExistsMember() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -282,7 +282,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void failed_changePassword_notExistsMember() {
+        void changePassword_notExistsMember() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -300,7 +300,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void failed_delete_notExistsMember() {
+        void delete_notExistsMember() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -317,7 +317,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void failed_delete_alreadyDeleted() {
+        void delete_alreadyDeleted() {
             //given
             Member member = Member.builder().loginId(loginId).build();
 
