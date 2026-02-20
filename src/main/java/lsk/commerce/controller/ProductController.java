@@ -36,17 +36,15 @@ public class ProductController {
 
     @PostMapping("/products")
     public String create(@Valid ProductRequest request, String... categoryNames) {
-        List<Category> categories = categoryService.findCategoryByNames(categoryNames);
-
         if (request.getDtype().equals("A")) {
             Album album = new Album(request.getName(), request.getPrice(), request.getStockQuantity(), request.getArtist(), request.getStudio());
-            productService.register(album, categories);
+            productService.register(album, List.of(categoryNames));
         } else if (request.getDtype().equals("B")) {
             Book book = new Book(request.getName(), request.getPrice(), request.getStockQuantity(), request.getAuthor(), request.getIsbn());
-            productService.register(book, categories);
+            productService.register(book, List.of(categoryNames));
         } else if (request.getDtype().equals("M")) {
             Movie movie = new Movie(request.getName(), request.getPrice(), request.getStockQuantity(), request.getActor(), request.getDirector());
-            productService.register(movie, categories);
+            productService.register(movie, List.of(categoryNames));
         } else {
             throw new IllegalArgumentException("잘못된 양식입니다. dtype: " + request.getDtype());
         }

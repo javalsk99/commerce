@@ -36,7 +36,7 @@ class CategoryProductServiceTest {
         Category childCategory = createCategory4();
 
         Album album = createAlbum1();
-        productService.register(album, List.of(childCategory));
+        productService.register(album, List.of(childCategory.getName()));
 
         //when
         categoryProductService.disconnect(childCategory.getName(), album.getName());
@@ -57,7 +57,7 @@ class CategoryProductServiceTest {
         Category category2 = createCategory2();
 
         Album album = createAlbum1();
-        productService.register(album, List.of(category1));
+        productService.register(album, List.of(category1.getName()));
 
         //when
         assertThrows(IllegalArgumentException.class, () ->
@@ -70,7 +70,7 @@ class CategoryProductServiceTest {
         //given
         Category category = createCategory1();
         Album album = createAlbum1();
-        productService.register(album, List.of(category));
+        productService.register(album, List.of(category.getName()));
 
         //when
         assertThrows(IllegalArgumentException.class, () ->
@@ -82,7 +82,7 @@ class CategoryProductServiceTest {
         //given
         Category category = createCategory1();
         Album album = createAlbum1();
-        productService.register(album, List.of(category));
+        productService.register(album, List.of(category.getName()));
 
         categoryProductService.disconnect(category.getName(), album.getName());
 
@@ -99,9 +99,9 @@ class CategoryProductServiceTest {
         Album album1 = createAlbum1();
         Album album2 = createAlbum2();
         Album album3 = createAlbum3();
-        productService.register(album1, List.of(category));
-        productService.register(album2, List.of(category));
-        productService.register(album3, List.of(category));
+        productService.register(album1, List.of(category.getName()));
+        productService.register(album2, List.of(category.getName()));
+        productService.register(album3, List.of(category.getName()));
 
         //when
         categoryProductService.disconnectAll(category.getName());
@@ -122,9 +122,9 @@ class CategoryProductServiceTest {
         Album album1 = createAlbum1();
         Album album2 = createAlbum2();
         Album album3 = createAlbum3();
-        productService.register(album1, List.of(category));
-        productService.register(album2, List.of(category));
-        productService.register(album3, List.of(category));
+        productService.register(album1, List.of(category.getName()));
+        productService.register(album2, List.of(category.getName()));
+        productService.register(album3, List.of(category.getName()));
 
         //when
         assertThrows(IllegalArgumentException.class, () ->
@@ -139,9 +139,9 @@ class CategoryProductServiceTest {
         Album album1 = createAlbum1();
         Album album2 = createAlbum2();
         Album album3 = createAlbum3();
-        productService.register(album1, List.of(category));
-        productService.register(album2, List.of(category));
-        productService.register(album3, List.of(category));
+        productService.register(album1, List.of(category.getName()));
+        productService.register(album2, List.of(category.getName()));
+        productService.register(album3, List.of(category.getName()));
 
         categoryProductService.disconnectAll(category.getName());
 
@@ -157,7 +157,7 @@ class CategoryProductServiceTest {
         Category childCategory = createCategory4();
 
         Album album = createAlbum1();
-        productService.register(album, List.of(parentCategory));
+        productService.register(album, List.of(parentCategory.getName()));
 
         //when
         categoryProductService.connect(album.getName(), childCategory.getName());
@@ -174,7 +174,7 @@ class CategoryProductServiceTest {
         //given
         Category category = createCategory1();
         Album album = createAlbum1();
-        productService.register(album, List.of(category));
+        productService.register(album, List.of(category.getName()));
 
         //when
         assertThrows(IllegalArgumentException.class, () ->
@@ -186,7 +186,7 @@ class CategoryProductServiceTest {
         //given
         Category category = createCategory1();
         Album album = createAlbum1();
-        productService.register(album, List.of(category));
+        productService.register(album, List.of(category.getName()));
 
         //when
         assertThrows(IllegalArgumentException.class, () ->

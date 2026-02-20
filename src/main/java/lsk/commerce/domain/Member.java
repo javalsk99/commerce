@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.util.InitialExtractor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,8 +76,14 @@ public class Member {
         this.grade = ADMIN;
     }
 
-    public void changePassword(String newEncodedPassword) {
-        this.password = newEncodedPassword;
+    public void changePassword(String newPassword, PasswordEncoder passwordEncoder) {
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
+        } else if (passwordEncoder.matches(newPassword, this.password)) {
+            throw new IllegalArgumentException("비밀번호가 기존과 달라야 합니다.");
+        }
+
+        this.password = passwordEncoder.encode(newPassword);
     }
 
     public void changeAddress(String newCity, String newStreet, String newZipcode) {

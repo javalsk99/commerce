@@ -23,9 +23,9 @@ public class ProductService {
     private final CategoryService categoryService;
 
     @Transactional
-    public String register(Product product, List<Category> categories) {
+    public String register(Product product, List<String> categoryNames) {
         validateProduct(product);
-        categoryService.validateCategories(categories);
+        List<Category> categories = categoryService.validateAndGetCategories(categoryNames);
 
         product.addCategoryProduct(categories);
         productRepository.save(product);

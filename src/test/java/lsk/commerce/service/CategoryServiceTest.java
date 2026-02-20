@@ -154,7 +154,7 @@ class CategoryServiceTest {
         //given
         Category category = createCategory1();
         Album album = createAlbum();
-        productService.register(album, List.of(category));
+        productService.register(album, List.of(category.getName()));
 
         //when
         assertThrows(IllegalStateException.class, () ->
@@ -252,7 +252,7 @@ class CategoryServiceTest {
         Category parentCategory2 = createCategory2();
         Category childCategory = createCategory4();
         Book book = createBook();
-        productService.register(book, List.of(parentCategory2));
+        productService.register(book, List.of(parentCategory2.getName()));
 
         //when
         CategoryResponse categoryDto = categoryService.getCategoryDto(parentCategory1);

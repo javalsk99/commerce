@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 
 @Service
 @Transactional(readOnly = true)
@@ -123,18 +122,18 @@ public class CategoryService {
         return parentCategory;
     }
 
-    protected void validateCategories(List<Category> categories) {
-        if (categories == null || categories.isEmpty()) {
+    protected List<Category> validateAndGetCategories(List<String> categoryNames) {
+        if (categoryNames == null || categoryNames.isEmpty()) {
             throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
         }
 
-        Set<Long> categoriesIds = categories.stream()
-                .map(c -> c.getId())
-                .collect(toSet());
+        Set<String> categoryNameSet = new HashSet<>(categoryNames);
 
-        Long findCategoryCount = categoryRepository.countCategories(categoriesIds);
-        if (categoriesIds.size() != findCategoryCount) {
+        List<Category> categories = categoryRepository.findByNameSet(categoryNameSet);
+        if (categoryNameSet.size() != categories.size()) {
             throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다.");
         }
+
+        return categories;
     }
 }

@@ -63,27 +63,19 @@ public class InitDb {
             String movieCategoryName2 = categoryService.create("액션 영화", "국내 영화");
             String movieCategoryName3 = categoryService.create("코미디 영화", "국내 영화");
 
-            Category albumCategory2 = categoryService.findCategoryByName(albumCategoryName2);
-            Category albumCategory3 = categoryService.findCategoryByName(albumCategoryName3);
-            Category bookCategory3 = categoryService.findCategoryByName(bookCategoryName3);
-            Category bookCategory4 = categoryService.findCategoryByName(bookCategoryName4);
-            Category bookCategory5 = categoryService.findCategoryByName(bookCategoryName5);
-            Category movieCategory2 = categoryService.findCategoryByName(movieCategoryName2);
-            Category movieCategory3 = categoryService.findCategoryByName(movieCategoryName3);
-
-            String albumName1 = productService.register(new Album("BANG BANG", 15000, 100, "IVE", "STARSHIP"), List.of(albumCategory2));
-            productService.register(new Album("Blue Valentine", 15000, 100, "NMIXX", "JYP"), List.of(albumCategory2));
-            productService.register(new Album("404", 15000, 100, "KiiiKiii", "STARSHIP"), List.of(albumCategory2));
-            String albumName4 = productService.register(new Album("타임 캡슐", 15000, 100, "다비치", "씨에이엠위더스"), List.of(albumCategory3));
-            productService.register(new Album("너의 모든 순간", 15000, 100, "성시경", "에스케이재원"), List.of(albumCategory3));
-            String albumName6 = productService.register(new Album("천상연", 15000, 100, "이창섭", "판타지오"), List.of(albumCategory3));
-            String bookName1 = productService.register(new Book("자바 ORM 표준 JPA 프로그래밍", 15000, 100, "김영한", "9788960777330"), List.of(bookCategory3, bookCategory5));
-            String bookName2 = productService.register(new Book("면접을 위한 CS 전공지식 노트", 15000, 100, "주홍철", "9791165219529"), List.of(bookCategory5));
-            productService.register(new Book("Do it! 점프 투 파이썬", 15000, 100, "박응용", "9791163034735"), List.of(bookCategory4));
-            String movieName1 = productService.register(new Movie("범죄도시", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
-            String movieName2 = productService.register(new Movie("범죄도시2", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
-            productService.register(new Movie("범죄도시3", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
-            productService.register(new Movie("범죄도시4", 15000, 100, "마동석", "강윤성"), List.of(movieCategory2, movieCategory3));
+            String albumName1 = productService.register(new Album("BANG BANG", 15000, 100, "IVE", "STARSHIP"), List.of(albumCategoryName2));
+            productService.register(new Album("Blue Valentine", 15000, 100, "NMIXX", "JYP"), List.of(albumCategoryName2));
+            productService.register(new Album("404", 15000, 100, "KiiiKiii", "STARSHIP"), List.of(albumCategoryName2));
+            String albumName4 = productService.register(new Album("타임 캡슐", 15000, 100, "다비치", "씨에이엠위더스"), List.of(albumCategoryName3));
+            productService.register(new Album("너의 모든 순간", 15000, 100, "성시경", "에스케이재원"), List.of(albumCategoryName3));
+            String albumName6 = productService.register(new Album("천상연", 15000, 100, "이창섭", "판타지오"), List.of(albumCategoryName3));
+            String bookName1 = productService.register(new Book("자바 ORM 표준 JPA 프로그래밍", 15000, 100, "김영한", "9788960777330"), List.of(bookCategoryName3, bookCategoryName5));
+            String bookName2 = productService.register(new Book("면접을 위한 CS 전공지식 노트", 15000, 100, "주홍철", "9791165219529"), List.of(bookCategoryName5));
+            productService.register(new Book("Do it! 점프 투 파이썬", 15000, 100, "박응용", "9791163034735"), List.of(bookCategoryName4));
+            String movieName1 = productService.register(new Movie("범죄도시", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
+            String movieName2 = productService.register(new Movie("범죄도시2", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
+            productService.register(new Movie("범죄도시3", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
+            productService.register(new Movie("범죄도시4", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
 
             orderService.order(userAId, Map.of(albumName1, 3, albumName4, 2, albumName6, 5));
             orderService.order(userAId, Map.of(albumName1, 2, bookName1, 4, movieName2, 3));

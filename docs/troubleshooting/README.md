@@ -12,4 +12,5 @@
   [maven central repository](https://central.sonatype.com/artifact/io.github.openfeign.querydsl/querydsl-jpa/7.1/overview)를 참고하여 io.github.openfeign.querydsl:querydsl-jpa:7.1 의존성 추가  
   기본적인 검색은 배웠던 내용에서 변한게 없으므로 초성으로 검색하는 기능을 추가했다.
 - 통합 테스트가 실제 서버를 사용해서 오래걸린다.  
-  가짜 객체를 사용해 단위 테스트로 테스트 시간을 단축시킨다.
+  가짜 객체를 사용해 단위 테스트로 테스트 시간을 단축시킨다.  
+  [Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation:](https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3) 오류는 아니지만 경고 메시지가 떠서 해당 링크를 참고해서 gradle에 추가

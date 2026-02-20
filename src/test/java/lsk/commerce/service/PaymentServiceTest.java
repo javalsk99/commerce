@@ -63,9 +63,9 @@ class PaymentServiceTest {
         album = createAlbum();
         book = createBook();
         movie = createMovie();
-        productService.register(album, List.of(category1));
-        productService.register(book, List.of(category2));
-        productService.register(movie, List.of(category3));
+        productService.register(album, List.of(category1.getName()));
+        productService.register(book, List.of(category2.getName()));
+        productService.register(movie, List.of(category3.getName()));
 
         orderNumber1 = orderService.order(memberLoginId, Map.of(album.getName(), 3, book.getName(), 2, movie.getName(), 5));
         orderNumber2 = orderService.order(memberLoginId, Map.of(album.getName(), 3, book.getName(), 2, movie.getName(), 5));

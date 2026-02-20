@@ -16,5 +16,6 @@
 - [new CaseBuilder()](https://ssow93.tistory.com/84)
 - [테스트에서의 REQUIRES_NEW 이슈](https://blog.tetedo.com/368)
 - [단위 테스트 Mockito](https://mangkyu.tistory.com/145)
-- [Mockito 소개](https://sun-22.tistory.com/94)  
-  Mockito는 given 절에서 when을 사용해서 when을 given으로 바꾼 BDDMockito로 변경 BDDMockito.class 참고
+- [Mockito 소개](https://sun-22.tistory.com/94) - Mockito는 given 절에서 when을 사용해서 when을 given으로 바꾼 BDDMockito로 변경 (BDDMockito.class 참고)
+- [private 필드 값 주입](https://0soo.tistory.com/129)
+- [@Nested를 활용한 계층 구조의 테스트](https://velog.io/@jhbae0420/Nested%EB%A5%BC-%ED%99%9C%EC%9A%A9%ED%95%98%EC%97%AC-%EA%B3%84%EC%B8%B5-%EA%B5%AC%EC%A1%B0%EC%9D%98-%ED%85%8C%EC%8A%A4%ED%8A%B8-%EC%BD%94%EB%93%9C-%EC%9E%91%EC%84%B1%ED%95%98%EA%B8%B0)

@@ -47,11 +47,11 @@ public class CategoryRepository {
                 .getResultList();
     }
 
-    public Long countCategories(Set<Long> categoryIds) {
+    public List<Category> findByNameSet(Set<String> categoryNameSet) {
         return em.createQuery(
-                        "select count(c) from Category c" +
-                                " where c.id in :categoryIds", Long.class)
-                .setParameter("categoryIds", categoryIds)
-                .getSingleResult();
+                        "select c from Category c" +
+                                " where c.id in :categoryNameSet", Category.class)
+                .setParameter("categoryNameSet", categoryNameSet)
+                .getResultList();
     }
 }

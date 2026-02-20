@@ -46,20 +46,8 @@ public class MemberService {
 
     @Transactional
     public Member changePassword(String memberLoginId, String newPassword) {
-        if (newPassword == null || newPassword.isBlank()) {
-            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
-        }
-
         Member member = findMemberByLoginId(memberLoginId);
-
-        String newEncodedPassword = passwordEncoder.encode(newPassword);
-        if (!newEncodedPassword.startsWith("$2a$")) {
-            throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다.");
-        } else if (passwordEncoder.matches(newEncodedPassword, member.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 기존과 달라야 합니다.");
-        }
-
-        member.changePassword(newEncodedPassword);
+        member.changePassword(newPassword, passwordEncoder);
         return member;
     }
 
