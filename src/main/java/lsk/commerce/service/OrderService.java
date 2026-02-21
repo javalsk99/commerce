@@ -87,7 +87,7 @@ public class OrderService {
         }
 
         //기존 주문 상품 삭제
-        OrderProduct.deleteOrderProduct(order);
+        order.clearOrderProduct();
 
         //영속성 컨텍스트 정리
         em.flush();
@@ -116,11 +116,11 @@ public class OrderService {
         }
 
         //새로운 주문 상품으로 변경
-        Order.updateOrder(currentOrder, newOrderProducts);
+        Order newCurrentOrder = currentOrder.updateOrder(newOrderProducts);
         em.flush();
 
         //기존의 주문 상품 삭제와 새로운 주문 상품 저장
-        orderProductJdbcRepository.deleteOrderProductsByOrderId(currentOrder.getId());
+        orderProductJdbcRepository.deleteOrderProductsByOrderId(newCurrentOrder.getId());
         orderProductJdbcRepository.saveAll(newOrderProducts);
 
         em.clear();

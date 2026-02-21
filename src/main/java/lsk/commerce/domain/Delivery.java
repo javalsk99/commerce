@@ -21,10 +21,6 @@ import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
-import static lsk.commerce.domain.DeliveryStatus.CANCELED;
-import static lsk.commerce.domain.DeliveryStatus.DELIVERED;
-import static lsk.commerce.domain.DeliveryStatus.SHIPPED;
-import static lsk.commerce.domain.DeliveryStatus.WAITING;
 
 @Entity
 @Getter
@@ -65,19 +61,14 @@ public class Delivery {
     //주문을 결제해야 배송 준비가 시작돼서 결제 대기 상태 추가
     public Delivery(Member member) {
         this.address = member.getAddress();
-        this.deliveryStatus = WAITING;
-    }
-
-    public Delivery(Address address) {
-        this.address = address;
-        this.deliveryStatus = WAITING;
+        this.deliveryStatus = DeliveryStatus.WAITING;
     }
 
     public void startDelivery() {
         validatePaidOrder();
         validateCanShip();
 
-        this.deliveryStatus = SHIPPED;
+        this.deliveryStatus = DeliveryStatus.SHIPPED;
         this.shippedDate = LocalDateTime.now();
     }
 
@@ -85,7 +76,7 @@ public class Delivery {
         validatePaidOrder();
         validateShipped();
 
-        this.deliveryStatus = DELIVERED;
+        this.deliveryStatus = DeliveryStatus.DELIVERED;
         this.deliveredDate = LocalDateTime.now();
         this.order.setOrderStatus(OrderStatus.DELIVERED);
     }
@@ -99,19 +90,19 @@ public class Delivery {
     }
 
     private void validateCanShip() {
-        if (this.deliveryStatus == WAITING) {
+        if (this.deliveryStatus == DeliveryStatus.WAITING) {
             throw new IllegalStateException("결제가 완료된 주문이 아닙니다.");
-        } else if (this.deliveryStatus == CANCELED) {
+        } else if (this.deliveryStatus == DeliveryStatus.CANCELED) {
             throw new IllegalStateException("취소된 주문입니다.");
-        } else if (this.deliveryStatus == SHIPPED || this.deliveryStatus == DELIVERED) {
+        } else if (this.deliveryStatus == DeliveryStatus.SHIPPED || this.deliveryStatus == DeliveryStatus.DELIVERED) {
             throw new IllegalStateException("이미 발송된 주문입니다.");
         }
     }
 
     private void validateShipped() {
-        if (this.deliveryStatus == DELIVERED) {
+        if (this.deliveryStatus == DeliveryStatus.DELIVERED) {
             throw new IllegalStateException("이미 배송 완료된 주문입니다.");
-        } else if (this.deliveryStatus != SHIPPED) {
+        } else if (this.deliveryStatus != DeliveryStatus.SHIPPED) {
             throw new IllegalStateException("발송된 주문이 아닙니다.");
         }
     }
@@ -121,6 +112,6 @@ public class Delivery {
     }
 
     protected void canceled() {
-        this.deliveryStatus = CANCELED;
+        this.deliveryStatus = DeliveryStatus.CANCELED;
     }
 }

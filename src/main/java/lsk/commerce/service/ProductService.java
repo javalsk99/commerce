@@ -32,10 +32,6 @@ public class ProductService {
         return product.getName();
     }
 
-    public List<Product> findProducts() {
-        return productRepository.findAll();
-    }
-
     public Product findProductByName(String productName) {
         return productRepository.findByName(productName)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
@@ -44,6 +40,10 @@ public class ProductService {
     public Product findProductWithCategoryProduct(String productName) {
         return productRepository.findWithCategoryProduct(productName)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
+    }
+
+    public List<Product> findProducts() {
+        return productRepository.findAll();
     }
 
     @Transactional
@@ -57,6 +57,7 @@ public class ProductService {
     public void deleteProduct(String productName) {
         Product product = productRepository.findWithCategoryProductCategory(productName)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
+
         if (!product.getCategoryProducts().isEmpty()) {
             product.removeCategoryProducts();
         }

@@ -50,6 +50,10 @@ public class OrderProduct {
     private boolean deleted = false;
 
     public static OrderProduct createOrderProduct(Product product, Integer count) {
+        if (product == null || count == null) {
+            throw new IllegalArgumentException("주문하는 상품 또는 수량이 없습니다.");
+        }
+
         OrderProduct orderProduct = new OrderProduct();
         orderProduct.product = product;
         orderProduct.orderPrice = product.getPrice() * count;
@@ -57,22 +61,6 @@ public class OrderProduct {
 
         product.removeStock(count);
         return orderProduct;
-    }
-
-    //수량만 변경
-    public static void updateCountOrderProduct(OrderProduct orderProduct, Product product, Integer newCount) {
-        if (orderProduct.product.equals(product)) {
-            product.updateStock(orderProduct.count, newCount);
-            orderProduct.count = newCount;
-        }
-    }
-
-    public static void deleteOrderProduct(Order order) {
-        for (OrderProduct orderProduct : order.getOrderProducts()) {
-            orderProduct.product.addStock(orderProduct.count);
-        }
-
-        order.getOrderProducts().clear();
     }
 
     //Order에서 사용해서 protected

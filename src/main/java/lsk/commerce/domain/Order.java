@@ -30,10 +30,6 @@ import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
-import static lsk.commerce.domain.DeliveryStatus.PREPARING;
-import static lsk.commerce.domain.OrderStatus.CANCELED;
-import static lsk.commerce.domain.OrderStatus.PAID;
-import static lsk.commerce.domain.PaymentStatus.COMPLETED;
 
 @Entity
 @Table(name = "orders")
@@ -104,6 +100,8 @@ public class Order {
 
     //결제는 주문 생성하고 바로 진행하지 않는다.
     public static Order createOrder(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
+        validateParameters(member, delivery, orderProducts);
+
         Order order = new Order();
 
         order.addMember(member);
@@ -120,46 +118,123 @@ public class Order {
         return order;
     }
 
-    public static Order updateOrder(Order order, List<OrderProduct> newOrderProducts) {
-        order.totalAmount = 0;
-        for (OrderProduct newOrderProduct : newOrderProducts) {
-            order.addOrderProduct(newOrderProduct);
-            order.totalAmount += newOrderProduct.getOrderPrice();
+    public void clearOrderProduct() {
+        for (OrderProduct orderProduct : this.orderProducts) {
+            orderProduct.getProduct().addStock(orderProduct.getCount());
         }
 
-        return order;
+        this.totalAmount = 0;
+        this.orderProducts.clear();
     }
 
-    public void completePaid() {
-        this.orderStatus = PAID;
-        this.delivery.setDeliveryStatus(PREPARING);
-    }
+    public Order updateOrder(List<OrderProduct> newOrderProducts) {
+        validateOrderProducts(newOrderProducts);
 
-    protected void setOrderStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
-    }
+        for (OrderProduct newOrderProduct : newOrderProducts) {
+            this.addOrderProduct(newOrderProduct);
+            this.totalAmount += newOrderProduct.getOrderPrice();
+        }
 
-    //Payment에서 사용해서 protected
-    protected void setPayment(Payment payment) {
-        this.payment = payment;
+        return this;
     }
 
     public void cancel() {
-        if (this.orderStatus == CANCELED) {
-            throw new IllegalStateException("이미 취소된 주문입니다.");
-        } else if (this.payment != null) {
-            if (this.payment.getPaymentStatus() == COMPLETED) {
-                throw new IllegalStateException("결제가 완료돼서 취소할 수 없습니다.");
-            }
-
-            this.payment.canceled();
+        if (this.orderStatus == OrderStatus.CANCELED) {
+            return;
         }
+
+        validateStatusForCancel();
 
         for (OrderProduct orderProduct : this.orderProducts) {
             orderProduct.getProduct().addStock(orderProduct.getCount());
         }
 
         this.getDelivery().canceled();
-        this.orderStatus = CANCELED;
+        this.orderStatus = OrderStatus.CANCELED;
+    }
+
+    public void completePaid() {
+        if (this.orderStatus == OrderStatus.PAID && this.delivery.getDeliveryStatus() == DeliveryStatus.PREPARING) {
+            return;
+        }
+
+        validateStatusForCompletePaid();
+
+        this.orderStatus = OrderStatus.PAID;
+        this.delivery.setDeliveryStatus(DeliveryStatus.PREPARING);
+    }
+
+    protected void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    protected void setPayment(Payment payment) {
+        this.payment = payment;
+    }
+
+    private static void validateParameters(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
+        if (member == null) {
+            throw new IllegalArgumentException("주문할 회원이 없습니다.");
+        }
+
+        if (delivery == null) {
+            throw new IllegalArgumentException("배송 정보가 없습니다.");
+        }
+
+        if (member.getAddress() == null || delivery.getAddress() == null) {
+            throw new IllegalArgumentException("배송될 주소가 없습니다.");
+        }
+
+        if (orderProducts == null || orderProducts.isEmpty()) {
+            throw new IllegalArgumentException("주문 상품이 없습니다.");
+        }
+    }
+
+    private void validateOrderProducts(List<OrderProduct> newOrderProducts) {
+        if (this.orderProducts == null) {
+            throw new IllegalStateException("주문 상품이 없습니다.");
+        } else if (!this.orderProducts.isEmpty()) {
+            throw new IllegalStateException("주문 상품이 비어 있지 않습니다.");
+        }
+
+        if (newOrderProducts == null || newOrderProducts.isEmpty()) {
+            throw new IllegalArgumentException("수정할 주문 상품이 없습니다.");
+        }
+    }
+
+    private void validateStatusForCancel() {
+        if (this.orderStatus != OrderStatus.CREATED) {
+            throw new IllegalStateException("결제 완료된 주문이어서 취소할 수 없습니다.");
+        }
+
+        if (this.payment != null) {
+            if (this.payment.getPaymentStatus() == PaymentStatus.COMPLETED) {
+                throw new IllegalStateException("결제 완료돼서 취소할 수 없습니다.");
+            }
+
+            this.payment.canceled();
+        }
+
+        if (this.delivery.getDeliveryStatus() != DeliveryStatus.WAITING) {
+            throw new IllegalStateException("배송 대기 상태가 아니여서 취소할 수 없습니다.");
+        }
+    }
+
+    private void validateStatusForCompletePaid() {
+        if (this.payment == null) {
+            throw new IllegalStateException("진행 중인 결제가 없습니다.");
+        }
+
+        if (this.payment.getPaymentStatus() != PaymentStatus.COMPLETED) {
+            throw new IllegalStateException("결제가 완료되지 않았습니다.");
+        }
+
+        if (this.orderStatus != OrderStatus.CREATED) {
+            throw new IllegalStateException("결제 완료 처리가 불가능한 주문입니다.");
+        }
+
+        if (this.delivery.getDeliveryStatus() != DeliveryStatus.WAITING) {
+            throw new IllegalStateException("배송 대기 상태가 아닙니다.");
+        }
     }
 }

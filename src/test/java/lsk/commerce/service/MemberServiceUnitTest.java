@@ -325,7 +325,7 @@ class MemberServiceUnitTest {
                     .willReturn(Optional.of(member))
                     .willReturn(Optional.empty());
 
-            //when
+            //when 첫 번째 호출
             memberService.deleteMember(loginId);
 
             //then
@@ -334,7 +334,7 @@ class MemberServiceUnitTest {
                     () -> then(memberRepository).should(times(1)).delete(member)
             );
 
-            //when
+            //when 두 번째 호출
             assertThatThrownBy(() -> memberService.deleteMember(loginId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("존재하지 않는 아이디입니다.");

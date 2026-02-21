@@ -18,7 +18,6 @@ import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceUnitTest {
@@ -71,7 +70,7 @@ class AuthServiceUnitTest {
             //given
             Member.builder().loginId("id_B").password(encodedPassword).build();
 
-            willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.")).given(memberService).findMemberForLogin(any());
+            given(memberService.findMemberForLogin(any())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
 
             //when
             assertThatThrownBy(() -> authService.login(loginId, rawPassword))
@@ -90,7 +89,7 @@ class AuthServiceUnitTest {
             Member member = Member.builder().loginId(loginId).password("11111111").build();
 
             given(memberService.findMemberForLogin(any())).willReturn(member);
-            willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.")).given(passwordEncoder).matches(anyString(), anyString());
+            given(passwordEncoder.matches(anyString(), anyString())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
 
             //when
             assertThatThrownBy(() -> authService.login(loginId, rawPassword))

@@ -22,10 +22,6 @@ import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static java.util.UUID.randomUUID;
 import static lombok.AccessLevel.PROTECTED;
-import static lsk.commerce.domain.PaymentStatus.CANCELED;
-import static lsk.commerce.domain.PaymentStatus.COMPLETED;
-import static lsk.commerce.domain.PaymentStatus.FAILED;
-import static lsk.commerce.domain.PaymentStatus.PENDING;
 
 @Entity
 @Getter
@@ -69,7 +65,7 @@ public class Payment {
 
         Payment payment = new Payment();
         payment.paymentAmount = order.getTotalAmount();
-        payment.paymentStatus = PENDING;
+        payment.paymentStatus = PaymentStatus.PENDING;
         payment.addOrder(order);
         payment.paymentId = randomUUID().toString();
     }
@@ -81,29 +77,29 @@ public class Payment {
     }
 
     public void failed() {
-        this.paymentStatus = FAILED;
+        this.paymentStatus = PaymentStatus.FAILED;
     }
 
     public void canceled() {
-        this.paymentStatus = CANCELED;
+        this.paymentStatus = PaymentStatus.CANCELED;
     }
 
     public void complete(LocalDateTime paymentDate) {
-        if (this.paymentStatus == COMPLETED) {
+        if (this.paymentStatus == PaymentStatus.COMPLETED) {
             throw new IllegalStateException("이미 결제 완료된 주문입니다.");
         }
 
-        this.paymentStatus = COMPLETED;
+        this.paymentStatus = PaymentStatus.COMPLETED;
         this.paymentDate = paymentDate;
     }
 
     //결제 api 추가 전, 테스트용
     public void testFailed() {
-        this.paymentStatus = FAILED;
+        this.paymentStatus = PaymentStatus.FAILED;
     }
 
     //결제 api 추가 전, 테스트용
     public void testCompleted() {
-        this.paymentStatus = COMPLETED;
+        this.paymentStatus = PaymentStatus.COMPLETED;
     }
 }

@@ -135,8 +135,9 @@ public class PaymentController {
         OrderRequest orderRequest = orderService.getOrderRequest(order);
         List<Product> products = productService.findProducts();
         for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
-            return products.stream()
-                    .anyMatch(p -> p.getName().equals(orderProduct.getName()));
+            if (products.stream().noneMatch(p -> p.getName().equals(orderProduct.getName()))) {
+                throw new IllegalArgumentException("잘못된 상품이 있습니다.");
+            }
         }
 
         if (orderRequest.getOrderProducts().size() == 1) {
