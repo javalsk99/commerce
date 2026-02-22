@@ -1,12 +1,11 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
-import lsk.commerce.domain.CategoryProduct;
-import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.repository.CategoryRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +24,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.BDDMockito.any;
@@ -33,7 +32,6 @@ import static org.mockito.BDDMockito.anySet;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.argThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.mock;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
@@ -47,13 +45,29 @@ class CategoryServiceUnitTest {
     @InjectMocks
     CategoryService categoryService;
 
-    Category category1 = Category.createCategory(null, "컴퓨터/IT");
-    Category category2 = Category.createCategory(category1, "프로그래밍 언어");
-    Category category3 = Category.createCategory(category2, "Java");
-    Category category4 = Category.createCategory(category1, "Python");
+    Category category1;
+    Category category2;
+    Category category3;
+    Category category4;
 
-    List<Category> categories1 = List.of(category1);
-    List<Category> categories2 = List.of(category1, category2, category3, category4);
+    List<Category> categories1;
+    List<Category> categories2;
+
+    @BeforeEach
+    void beforeEach() {
+        category1 = Category.createCategory(null, "컴퓨터/IT");
+        category2 = Category.createCategory(category1, "프로그래밍 언어");
+        category3 = Category.createCategory(category2, "Java");
+        category4 = Category.createCategory(category1, "Python");
+
+        ReflectionTestUtils.setField(category1, "id", 1L);
+        ReflectionTestUtils.setField(category2, "id", 2L);
+        ReflectionTestUtils.setField(category3, "id", 3L);
+        ReflectionTestUtils.setField(category4, "id", 4L);
+
+        categories1 = List.of(category1);
+        categories2 = List.of(category1, category2, category3, category4);
+    }
 
     @Nested
     class SuccessCase {
@@ -156,9 +170,6 @@ class CategoryServiceUnitTest {
             //given
             given(categoryRepository.findAll()).willReturn(categories2);
 
-            ReflectionTestUtils.setField(category2, "id", 2L);
-            ReflectionTestUtils.setField(category4, "id", 4L);
-
             //when
             categoryService.changeParentCategory("Python", "프로그래밍 언어");
 
@@ -174,9 +185,6 @@ class CategoryServiceUnitTest {
         void changeParent_hasChild() {
             //given
             given(categoryRepository.findAll()).willReturn(categories2);
-
-            ReflectionTestUtils.setField(category2, "id", 2L);
-            ReflectionTestUtils.setField(category4, "id", 4L);
 
             //when
             categoryService.changeParentCategory("프로그래밍 언어", "Python");
@@ -210,11 +218,12 @@ class CategoryServiceUnitTest {
         @Test
         void changeDto() {
             //given
-            Category category = connectProduct();
+            Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
+            book.connectCategory(category1);
 
             //when
             CategoryResponse categoryDto = categoryService.getCategoryDto(category2);
-            CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category);
+            CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category1);
 
             //then
             assertAll(
@@ -224,8 +233,11 @@ class CategoryServiceUnitTest {
                             .containsExactly(category3.getName())
             );
             assertAll(
-                    () -> assertThat(categoryDisconnectResponse.getName()).isEqualTo(category.getName()),
-                    () -> assertThat(categoryDisconnectResponse.getProducts().size()).isEqualTo(1)
+                    () -> assertThat(categoryDisconnectResponse.getName()).isEqualTo(category1.getName()),
+                    () -> assertThat(categoryDisconnectResponse.getProducts())
+                            .isNotEmpty()
+                            .extracting("name", "author")
+                            .containsExactly(tuple("자바 ORM 표준 JPA 프로그래밍", "김영한"))
             );
         }
 
@@ -260,21 +272,6 @@ class CategoryServiceUnitTest {
                             .extracting("name")
                             .containsExactlyInAnyOrder("Java", "Python")
             );
-        }
-
-        private Category connectProduct() {
-            Product product = mock(Book.class);
-
-            CategoryProduct categoryProduct = mock(CategoryProduct.class);
-            given(categoryProduct.getProduct()).willReturn(product);
-
-            List<CategoryProduct> categoryProducts = new ArrayList<>();
-            categoryProducts.add(categoryProduct);
-
-            Category category = mock(Category.class);
-            given(category.getCategoryProducts()).willReturn(categoryProducts);
-
-            return category;
         }
     }
 
@@ -400,7 +397,8 @@ class CategoryServiceUnitTest {
         @Test
         void delete_hasProduct() {
             //given
-            ReflectionTestUtils.setField(category4, "categoryProducts", List.of(mock(CategoryProduct.class)));
+            Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
+            book.connectCategory(category4);
 
             given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category4));
 
@@ -412,7 +410,10 @@ class CategoryServiceUnitTest {
             //then
             assertAll(
                     () -> then(categoryRepository).should().findWithChild(anyString()),
-                    () -> assertThat(category4.getCategoryProducts().size()).isEqualTo(1)
+                    () -> assertThat(category4.getCategoryProducts())
+                            .isNotEmpty()
+                            .extracting("category.name", "product.name", "product.author")
+                            .containsExactly(tuple("Python", "자바 ORM 표준 JPA 프로그래밍", "김영한"))
             );
         }
 

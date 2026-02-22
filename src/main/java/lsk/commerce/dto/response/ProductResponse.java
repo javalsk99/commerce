@@ -12,8 +12,8 @@ import org.hibernate.Hibernate;
 public class ProductResponse {
 
     private String name;
-    private int price;
-    private int stockQuantity;
+    private Integer price;
+    private Integer stockQuantity;
 
     private String dtype;
 
@@ -27,7 +27,7 @@ public class ProductResponse {
     private String director;
 
     @QueryProjection
-    public ProductResponse(String name, int price, int stockQuantity, String dtype, String artist,
+    public ProductResponse(String name, Integer price, Integer stockQuantity, String dtype, String artist,
                            String studio, String author, String isbn, String actor, String director) {
         this.name = name;
         this.price = price;

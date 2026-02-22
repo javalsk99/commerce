@@ -201,7 +201,7 @@ class ProductTest {
         }
 
         @Test
-        void removeCategoryProducts() {
+        void removeCategoryProductsFromCategory() {
             //given
             Category category1 = Category.createCategory(null, "가요");
             Category category2 = Category.createCategory(category1, "댄스");
@@ -213,7 +213,7 @@ class ProductTest {
             album.connectCategories(List.of(category2));
 
             //when
-            album.removeCategoryProducts();
+            album.removeCategoryProductsFormCategory();
 
             //then
             assertAll(
@@ -224,7 +224,7 @@ class ProductTest {
         }
 
         @Test
-        void removeCategoryProducts_idempotency() {
+        void removeCategoryProductsFormCategory_idempotency() {
             //given
             Category category1 = Category.createCategory(null, "가요");
             Category category2 = Category.createCategory(category1, "댄스");
@@ -236,7 +236,7 @@ class ProductTest {
             album.connectCategories(List.of(category2));
 
             //when 첫 번째 호출
-            album.removeCategoryProducts();
+            album.removeCategoryProductsFormCategory();
 
             //then
             assertAll(
@@ -246,13 +246,33 @@ class ProductTest {
             );
 
             //when 두 번째 호출
-            album.removeCategoryProducts();
+            album.removeCategoryProductsFormCategory();
 
             //then
             assertAll(
                     () -> assertThat(category1.getCategoryProducts()).isEmpty(),
                     () -> assertThat(category2.getCategoryProducts()).isEmpty(),
                     () -> assertThat(album.getCategoryProducts()).hasSize(2)
+            );
+        }
+
+        @Test
+        void removeCategoryProduct() {
+            //given
+            Category category = Category.createCategory(null, "가요");
+            Album album = new Album();
+
+            ReflectionTestUtils.setField(category, "id", 1L);
+
+            album.connectCategory(category);
+
+            //when
+            album.removeCategoryProduct(category);
+
+            //then
+            assertAll(
+                    () -> assertThat(album.getCategoryProducts()).isEmpty(),
+                    () -> assertThat(category.getCategoryProducts()).isEmpty()
             );
         }
 
@@ -291,7 +311,7 @@ class ProductTest {
     class FailureCase {
 
         @Test
-        void failed_addStock_nullParameter() {
+        void addStock_nullParameter() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -305,7 +325,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_removeStock_nullParameter() {
+        void removeStock_nullParameter() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -319,7 +339,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_removeStock_exceed() {
+        void removeStock_exceed() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -333,7 +353,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_updateStock_nullParameter() {
+        void updateStock_nullParameter() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -352,7 +372,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_updateStock_exceed() {
+        void updateStock_exceed() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -366,7 +386,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_update_allNull() {
+        void update_allNull() {
             //given
             Album album = Album.builder().price(15000).stockQuantity(10).build();
 
@@ -382,7 +402,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_connectCategory_categoryNull() {
+        void connectCategory_categoryNull() {
             //given
             Album album = new Album();
 
@@ -396,7 +416,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_connectCategory_notPersist() {
+        void connectCategory_notPersist() {
             //given
             Category category = Category.createCategory(null, "가요");
             Album album = new Album();
@@ -411,7 +431,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_connectCategories_notExistsCategories() {
+        void connectCategories_notExistsCategories() {
             //given
             Album album = new Album();
 
@@ -430,7 +450,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_connectCategories_notPersist() {
+        void connectCategories_notPersist() {
             //given
             Category category = Category.createCategory(null, "가요");
             Album album = new Album();
@@ -445,27 +465,7 @@ class ProductTest {
         }
 
         @Test
-        void removeCategoryProduct() {
-            //given
-            Category category = Category.createCategory(null, "가요");
-            Album album = new Album();
-
-            ReflectionTestUtils.setField(category, "id", 1L);
-
-            album.connectCategory(category);
-
-            //when
-            album.removeCategoryProduct(category);
-
-            //then
-            assertAll(
-                    () -> assertThat(album.getCategoryProducts()).isEmpty(),
-                    () -> assertThat(category.getCategoryProducts()).isEmpty()
-            );
-        }
-
-        @Test
-        void failed_removeCategoryProduct_notExistsCategoryProducts() {
+        void removeCategoryProduct_notExistsCategoryProducts() {
             //given
             Album album = new Album();
 
@@ -476,7 +476,7 @@ class ProductTest {
         }
 
         @Test
-        void failed_removeCategoryProduct_notLinked() {
+        void removeCategoryProduct_notLinked() {
             //given
             Category category1 = Category.createCategory(null, "가요");
             Category category2 = Category.createCategory(category1, "댄스");

@@ -25,9 +25,10 @@ public class CategoryRepository {
     }
 
     public Optional<Category> findWithChild(String categoryName) {
-        return em.createQuery("select c from Category c" +
-                        " left join fetch c.child" +
-                        " where c.name = :name", Category.class)
+        return em.createQuery(
+                        "select c from Category c" +
+                                " left join fetch c.child" +
+                                " where c.name = :name", Category.class)
                 .setParameter("name", categoryName)
                 .getResultStream()
                 .findFirst();

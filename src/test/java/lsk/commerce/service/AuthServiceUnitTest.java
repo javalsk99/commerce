@@ -66,7 +66,7 @@ class AuthServiceUnitTest {
     class FailureCase {
 
         @Test
-        void failed_login_wrongLoginId() {
+        void login_wrongLoginId() {
             //given
             Member.builder().loginId("id_B").password(encodedPassword).build();
 
@@ -79,12 +79,12 @@ class AuthServiceUnitTest {
 
             //then
             then(memberService).should().findMemberForLogin(any());
-            then(passwordEncoder).should(never()).matches(anyString(), anyString());
+            then(passwordEncoder).should(never()).matches(any(), any());
             then(jwtProvider).should(never()).createToken(any());
         }
 
         @Test
-        void failed_login_wrongPassword() {
+        void login_wrongPassword() {
             //given
             Member member = Member.builder().loginId(loginId).password("11111111").build();
 

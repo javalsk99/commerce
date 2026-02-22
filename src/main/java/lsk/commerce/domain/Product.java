@@ -153,7 +153,7 @@ public abstract class Product {
     }
 
     //상품 제거할 때 카테고리에서 카테고리 상품들 제거
-    public void removeCategoryProducts() {
+    public void removeCategoryProductsFormCategory() {
         for (CategoryProduct categoryProduct : this.categoryProducts) {
             Category category = categoryProduct.getCategory();
 
