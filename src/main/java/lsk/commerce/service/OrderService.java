@@ -35,6 +35,11 @@ public class OrderService {
     private final OrderProductJdbcRepository orderProductJdbcRepository;
 
     public String order(String memberLoginId, Map<String, Integer> productNamesCount) {
+
+        if (productNamesCount == null || productNamesCount.isEmpty()) {
+            throw new IllegalArgumentException("주문 상품이 없습니다.");
+        }
+
         //엔티티 조회
         Member member = memberService.findMemberByLoginId(memberLoginId);
         List<Product> products = productService.findProducts();
@@ -78,52 +83,10 @@ public class OrderService {
         return orderNumber;
     }
 
-    public void updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
-        Order order = findOrderWithAllExceptMember(orderNumber);
-
-        //결제가 됐는지 검증
-        if (order.getOrderStatus() != CREATED) {
-            throw new IllegalStateException("결제가 완료돼서 주문을 수정할 수 없습니다.");
-        }
-
-        //기존 주문 상품 삭제
-        order.clearOrderProduct();
-
-        //영속성 컨텍스트 정리
-        em.flush();
-        em.clear();
-
-        Order currentOrder = findOrderWithDeliveryPayment(orderNumber);
-        List<Product> currentProducts = productService.findProducts();
-
-        List<OrderProduct> newOrderProducts = new ArrayList<>();
-
-        for (Map.Entry<String, Integer> newProductNameCountEntry : newProductNamesCount.entrySet()) {
-            String newProductName = newProductNameCountEntry.getKey();
-            Integer newCount = newProductNameCountEntry.getValue();
-
-            if (newProductName == null) {
-                throw new IllegalArgumentException("상품이 존재하지 않습니다.");
-            } else if (newCount == null) {
-                throw new IllegalArgumentException("수량이 존재하지 않습니다.");
-            }
-
-            Product newProduct = currentProducts.stream()
-                    .filter(p -> newProductName.equals(p.getName()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + newProductName));
-            newOrderProducts.add(OrderProduct.createOrderProduct(newProduct, newCount));
-        }
-
-        //새로운 주문 상품으로 변경
-        Order newCurrentOrder = currentOrder.updateOrder(newOrderProducts);
-        em.flush();
-
-        //기존의 주문 상품 삭제와 새로운 주문 상품 저장
-        orderProductJdbcRepository.deleteOrderProductsByOrderId(newCurrentOrder.getId());
-        orderProductJdbcRepository.saveAll(newOrderProducts);
-
-        em.clear();
+    @Transactional(readOnly = true)
+    public Order findOrder(String orderNumber) {
+        return orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
     }
 
     @Transactional(readOnly = true)
@@ -148,6 +111,51 @@ public class OrderService {
     public Order findOrderWithAll(String orderNumber) {
         return orderRepository.findWithAll(orderNumber)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+    }
+
+    public void updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
+        Order order = findOrderWithAllExceptMember(orderNumber);
+
+        //기존 주문의 주문 상품 리스트 비우기
+        order.clearOrderProduct();
+        em.flush();
+
+        //기존 주문 상품 삭제
+        orderProductJdbcRepository.deleteOrderProductsByOrderId(order.getId());
+
+        //영속성 컨텍스트 정리
+        em.clear();
+
+        Order currentOrder = findOrder(orderNumber);
+        List<Product> currentProducts = productService.findProducts();
+
+        List<OrderProduct> newOrderProducts = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> newProductNameCountEntry : newProductNamesCount.entrySet()) {
+            String newProductName = newProductNameCountEntry.getKey();
+            Integer newCount = newProductNameCountEntry.getValue();
+
+            if (newProductName == null) {
+                throw new IllegalArgumentException("상품이 존재하지 않습니다.");
+            } else if (newCount == null) {
+                throw new IllegalArgumentException("수량이 존재하지 않습니다.");
+            }
+
+            Product newProduct = currentProducts.stream()
+                    .filter(p -> newProductName.equals(p.getName()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + newProductName));
+            newOrderProducts.add(OrderProduct.createOrderProduct(newProduct, newCount));
+        }
+
+        //새로운 주문 상품으로 변경
+        currentOrder.updateOrder(newOrderProducts);
+        em.flush();
+
+        //새로운 주문 상품 저장
+        orderProductJdbcRepository.saveAll(newOrderProducts);
+
+        em.clear();
     }
 
     public void deleteOrder(String orderNumber) {

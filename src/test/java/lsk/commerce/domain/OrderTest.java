@@ -301,6 +301,93 @@ class OrderTest {
         }
 
         @Test
+        void clear_byOrderStatus() {
+            //given
+            Order canceledOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+            Order paidOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+            Order deliveredOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+
+            ReflectionTestUtils.setField(canceledOrder, "orderStatus", OrderStatus.CANCELED);
+            ReflectionTestUtils.setField(paidOrder, "orderStatus", OrderStatus.PAID);
+            ReflectionTestUtils.setField(deliveredOrder, "orderStatus", OrderStatus.DELIVERED);
+
+            //when
+            assertAll(
+                    () -> assertThatThrownBy(() -> canceledOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다."),
+                    () -> assertThatThrownBy(() -> paidOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다."),
+                    () -> assertThatThrownBy(() -> deliveredOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다.")
+            );
+        }
+
+        @Test
+        void clear_byPaymentStatus() {
+            //given
+            Order canceledOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+            Order failedOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+            Order completedOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+
+            Payment canceledPayment = new Payment();
+            Payment failedPayment = new Payment();
+            Payment completedPayment = new Payment();
+
+            ReflectionTestUtils.setField(canceledPayment, "paymentStatus", PaymentStatus.CANCELED);
+            ReflectionTestUtils.setField(failedPayment, "paymentStatus", PaymentStatus.FAILED);
+            ReflectionTestUtils.setField(completedPayment, "paymentStatus", PaymentStatus.COMPLETED);
+            ReflectionTestUtils.setField(canceledOrder, "payment", canceledPayment);
+            ReflectionTestUtils.setField(failedOrder, "payment", failedPayment);
+            ReflectionTestUtils.setField(completedOrder, "payment", completedPayment);
+
+            //when
+            assertAll(
+                    () -> assertThatThrownBy(() -> canceledOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다."),
+                    () -> assertThatThrownBy(() -> failedOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다."),
+                    () -> assertThatThrownBy(() -> completedOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다.")
+            );
+        }
+
+        @Test
+        void clear_byDeliveryStatus() {
+            //given
+            Order canceledOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+            Order preparingOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+            Order shippedOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+            Order deliveredOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+
+            ReflectionTestUtils.setField(canceledOrder.getDelivery(), "deliveryStatus", DeliveryStatus.CANCELED);
+            ReflectionTestUtils.setField(preparingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.PREPARING);
+            ReflectionTestUtils.setField(shippedOrder.getDelivery(), "deliveryStatus", DeliveryStatus.SHIPPED);
+            ReflectionTestUtils.setField(deliveredOrder.getDelivery(), "deliveryStatus", DeliveryStatus.DELIVERED);
+
+            //when
+            assertAll(
+                    () -> assertThatThrownBy(() -> canceledOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다."),
+                    () -> assertThatThrownBy(() -> preparingOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다."),
+                    () -> assertThatThrownBy(() -> shippedOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다."),
+                    () -> assertThatThrownBy(() -> deliveredOrder.clearOrderProduct())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다.")
+            );
+        }
+
+        @Test
         void update_notClearedOrderProduct() {
             //given
             Order notClearedOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));

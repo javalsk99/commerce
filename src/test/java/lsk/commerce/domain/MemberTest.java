@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 class MemberTest {
 
@@ -55,9 +55,9 @@ class MemberTest {
             assertThat(passwordEncoder.matches("11111111", member.getPassword())).isTrue();
         }
 
-        @ParameterizedTest(name = "[{index}] {3}")
+        @ParameterizedTest
         @MethodSource("addressProvider")
-        void changeAddress(String city, String street, String zipcode, String reason) {
+        void changeAddress(String city, String street, String zipcode) {
             //given
             Member member = Member.builder()
                     .city("Seoul")
@@ -78,10 +78,10 @@ class MemberTest {
 
         static Stream<Arguments> addressProvider() {
             return Stream.of(
-                    arguments("Gyeonggi-do", "Gangnam", "01234", "city 변경"),
-                    arguments("Seoul", "Gangbuk", "01234", "street 변경"),
-                    arguments("Seoul", "Gangnam", "01235", "zipcode 변경"),
-                    arguments("Gyeonggi-do", "Gangbuk", "01235", "모두 변경")
+                    argumentSet("city 변경", "Gyeonggi-do", "Gangnam", "01234"),
+                    argumentSet("street 변경", "Seoul", "Gangbuk", "01234"),
+                    argumentSet("zipcode 변경", "Seoul", "Gangnam", "01235"),
+                    argumentSet("모두 변경", "Gyeonggi-do", "Gangbuk", "01235")
             );
         }
     }
@@ -89,9 +89,9 @@ class MemberTest {
     @Nested
     class FailureCase {
 
-        @ParameterizedTest(name = "[{index}] {1}")
+        @ParameterizedTest
         @MethodSource("passwordProvider")
-        void changePassword_BlankPassword(String password, String reason) {
+        void changePassword_BlankPassword(String password) {
             //given
             Member member = getMember();
 
@@ -129,9 +129,9 @@ class MemberTest {
 
         static Stream<Arguments> passwordProvider() {
             return Stream.of(
-                    arguments(null, "비밀번호 null"),
-                    arguments("", "비밀번호 공백"),
-                    arguments(" ", "비밀번호 빈 문자열")
+                    argumentSet("비밀번호 null", (Object) null),
+                    argumentSet("비밀번호 공백", ""),
+                    argumentSet("비밀번호 빈 문자열", " ")
             );
         }
     }

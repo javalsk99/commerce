@@ -81,6 +81,18 @@
       orderProductJdbcRepository.deleteOrderProductsByOrderId(currentOrder.getId());
       orderProductJdbcRepository.saveAll(newOrderProducts);
 
+  추가 문제: OrderProduct를 em.clear() 하기 전에 지우지 않아서 Order를 다시 조회하면 currentOrder.orderProducts가 다시 채워진다.  
+  시도한 방법: em.clear() 하기 전에 OrderProduct를 지운다.
+
+      order.clearOrderProduct();
+      em.flush();
+
+      orderProductJdbcRepository.deleteOrderProductsByOrderId(order.getId());
+
+      em.clear();
+
+  추가 문제: 중간에 OrderProduct를 지우고 em.clear()를 해서 예상치 못한 select 쿼리가 다수 생겼다. (추후 해결 예정)
+
 
 - DELETE /orders/{orderNumber} 주문에서 배송과 결제를 Fetch Join으로 가져오게 변경
 - POST /orders/{orderNumber}/cancel 주문에서 연관된 모든 엔티티들을 Fetch Join으로 가져오게 변경 (회원 제외)

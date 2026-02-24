@@ -1,5 +1,6 @@
 package lsk.commerce.domain;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -10,6 +11,18 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class CategoryTest {
+
+    Category parentCategory;
+    Category childCategory;
+
+    @BeforeEach
+    void beforeEach() {
+        parentCategory = Category.createCategory(null, "가요");
+        childCategory = Category.createCategory(parentCategory, "댄스");
+
+        ReflectionTestUtils.setField(parentCategory, "id", 1L);
+        ReflectionTestUtils.setField(childCategory, "id", 2L);
+    }
 
     @Nested
     class SuccessCase {
@@ -30,10 +43,6 @@ class CategoryTest {
 
         @Test
         void unConnect() {
-            //given
-            Category parentCategory = createCategory1();
-            Category childCategory = createCategory2(parentCategory);
-
             //when
             childCategory.unConnectParent();
 
@@ -46,10 +55,6 @@ class CategoryTest {
 
         @Test
         void unConnect_idempotency() {
-            //given
-            Category parentCategory = createCategory1();
-            Category childCategory = createCategory2(parentCategory);
-
             //when 첫 번째 호출
             childCategory.unConnectParent();
 
@@ -69,19 +74,17 @@ class CategoryTest {
         @Test
         void changeParent() {
             //given
-            Category category1 = createCategory1();
-            Category category2 = createCategory3();
+            Category category = createCategory();
 
-            ReflectionTestUtils.setField(category1, "id", 1L);
-            ReflectionTestUtils.setField(category2, "id", 2L);
+            ReflectionTestUtils.setField(category, "id", 3L);
 
             //when
-            category2.changeParentCategory(category1);
+            category.changeParentCategory(childCategory);
 
             //then
             assertAll(
-                    () -> assertThat(category1.getChild().getFirst()).isEqualTo(category2),
-                    () -> assertThat(category2.getParent()).isEqualTo(category1)
+                    () -> assertThat(childCategory.getChild().getFirst()).isEqualTo(category),
+                    () -> assertThat(category.getParent()).isEqualTo(childCategory)
             );
         }
     }
@@ -92,7 +95,7 @@ class CategoryTest {
         @Test
         void changeParent_notExistsParent() {
             //given
-            Category category = createCategory3();
+            Category category = createCategory();
 
             //when
             assertThatThrownBy(() -> category.changeParentCategory(null))
@@ -102,34 +105,19 @@ class CategoryTest {
 
         @Test
         void changeParent_selfOrChild() {
-            //given
-            Category category1 = createCategory1();
-            Category category2 = createCategory2(category1);
-
-            ReflectionTestUtils.setField(category1, "id", 1L);
-            ReflectionTestUtils.setField(category2, "id", 2L);
-
             //when
             assertAll(
-                    () -> assertThatThrownBy(() -> category1.changeParentCategory(category1))
+                    () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(parentCategory))
                             .isInstanceOf(IllegalArgumentException.class)
                             .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다."),
-                    () -> assertThatThrownBy(() -> category1.changeParentCategory(category2))
+                    () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(childCategory))
                             .isInstanceOf(IllegalArgumentException.class)
                             .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다.")
             );
         }
     }
 
-    private Category createCategory1() {
-        return Category.createCategory(null, "가요");
-    }
-
-    private Category createCategory2(Category parentCategory) {
-        return Category.createCategory(parentCategory, "댄스");
-    }
-
-    private Category createCategory3() {
+    private Category createCategory() {
         return Category.createCategory(null, "발라드");
     }
 }

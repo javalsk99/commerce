@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anySet;
 import static org.mockito.BDDMockito.anyString;
@@ -340,9 +340,9 @@ class CategoryServiceUnitTest {
             then(categoryRepository).should().findAll();
         }
 
-        @ParameterizedTest(name = "[{index}] {1}")
+        @ParameterizedTest
         @MethodSource("nameProvider")
-        void changeParent_notExistsCategory(String name, String reason) {
+        void changeParent_notExistsCategory(String name) {
             //given
             given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
 
@@ -477,10 +477,10 @@ class CategoryServiceUnitTest {
 
         static Stream<Arguments> nameProvider() {
             return Stream.of(
-                    arguments(null, "카테고리 이름 null"),
-                    arguments("", "카테고리 이름 빈 문자열"),
-                    arguments(" ", "카테고리 이름 공백"),
-                    arguments("C++", "존재하지 않는 카테고리 이름")
+                    argumentSet("카테고리 이름 null", (Object) null),
+                    argumentSet("카테고리 이름 빈 문자열", ""),
+                    argumentSet("카테고리 이름 공백", " "),
+                    argumentSet("존재하지 않는 카테고리 이름", "C++")
             );
         }
     }

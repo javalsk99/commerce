@@ -30,6 +30,7 @@ import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
+import static lsk.commerce.domain.OrderStatus.CREATED;
 
 @Entity
 @Table(name = "orders")
@@ -68,7 +69,7 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
-    @NotNull @Min(100)
+    @NotNull @Min(0)
     private Integer totalAmount;
 
     @NotNull
@@ -106,11 +107,13 @@ public class Order {
 
         order.addMember(member);
         order.addDelivery(delivery);
-        order.totalAmount = 0;
+
+        int calculatedPrice = 0;
         for (OrderProduct orderProduct : orderProducts) {
             order.addOrderProduct(orderProduct);
-            order.totalAmount += orderProduct.getOrderPrice();
+            calculatedPrice += orderProduct.getOrderPrice();
         }
+        order.totalAmount = calculatedPrice;
         order.orderDate = LocalDateTime.now();
         order.orderStatus = OrderStatus.CREATED;
         order.orderNumber = NanoIdUtils.randomNanoId(SECURE_RANDOM, NUMBER_ALPHABET, 12);
@@ -119,6 +122,8 @@ public class Order {
     }
 
     public void clearOrderProduct() {
+        validateStatusForClear();
+
         for (OrderProduct orderProduct : this.orderProducts) {
             orderProduct.getProduct().addStock(orderProduct.getCount());
         }
@@ -130,10 +135,12 @@ public class Order {
     public Order updateOrder(List<OrderProduct> newOrderProducts) {
         validateOrderProducts(newOrderProducts);
 
+        int calculatedPrice = 0;
         for (OrderProduct newOrderProduct : newOrderProducts) {
             this.addOrderProduct(newOrderProduct);
-            this.totalAmount += newOrderProduct.getOrderPrice();
+            calculatedPrice += newOrderProduct.getOrderPrice();
         }
+        this.totalAmount = calculatedPrice;
 
         return this;
     }
@@ -187,6 +194,22 @@ public class Order {
 
         if (orderProducts == null || orderProducts.isEmpty()) {
             throw new IllegalArgumentException("주문 상품이 없습니다.");
+        }
+    }
+
+    private void validateStatusForClear() {
+        if (this.getOrderStatus() != CREATED) {
+            throw new IllegalStateException("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다.");
+        }
+
+        if (this.payment != null) {
+            if (this.payment.getPaymentStatus() != PaymentStatus.PENDING) {
+                throw new IllegalStateException("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다.");
+            }
+        }
+
+        if (this.delivery.getDeliveryStatus() != DeliveryStatus.WAITING) {
+            throw new IllegalStateException("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다.");
         }
     }
 

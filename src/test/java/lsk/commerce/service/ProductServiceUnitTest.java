@@ -76,7 +76,7 @@ class ProductServiceUnitTest {
             //then
             assertAll(
                     () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should().validateAndGetCategories(anyList()),
+                    () -> then(categoryService).should().validateAndGetCategories(List.of("가요")),
                     () -> then(productRepository).should().save(argThat(p -> p.getName().equals("BANG BANG"))),
                     () -> assertThat(album.getCategoryProducts())
                             .isNotEmpty()
@@ -99,7 +99,7 @@ class ProductServiceUnitTest {
             //then
             assertAll(
                     () -> then(productRepository).should().existsBook(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should().validateAndGetCategories(anyList()),
+                    () -> then(categoryService).should().validateAndGetCategories(List.of("컴퓨터/IT")),
                     () -> then(productRepository).should().save(argThat(p -> p.getName().equals("자바 ORM 표준 JPA 프로그래밍"))),
                     () -> assertThat(book.getCategoryProducts())
                             .isNotEmpty()
@@ -122,7 +122,7 @@ class ProductServiceUnitTest {
             //then
             assertAll(
                     () -> then(productRepository).should().existsMovie(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should().validateAndGetCategories(anyList()),
+                    () -> then(categoryService).should().validateAndGetCategories(List.of("국내 영화")),
                     () -> then(productRepository).should().save(argThat(p -> p.getName().equals("범죄도시"))),
                     () -> assertThat(movie.getCategoryProducts())
                             .isNotEmpty()
@@ -137,20 +137,14 @@ class ProductServiceUnitTest {
             Album album = Album.builder().name("BANG BANG").build();
 
             given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
-            given(productRepository.findWithCategoryProduct(anyString())).willReturn(Optional.of(album));
 
             //when
-            Product findProduct1 = productService.findProductByName("BANG BANG");
-            Product findProduct2 = productService.findProductWithCategoryProduct("BANG BANG");
+            Product findProduct = productService.findProductByName("BANG BANG");
 
             //then
             assertAll(
                     () -> then(productRepository).should().findByName(anyString()),
-                    () -> assertThat(findProduct1.getName()).isEqualTo("BANG BANG")
-            );
-            assertAll(
-                    () -> then(productRepository).should().findWithCategoryProduct(anyString()),
-                    () -> assertThat(findProduct2.getName()).isEqualTo("BANG BANG")
+                    () -> assertThat(findProduct.getName()).isEqualTo("BANG BANG")
             );
         }
 
@@ -278,23 +272,14 @@ class ProductServiceUnitTest {
         void find_notExistsProduct() {
             //given
             given(productRepository.findByName(anyString())).willReturn(Optional.empty());
-            given(productRepository.findWithCategoryProduct(anyString())).willReturn(Optional.empty());
 
             //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> productService.findProductByName("하얀 그리움"))
+            assertThatThrownBy(() -> productService.findProductByName("하얀 그리움"))
                             .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움"),
-                    () -> assertThatThrownBy(() -> productService.findProductWithCategoryProduct("하얀 그리움"))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움")
-            );
+                            .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
 
             //then
-            assertAll(
-                    () -> then(productRepository).should().findByName(anyString()),
-                    () -> then(productRepository).should().findWithCategoryProduct(anyString())
-            );
+            then(productRepository).should().findByName(anyString());
         }
 
         @Test

@@ -51,7 +51,7 @@ public class CategoryRepository {
     public List<Category> findByNameSet(Set<String> categoryNameSet) {
         return em.createQuery(
                         "select c from Category c" +
-                                " where c.id in :categoryNameSet", Category.class)
+                                " where c.name in :categoryNameSet", Category.class)
                 .setParameter("categoryNameSet", categoryNameSet)
                 .getResultList();
     }
