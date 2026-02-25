@@ -269,7 +269,7 @@ class ProductServiceUnitTest {
         }
 
         @Test
-        void find_notExistsProduct() {
+        void find_productNotFound() {
             //given
             given(productRepository.findByName(anyString())).willReturn(Optional.empty());
 
@@ -283,7 +283,7 @@ class ProductServiceUnitTest {
         }
 
         @Test
-        void delete_notExistsProduct() {
+        void delete_productNotFound() {
             //given
             given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.empty());
 

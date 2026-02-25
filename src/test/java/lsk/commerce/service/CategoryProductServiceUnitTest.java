@@ -163,39 +163,7 @@ class CategoryProductServiceUnitTest {
     class FailureCase {
 
         @Test
-        void findCategoryProducts_notExistsCategory() {
-            //given
-            given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(Collections.emptyList());
-
-            //when
-            List<CategoryProduct> categoryProducts = categoryProductService.findCategoryProductsWithProductByCategory(null);
-
-            //then
-            assertAll(
-                    () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
-                    () -> assertThat(categoryProducts)
-                            .isEmpty()
-            );
-        }
-
-        @Test
-        void findCategoryProducts_notExistsProduct() {
-            //given
-            given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(Collections.emptyList());
-
-            //when
-            List<CategoryProduct> categoryProducts = categoryProductService.findCategoryProductsWithProductByCategory(category4);
-
-            //then
-            assertAll(
-                    () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
-                    () -> assertThat(categoryProducts)
-                            .isEmpty()
-            );
-        }
-
-        @Test
-        void disconnect_notExistsCategory() {
+        void disconnect_categoryNotFound() {
             //given
             given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
 
@@ -213,7 +181,7 @@ class CategoryProductServiceUnitTest {
         }
 
         @Test
-        void disconnect_notExistsProduct() {
+        void disconnect_productNotFound() {
             //given
             given(categoryService.findCategoryByName(anyString())).willReturn(category2);
             given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
@@ -263,7 +231,7 @@ class CategoryProductServiceUnitTest {
         }
 
         @Test
-        void disconnectAll_notExistsCategory() {
+        void disconnectAll_categoryNotFound() {
             //given
             given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
 
@@ -281,7 +249,7 @@ class CategoryProductServiceUnitTest {
         }
 
         @Test
-        void disconnectAll_notExistsCategoryProducts() {
+        void disconnectAll_categoryProductsIsEmpty_byProduct() {
             //given
             given(categoryService.findCategoryByName(anyString())).willReturn(category4);
             given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(Collections.emptyList());
@@ -337,7 +305,7 @@ class CategoryProductServiceUnitTest {
         }
 
         @Test
-        void connect_notExistsProduct() {
+        void connect_productNotFound() {
             //given
             given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
 
@@ -354,7 +322,7 @@ class CategoryProductServiceUnitTest {
         }
 
         @Test
-        void connect_notExistsCategory() {
+        void connect_categoryNotFound() {
             //given
             given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
             given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));

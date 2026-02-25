@@ -49,12 +49,12 @@ public class OrderController {
     }
 
     @PostMapping("/orders/{orderNumber}")
-    public OrderResponse changeOrder(@PathVariable("orderNumber") String orderNumber, @RequestBody Map<String, Integer> productMap) {
-        if (productMap.isEmpty()) {
+    public OrderResponse changeOrder(@PathVariable("orderNumber") String orderNumber, @RequestBody Map<String, Integer> newProductMap) {
+        if (newProductMap.isEmpty()) {
             throw new IllegalArgumentException("주문을 수정할 주문 상품이 없습니다.");
         }
 
-        orderService.updateOrder(orderNumber, productMap);
+        orderService.updateOrder(orderNumber, newProductMap);
         Order order = orderService.findOrderWithDeliveryPayment(orderNumber);
         return orderService.getOrderResponse(order);
     }

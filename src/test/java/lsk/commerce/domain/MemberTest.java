@@ -91,7 +91,7 @@ class MemberTest {
 
         @ParameterizedTest
         @MethodSource("passwordProvider")
-        void changePassword_BlankPassword(String password) {
+        void changePassword_passwordBlank(String password) {
             //given
             Member member = getMember();
 

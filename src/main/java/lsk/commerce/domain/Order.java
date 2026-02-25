@@ -24,6 +24,8 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.EnumType.STRING;
@@ -101,7 +103,7 @@ public class Order {
 
     //결제는 주문 생성하고 바로 진행하지 않는다.
     public static Order createOrder(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
-        validateParameters(member, delivery, orderProducts);
+        validateAddress(member, delivery);
 
         Order order = new Order();
 
@@ -132,9 +134,14 @@ public class Order {
         this.orderProducts.clear();
     }
 
-    public Order updateOrder(List<OrderProduct> newOrderProducts) {
-        validateOrderProducts(newOrderProducts);
+    public Map<String, Integer> getOrderProductsAsMap() {
+        return this.orderProducts.stream()
+                .collect(Collectors.toMap(
+                        op -> op.getProductName(),
+                        op -> op.getCount()));
+    }
 
+    public Order updateOrder(List<OrderProduct> newOrderProducts) {
         int calculatedPrice = 0;
         for (OrderProduct newOrderProduct : newOrderProducts) {
             this.addOrderProduct(newOrderProduct);
@@ -146,7 +153,7 @@ public class Order {
     }
 
     public void cancel() {
-        if (this.orderStatus == OrderStatus.CANCELED) {
+        if (this.orderStatus == OrderStatus.CANCELED || this.delivery.getDeliveryStatus() == DeliveryStatus.CANCELED) {
             return;
         }
 
@@ -171,6 +178,28 @@ public class Order {
         this.delivery.setDeliveryStatus(DeliveryStatus.PREPARING);
     }
 
+    public void validateDeletable() {
+        if (this.getOrderStatus() == OrderStatus.CREATED) {
+            throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다.");
+        } else if (this.getOrderStatus() == OrderStatus.PAID) {
+            throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다.");
+        }
+
+        DeliveryStatus deliveryStatus = this.getDelivery().getDeliveryStatus();
+        if (deliveryStatus == DeliveryStatus.WAITING) {
+            throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
+        } else if (deliveryStatus == DeliveryStatus.PREPARING || deliveryStatus == DeliveryStatus.SHIPPED) {
+            throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
+        }
+
+        if (this.getPayment() != null) {
+            PaymentStatus paymentStatus = this.getPayment().getPaymentStatus();
+            if (paymentStatus == PaymentStatus.PENDING || paymentStatus == PaymentStatus.FAILED) {
+                throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다. PaymentStatus: " + paymentStatus);
+            }
+        }
+    }
+
     protected void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
@@ -179,21 +208,9 @@ public class Order {
         this.payment = payment;
     }
 
-    private static void validateParameters(Member member, Delivery delivery, List<OrderProduct> orderProducts) {
-        if (member == null) {
-            throw new IllegalArgumentException("주문할 회원이 없습니다.");
-        }
-
-        if (delivery == null) {
-            throw new IllegalArgumentException("배송 정보가 없습니다.");
-        }
-
+    private static void validateAddress(Member member, Delivery delivery) {
         if (member.getAddress() == null || delivery.getAddress() == null) {
             throw new IllegalArgumentException("배송될 주소가 없습니다.");
-        }
-
-        if (orderProducts == null || orderProducts.isEmpty()) {
-            throw new IllegalArgumentException("주문 상품이 없습니다.");
         }
     }
 
@@ -210,18 +227,6 @@ public class Order {
 
         if (this.delivery.getDeliveryStatus() != DeliveryStatus.WAITING) {
             throw new IllegalStateException("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다.");
-        }
-    }
-
-    private void validateOrderProducts(List<OrderProduct> newOrderProducts) {
-        if (this.orderProducts == null) {
-            throw new IllegalStateException("주문 상품이 없습니다.");
-        } else if (!this.orderProducts.isEmpty()) {
-            throw new IllegalStateException("주문 상품이 비어 있지 않습니다.");
-        }
-
-        if (newOrderProducts == null || newOrderProducts.isEmpty()) {
-            throw new IllegalArgumentException("수정할 주문 상품이 없습니다.");
         }
     }
 
@@ -244,10 +249,6 @@ public class Order {
     }
 
     private void validateStatusForCompletePaid() {
-        if (this.payment == null) {
-            throw new IllegalStateException("진행 중인 결제가 없습니다.");
-        }
-
         if (this.payment.getPaymentStatus() != PaymentStatus.COMPLETED) {
             throw new IllegalStateException("결제가 완료되지 않았습니다.");
         }

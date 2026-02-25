@@ -311,7 +311,7 @@ class ProductTest {
     class FailureCase {
 
         @Test
-        void addStock_nullParameter() {
+        void addStock_quantityNull() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -325,7 +325,7 @@ class ProductTest {
         }
 
         @Test
-        void removeStock_nullParameter() {
+        void removeStock_quantityNull() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -353,7 +353,7 @@ class ProductTest {
         }
 
         @Test
-        void updateStock_nullParameter() {
+        void updateStock_quantityNull() {
             //given
             Album album = Album.builder().stockQuantity(3).build();
 
@@ -386,7 +386,7 @@ class ProductTest {
         }
 
         @Test
-        void update_allNull() {
+        void update_priceQuantityNull() {
             //given
             Album album = Album.builder().price(15000).stockQuantity(10).build();
 
@@ -402,21 +402,7 @@ class ProductTest {
         }
 
         @Test
-        void connectCategory_categoryNull() {
-            //given
-            Album album = new Album();
-
-            //when
-            assertThatThrownBy(() -> album.connectCategory(null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("카테고리가 존재하지 않습니다.");
-
-            //then
-            assertThat(album.getCategoryProducts()).isEmpty();
-        }
-
-        @Test
-        void connectCategory_notPersist() {
+        void connectCategory_categoryIdIsNull() {
             //given
             Category category = Category.createCategory(null, "가요");
             Album album = new Album();
@@ -424,53 +410,20 @@ class ProductTest {
             //when
             assertThatThrownBy(() -> album.connectCategory(category))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("저장되지 않은 카테고리입니다.");
+                    .hasMessage("식별자가 없는 잘못된 카테고리입니다.");
 
             //then
             assertThat(album.getCategoryProducts()).isEmpty();
         }
 
         @Test
-        void connectCategories_notExistsCategories() {
-            //given
-            Album album = new Album();
-
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> album.connectCategories(null))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("카테고리가 존재하지 않습니다."),
-                    () -> assertThatThrownBy(() -> album.connectCategories(Collections.emptyList()))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("카테고리가 존재하지 않습니다.")
-            );
-
-            //then
-            assertThat(album.getCategoryProducts()).isEmpty();
-        }
-
-        @Test
-        void connectCategories_notPersist() {
+        void removeCategoryProduct_categoryProductsIsEmpty() {
             //given
             Category category = Category.createCategory(null, "가요");
             Album album = new Album();
 
             //when
-            assertThatThrownBy(() -> album.connectCategories(List.of(category)))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("저장되지 않은 카테고리가 있습니다.");
-
-            //then
-            assertThat(album.getCategoryProducts()).isEmpty();
-        }
-
-        @Test
-        void removeCategoryProduct_notExistsCategoryProducts() {
-            //given
-            Album album = new Album();
-
-            //when
-            assertThatThrownBy(() -> album.removeCategoryProduct(null))
+            assertThatThrownBy(() -> album.removeCategoryProduct(category))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("상품과 연결된 카테고리가 없습니다.");
         }

@@ -45,10 +45,6 @@ public class Category {
     private List<Category> child = new ArrayList<>();
 
     private void connectParent(Category parentCategory) {
-        if (parentCategory == null) {
-            throw new IllegalArgumentException("부모 카테고리로 선택한 카테고리가 존재하지 않습니다.");
-        }
-
         this.parent = parentCategory;
         parentCategory.child.add(this);
     }

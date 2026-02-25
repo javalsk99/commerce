@@ -212,7 +212,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void join_notExistsPassword() {
+        void join_passwordBlank() {
             //given
             MemberRequest request1 = MemberRequest.builder().password(null).build();
             MemberRequest request2 = MemberRequest.builder().password(" ").build();
@@ -254,7 +254,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void findByLoginId_notExistsMember() {
+        void findByLoginId_memberNotFound() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -268,7 +268,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void findForLogin_notExistsMember() {
+        void findForLogin_memberNotFound() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -282,7 +282,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void changePassword_notExistsMember() {
+        void changePassword_memberNotFound() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -300,7 +300,7 @@ class MemberServiceUnitTest {
         }
 
         @Test
-        void delete_notExistsMember() {
+        void delete_memberNotFound() {
             //given
             given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 

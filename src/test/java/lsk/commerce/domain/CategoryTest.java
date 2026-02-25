@@ -93,17 +93,6 @@ class CategoryTest {
     class FailureCase {
 
         @Test
-        void changeParent_notExistsParent() {
-            //given
-            Category category = createCategory();
-
-            //when
-            assertThatThrownBy(() -> category.changeParentCategory(null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("부모 카테고리로 선택한 카테고리가 존재하지 않습니다.");
-        }
-
-        @Test
         void changeParent_selfOrChild() {
             //when
             assertAll(

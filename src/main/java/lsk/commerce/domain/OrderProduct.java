@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.util.Map;
+
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
@@ -50,8 +52,8 @@ public class OrderProduct {
     private boolean deleted = false;
 
     public static OrderProduct createOrderProduct(Product product, Integer count) {
-        if (product == null || count == null) {
-            throw new IllegalArgumentException("주문하는 상품 또는 수량이 없습니다.");
+        if (count == null) {
+            throw new IllegalArgumentException("수량이 없습니다.");
         }
 
         OrderProduct orderProduct = new OrderProduct();
@@ -61,6 +63,16 @@ public class OrderProduct {
 
         product.removeStock(count);
         return orderProduct;
+    }
+
+    public String getProductName() {
+        if (this.product == null) {
+            throw new IllegalStateException("상품이 없습니다.");
+        } else if (this.product.getName() == null) {
+            throw new IllegalStateException("상품 이름이 없습니다.");
+        }
+
+        return this.product.getName();
     }
 
     //Order에서 사용해서 protected

@@ -117,10 +117,8 @@ public abstract class Product {
     }
 
     public void connectCategory(Category category) {
-        if (category == null) {
-            throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
-        } else if (category.getId() == null) {
-            throw new IllegalArgumentException("저장되지 않은 카테고리입니다.");
+        if (category.getId() == null) {
+            throw new IllegalArgumentException("식별자가 없는 잘못된 카테고리입니다.");
         }
 
         CategoryProduct categoryProduct = new CategoryProduct();
@@ -131,15 +129,7 @@ public abstract class Product {
     }
 
     public void connectCategories(List<Category> categories) {
-        if (categories == null || categories.isEmpty()) {
-            throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
-        }
-
         for (Category category : categories) {
-            if (category.getId() == null) {
-                throw new IllegalArgumentException("저장되지 않은 카테고리가 있습니다.");
-            }
-
             while (category != null) {
                 Category finalCategory = category;
                 if (categoryProducts.stream().anyMatch(categoryProduct -> categoryProduct.getCategory() == finalCategory)) {

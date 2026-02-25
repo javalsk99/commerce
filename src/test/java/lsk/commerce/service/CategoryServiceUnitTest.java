@@ -296,7 +296,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void createChild_notExistsParent() {
+        void createChild_parentNotFound() {
             //given
             given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(Collections.emptyList());
 
@@ -313,7 +313,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void findByName_notExistsCategory() {
+        void findByName_categoryNotFound() {
             //given
             given(categoryRepository.findAll()).willReturn(categories1);
 
@@ -327,7 +327,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void findByNames_notExistsCategory() {
+        void findByNames_categoryNotFound() {
             //given
             given(categoryRepository.findAll()).willReturn(categories1);
 
@@ -342,7 +342,7 @@ class CategoryServiceUnitTest {
 
         @ParameterizedTest
         @MethodSource("nameProvider")
-        void changeParent_notExistsCategory(String name) {
+        void changeParent_categoryNotFound(String name) {
             //given
             given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
 
@@ -361,7 +361,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void delete_notExistsCategory() {
+        void delete_categoryNotFound() {
             //given
             given(categoryRepository.findWithChild(anyString())).willReturn(Optional.empty());
 
@@ -446,7 +446,7 @@ class CategoryServiceUnitTest {
         }
 
         @Test
-        void validateAndGet_notExistsCategory() {
+        void validateAndGet_categoryNotFound() {
             //when
             assertAll(
                     () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(null))
