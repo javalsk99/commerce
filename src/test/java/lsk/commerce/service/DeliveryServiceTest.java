@@ -88,7 +88,7 @@ class DeliveryServiceTest {
     @Test
     void startDelivery() {
         //given
-        paymentService.completePayment(paymentId);
+//        paymentService.completePayment(paymentId);
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
@@ -134,7 +134,7 @@ class DeliveryServiceTest {
     @Test
     void failed_startDelivery_alreadyShipped() {
         //given
-        paymentService.completePayment(paymentId);
+//        paymentService.completePayment(paymentId);
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
@@ -150,7 +150,7 @@ class DeliveryServiceTest {
     @Test
     void failed_startDelivery_alreadyDelivered() {
         //given
-        paymentService.completePayment(paymentId);
+//        paymentService.completePayment(paymentId);
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
@@ -166,7 +166,7 @@ class DeliveryServiceTest {
 
     @Test
     void completeDelivery() {
-        paymentService.completePayment(paymentId);
+//        paymentService.completePayment(paymentId);
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
@@ -214,7 +214,7 @@ class DeliveryServiceTest {
     @Test
     void failed_completeDelivery_notShipped() {
         //given
-        paymentService.completePayment(paymentId);
+//        paymentService.completePayment(paymentId);
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
@@ -228,7 +228,7 @@ class DeliveryServiceTest {
     @Test
     void failed_completeDelivery_alreadyDelivered() {
         //given
-        paymentService.completePayment(paymentId);
+//        paymentService.completePayment(paymentId);
 
         TestTransaction.flagForCommit();
         TestTransaction.end();

@@ -216,23 +216,25 @@ public class Order {
 
     private void validateStatusForClear() {
         if (this.getOrderStatus() != CREATED) {
-            throw new IllegalStateException("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다.");
+            throw new IllegalStateException("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다. OrderStatus: " + this.orderStatus);
         }
 
         if (this.payment != null) {
-            if (this.payment.getPaymentStatus() != PaymentStatus.PENDING) {
-                throw new IllegalStateException("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다.");
+            PaymentStatus paymentStatus = this.payment.getPaymentStatus();
+            if (paymentStatus != PaymentStatus.PENDING) {
+                throw new IllegalStateException("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. PaymentStatus: " + paymentStatus);
             }
         }
 
-        if (this.delivery.getDeliveryStatus() != DeliveryStatus.WAITING) {
-            throw new IllegalStateException("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다.");
+        DeliveryStatus deliveryStatus = this.delivery.getDeliveryStatus();
+        if (deliveryStatus != DeliveryStatus.WAITING) {
+            throw new IllegalStateException("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. DeliveryStatus: " + deliveryStatus);
         }
     }
 
     private void validateStatusForCancel() {
         if (this.orderStatus != OrderStatus.CREATED) {
-            throw new IllegalStateException("결제 완료된 주문이어서 취소할 수 없습니다.");
+            throw new IllegalStateException("결제 완료된 주문이어서 취소할 수 없습니다. OrderStatus: " + this.orderStatus);
         }
 
         if (this.payment != null) {
@@ -243,22 +245,26 @@ public class Order {
             this.payment.canceled();
         }
 
-        if (this.delivery.getDeliveryStatus() != DeliveryStatus.WAITING) {
-            throw new IllegalStateException("배송 대기 상태가 아니여서 취소할 수 없습니다.");
+        DeliveryStatus deliveryStatus = this.delivery.getDeliveryStatus();
+        if (deliveryStatus != DeliveryStatus.WAITING) {
+            throw new IllegalStateException("배송 대기 상태가 아니여서 취소할 수 없습니다. DeliveryStatus: " + deliveryStatus);
         }
     }
 
     private void validateStatusForCompletePaid() {
-        if (this.payment.getPaymentStatus() != PaymentStatus.COMPLETED) {
-            throw new IllegalStateException("결제가 완료되지 않았습니다.");
+        PaymentStatus paymentStatus = this.payment.getPaymentStatus();
+        if (paymentStatus != PaymentStatus.COMPLETED) {
+            throw new IllegalStateException("결제가 완료되지 않았습니다. PaymentStatus: " + paymentStatus);
         }
+
 
         if (this.orderStatus != OrderStatus.CREATED) {
-            throw new IllegalStateException("결제 완료 처리가 불가능한 주문입니다.");
+            throw new IllegalStateException("결제 완료할 수 없는 상태입니다. OrderStatus: " + this.orderStatus);
         }
 
-        if (this.delivery.getDeliveryStatus() != DeliveryStatus.WAITING) {
-            throw new IllegalStateException("배송 대기 상태가 아닙니다.");
+        DeliveryStatus deliveryStatus = this.delivery.getDeliveryStatus();
+        if (deliveryStatus != DeliveryStatus.WAITING) {
+            throw new IllegalStateException("결제 완료할 수 없는 상태입니다. DeliveryStatus: " + deliveryStatus);
         }
     }
 }

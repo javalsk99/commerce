@@ -46,6 +46,19 @@ public class OrderQueryDto {
         this.deliveredDate = deliveredDate;
     }
 
+    public OrderQueryDto(String orderNumber, int totalAmount, OrderStatus orderStatus, LocalDateTime orderDate, PaymentStatus paymentStatus,
+                         LocalDateTime paymentDate, DeliveryStatus deliveryStatus, LocalDateTime shippedDate, LocalDateTime deliveredDate) {
+        this.orderNumber = orderNumber;
+        this.totalAmount = totalAmount;
+        this.orderStatus = orderStatus;
+        this.orderDate = orderDate;
+        this.paymentStatus = paymentStatus;
+        this.paymentDate = paymentDate;
+        this.deliveryStatus = deliveryStatus;
+        this.shippedDate = shippedDate;
+        this.deliveredDate = deliveredDate;
+    }
+
     public static OrderQueryDto changeQueryDto(Order order) {
         return new OrderQueryDto(order.getMember().getLoginId(), order.getOrderNumber(), order.getTotalAmount(), order.getOrderStatus(), order.getOrderDate(), order.getPayment().getPaymentStatus(),
                 order.getPayment().getPaymentDate(), order.getDelivery().getDeliveryStatus(), order.getDelivery().getShippedDate(), order.getDelivery().getDeliveredDate());

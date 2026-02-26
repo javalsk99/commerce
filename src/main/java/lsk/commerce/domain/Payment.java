@@ -55,13 +55,7 @@ public class Payment {
     private boolean deleted = false;
 
     public static void requestPayment(Order order) {
-        if (order.getOrderStatus() == OrderStatus.CANCELED) {
-            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다.");
-        }
-
-        if (order.getOrderStatus() != OrderStatus.CREATED) {
-            throw new IllegalStateException("이미 결제된 주문입니다.");
-        }
+        validateStatusForRequest(order);
 
         Payment payment = new Payment();
         payment.paymentAmount = order.getTotalAmount();
@@ -70,7 +64,6 @@ public class Payment {
         payment.paymentId = randomUUID().toString();
     }
 
-    //Order에 payment를 넣기 위해 양방향 매핑 추가
     private void addOrder(Order order) {
         this.order = order;
         order.setPayment(this);
@@ -85,21 +78,65 @@ public class Payment {
     }
 
     public void complete(LocalDateTime paymentDate) {
-        if (this.paymentStatus == PaymentStatus.COMPLETED) {
-            throw new IllegalStateException("이미 결제 완료된 주문입니다.");
-        }
+        validateStatusForComplete();
 
         this.paymentStatus = PaymentStatus.COMPLETED;
         this.paymentDate = paymentDate;
     }
 
-    //결제 api 추가 전, 테스트용
-    public void testFailed() {
-        this.paymentStatus = PaymentStatus.FAILED;
+    private static void validateStatusForRequest(Order order) {
+        if (order == null) {
+            throw new IllegalArgumentException("주문 정보가 없습니다.");
+        }
+
+        if (order.getPayment() != null) {
+            throw new IllegalStateException("이미 결제 정보가 있습니다.");
+        }
+
+        OrderStatus orderStatus = order.getOrderStatus();
+        if (orderStatus == OrderStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다. OrderStatus: " + orderStatus);
+        }
+
+        if (orderStatus != OrderStatus.CREATED) {
+            throw new IllegalStateException("이미 결제 완료된 주문입니다. OrderStatus: " + orderStatus);
+        }
+
+        DeliveryStatus deliveryStatus = order.getDelivery().getDeliveryStatus();
+        if (deliveryStatus == DeliveryStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다. DeliveryStatus: " + deliveryStatus);
+        }
+
+        if (deliveryStatus != DeliveryStatus.WAITING) {
+            throw new IllegalStateException("이미 결제 완료된 주문입니다. DeliveryStatus: " + deliveryStatus);
+        }
     }
 
-    //결제 api 추가 전, 테스트용
-    public void testCompleted() {
-        this.paymentStatus = PaymentStatus.COMPLETED;
+    private void validateStatusForComplete() {
+        if (this.paymentStatus == PaymentStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다.");
+        }
+
+        if (this.paymentStatus == PaymentStatus.COMPLETED) {
+            throw new IllegalStateException("이미 결제 완료된 주문입니다.");
+        }
+
+        OrderStatus orderStatus = this.order.getOrderStatus();
+        if (orderStatus == OrderStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다. OrderStatus: " + orderStatus);
+        }
+
+        if (orderStatus == OrderStatus.PAID || orderStatus == OrderStatus.DELIVERED) {
+            throw new IllegalStateException("이미 결제 완료된 주문입니다. OrderStatus: " + orderStatus);
+        }
+
+        DeliveryStatus deliveryStatus = this.order.getDelivery().getDeliveryStatus();
+        if (deliveryStatus == DeliveryStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다. DeliveryStatus: " + deliveryStatus);
+        }
+
+        if (deliveryStatus == DeliveryStatus.PREPARING || deliveryStatus == DeliveryStatus.SHIPPED || deliveryStatus == DeliveryStatus.DELIVERED) {
+            throw new IllegalStateException("이미 결제 완료된 주문입니다. DeliveryStatus: " + deliveryStatus);
+        }
     }
 }

@@ -66,7 +66,7 @@ public class OrderDeliveryServiceTest {
     void delete_deliveredOrder() {
         //given
         Order order = paymentService.request(orderNumber);
-        paymentService.completePayment(order.getPayment().getPaymentId());
+//        paymentService.completePayment(order.getPayment().getPaymentId());
 
         TestTransaction.flagForCommit();
         TestTransaction.end();

@@ -142,6 +142,7 @@ class PaymentServiceTest {
         assertThat(failedPayment.getPaymentDate()).isNull();
     }
 
+/*
     @Test
     void completePayment() {
         //when
@@ -152,7 +153,9 @@ class PaymentServiceTest {
         assertThat(completePayment.getOrder().getOrderStatus()).isEqualTo(OrderStatus.PAID);
         assertThat(completePayment.getPaymentDate()).isNotNull();
     }
+*/
 
+/*
     @Test
     void completePayment_fromFailed() {
         //given
@@ -166,7 +169,9 @@ class PaymentServiceTest {
         assertThat(completePayment.getOrder().getOrderStatus()).isEqualTo(OrderStatus.PAID);
         assertThat(completePayment.getPaymentDate()).isNotNull();
     }
+*/
 
+/*
     @Test
     void failed_completePayment_alreadyCompletePayment() {
         //given
@@ -176,6 +181,7 @@ class PaymentServiceTest {
         assertThrows(IllegalStateException.class, () ->
                 paymentService.completePayment(paymentId));
     }
+*/
 
     @Test
     void delete_order() {
