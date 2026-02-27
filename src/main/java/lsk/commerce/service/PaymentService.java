@@ -26,19 +26,19 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
 
+    private final ObjectMapper objectMapper;
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
     private final ProductService productService;
     private final ApplicationEventPublisher eventPublisher;
 
     //이후 결제 진행은 다른 비즈니스 로직 다 생성 후 진행
-    @Transactional
     public Order request(String orderNumber) {
         Order order = orderService.findOrderWithAllExceptMember(orderNumber);
         Payment.requestPayment(order);
@@ -59,14 +59,6 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제 번호입니다."));
     }
 
-    @Transactional
-    public Payment failedPayment(String paymentId) {
-        Payment payment = findPaymentByPaymentId(paymentId);
-        payment.failed();
-        return payment;
-    }
-
-    @Transactional
     protected Payment verifyAndComplete(PaidPayment paidPayment) {
         if (!this.verifyPayment(paidPayment)) {
             throw new SyncPaymentException();
@@ -75,6 +67,12 @@ public class PaymentService {
         logger.info("결제 성공 {}", paidPayment);
 
         return this.completePayment(paidPayment);
+    }
+
+    public Payment failedPayment(String paymentId) {
+        Payment payment = findPaymentByPaymentId(paymentId);
+        payment.failed();
+        return payment;
     }
 
     @Transactional(readOnly = true)
@@ -109,6 +107,10 @@ public class PaymentService {
         OrderRequest orderRequest = orderService.getOrderRequest(order);
         List<Product> products = productService.findProducts();
 
+        if (orderRequest.getOrderProducts().isEmpty()) {
+            throw new IllegalArgumentException("주문 상품이 비어 있습니다.");
+        }
+
         for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
             if (products.stream().noneMatch(p -> p.getName().equals(orderProduct.getName()))) {
                 throw new IllegalArgumentException("잘못된 상품이 있습니다.");
@@ -119,7 +121,7 @@ public class PaymentService {
     }
 
     private boolean verifyPriceAndOrderName(PaidPayment paidPayment, OrderRequest orderRequest) {
-        if (paidPayment.getAmount().getTotal() != orderRequest.getTotalAmount()) {
+        if (paidPayment.getAmount().getTotal() != orderRequest.getTotalAmount().longValue()) {
             return false;
         }
 

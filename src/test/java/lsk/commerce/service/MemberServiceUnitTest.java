@@ -26,7 +26,6 @@ import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
-
 @ExtendWith(MockitoExtension.class)
 class MemberServiceUnitTest {
 
