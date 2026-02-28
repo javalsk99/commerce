@@ -10,82 +10,98 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class OrderProductTest {
 
     @Nested
-    class SuccessCase {
+    class Create {
 
-        @Test
-        void create() {
-            //given
-            Album album = Album.builder().price(15000).stockQuantity(10).build();
+        @Nested
+        class SuccessCase {
 
-            //when
-            OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
+            @Test
+            void basic() {
+                //given
+                Album album = Album.builder().price(15000).stockQuantity(10).build();
 
-            //then
-            assertThat(orderProduct)
-                    .extracting("order", "product", "orderPrice", "count")
-                    .containsExactly(null, album, 75000, 5);
+                //when
+                OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
+
+                //then
+                assertThat(orderProduct)
+                        .extracting("order", "product", "orderPrice", "count")
+                        .containsExactly(null, album, 75000, 5);
+            }
         }
 
-        @Test
-        void getProductName() {
-            Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
-            OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
+        @Nested
+        class FailureCase {
 
-            //when
-            String productName = orderProduct.getProductName();
+            @Test
+            void countNull() {
+                //given
+                Album album = Album.builder().price(15000).stockQuantity(10).build();
 
-            //then
-            assertThat(productName).isEqualTo("BANG BANG");
+                //when
+                assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("수량이 없습니다.");
+            }
+
+            @Test
+            void exceed() {
+                //given
+                Album album = Album.builder().price(15000).stockQuantity(10).build();
+
+                //when
+                assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, 11))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("재고가 부족합니다.");
+
+                //then
+                assertThat(album.getStockQuantity()).isEqualTo(10);
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class GetProductName {
 
-        @Test
-        void failed_create_countNull() {
-            //given
-            Album album = Album.builder().price(15000).stockQuantity(10).build();
+        @Nested
+        class SuccessCase {
 
-            //when
-            assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("수량이 없습니다.");
+            @Test
+            void basic() {
+                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
+                OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
+
+                //when
+                String productName = orderProduct.getProductName();
+
+                //then
+                assertThat(productName).isEqualTo("BANG BANG");
+            }
         }
 
-        @Test
-        void failed_create_exceed() {
-            //given
-            Album album = Album.builder().price(15000).stockQuantity(10).build();
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, 11))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("재고가 부족합니다.");
+            @Test
+            void productIsNull() {
+                OrderProduct orderProduct = new OrderProduct();
 
-            //then
-            assertThat(album.getStockQuantity()).isEqualTo(10);
-        }
+                //when
+                assertThatThrownBy(() -> orderProduct.getProductName())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("상품이 없습니다.");
+            }
 
-        @Test
-        void getProductName_productIsNull() {
-            OrderProduct orderProduct = new OrderProduct();
+            @Test
+            void productNameIsNull() {
+                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
 
-            //when
-            assertThatThrownBy(() -> orderProduct.getProductName())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("상품이 없습니다.");
-        }
-
-        @Test
-        void getProductName_productNameIsNull() {
-            Album album = Album.builder().price(15000).stockQuantity(10).build();
-            OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
-
-            //when
-            assertThatThrownBy(() -> orderProduct.getProductName())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("상품 이름이 없습니다.");
+                //when
+                assertThatThrownBy(() -> orderProduct.getProductName())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("상품 이름이 없습니다.");
+            }
         }
     }
 }

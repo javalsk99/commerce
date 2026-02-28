@@ -16,15 +16,11 @@ public class PaymentSyncService {
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentSyncService.class);
 
-    private final ProductService productService;
-    private final OrderService orderService;
     private final PaymentService paymentService;
     private final PortoneSecretProperties secret;
     private final PaymentClient portone;
 
-    public PaymentSyncService(ProductService productService, OrderService orderService, PaymentService paymentService, PortoneSecretProperties secret) {
-        this.productService = productService;
-        this.orderService = orderService;
+    public PaymentSyncService(PaymentService paymentService, PortoneSecretProperties secret) {
         this.paymentService = paymentService;
         this.secret = secret;
         portone = new PaymentClient(secret.api(), "https://api.portone.io", "store-3218fbd8-7af7-4043-8a4e-ec6e84fd858c");

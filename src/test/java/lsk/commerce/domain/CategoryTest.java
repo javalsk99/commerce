@@ -25,84 +25,104 @@ class CategoryTest {
     }
 
     @Nested
-    class SuccessCase {
+    class Create {
 
-        @Test
-        void create() {
-            //when
-            Category parentCategory = Category.createCategory(null, "가요");
-            Category childCategory = Category.createCategory(parentCategory, "댄스");
+        @Nested
+        class SuccessCase {
 
-            //then
-            assertAll(
-                    () -> assertThat(parentCategory.getParent()).isNull(),
-                    () -> assertThat(parentCategory.getChild().getFirst()).isEqualTo(childCategory),
-                    () -> assertThat(childCategory.getParent()).isEqualTo(parentCategory)
-            );
-        }
+            @Test
+            void basic() {
+                //when
+                Category parentCategory = Category.createCategory(null, "가요");
+                Category childCategory = Category.createCategory(parentCategory, "댄스");
 
-        @Test
-        void unConnect() {
-            //when
-            childCategory.unConnectParent();
-
-            //then
-            assertAll(
-                    () -> assertThat(childCategory.getParent()).isNull(),
-                    () -> assertThat(parentCategory.getChild()).isEmpty()
-            );
-        }
-
-        @Test
-        void unConnect_idempotency() {
-            //when 첫 번째 호출
-            childCategory.unConnectParent();
-
-            //then
-            assertAll(
-                    () -> assertThat(childCategory.getParent()).isNull(),
-                    () -> assertThat(parentCategory.getChild()).isEmpty()
-            );
-
-            //when 두 번째 호출
-            assertDoesNotThrow(() -> childCategory.unConnectParent());
-
-            //then
-            assertThat(childCategory.getParent()).isNull();
-        }
-
-        @Test
-        void changeParent() {
-            //given
-            Category category = createCategory();
-
-            ReflectionTestUtils.setField(category, "id", 3L);
-
-            //when
-            category.changeParentCategory(childCategory);
-
-            //then
-            assertAll(
-                    () -> assertThat(childCategory.getChild().getFirst()).isEqualTo(category),
-                    () -> assertThat(category.getParent()).isEqualTo(childCategory)
-            );
+                //then
+                assertAll(
+                        () -> assertThat(parentCategory.getParent()).isNull(),
+                        () -> assertThat(parentCategory.getChild().getFirst()).isEqualTo(childCategory),
+                        () -> assertThat(childCategory.getParent()).isEqualTo(parentCategory)
+                );
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class UnConnect {
 
-        @Test
-        void changeParent_selfOrChild() {
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(parentCategory))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다."),
-                    () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(childCategory))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다.")
-            );
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //when
+                childCategory.unConnectParent();
+
+                //then
+                assertAll(
+                        () -> assertThat(childCategory.getParent()).isNull(),
+                        () -> assertThat(parentCategory.getChild()).isEmpty()
+                );
+            }
+
+            @Test
+            void idempotency() {
+                //when 첫 번째 호출
+                childCategory.unConnectParent();
+
+                //then
+                assertAll(
+                        () -> assertThat(childCategory.getParent()).isNull(),
+                        () -> assertThat(parentCategory.getChild()).isEmpty()
+                );
+
+                //when 두 번째 호출
+                assertDoesNotThrow(() -> childCategory.unConnectParent());
+
+                //then
+                assertThat(childCategory.getParent()).isNull();
+            }
+        }
+    }
+
+    @Nested
+    class ChangeParent {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Category category = createCategory();
+
+                ReflectionTestUtils.setField(category, "id", 3L);
+
+                //when
+                category.changeParentCategory(childCategory);
+
+                //then
+                assertAll(
+                        () -> assertThat(childCategory.getChild().getFirst()).isEqualTo(category),
+                        () -> assertThat(category.getParent()).isEqualTo(childCategory)
+                );
+            }
+        }
+
+        @Nested
+        class FailureCase {
+
+            @Test
+            void selfOrChild() {
+                //when
+                assertAll(
+                        () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(parentCategory))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다."),
+                        () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(childCategory))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다.")
+                );
+            }
         }
     }
 

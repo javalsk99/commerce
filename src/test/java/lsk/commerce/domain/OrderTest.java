@@ -6,10 +6,14 @@ import lsk.commerce.domain.product.Movie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,14 +21,12 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 class OrderTest {
 
     Member member;
-    Delivery delivery1;
-    Delivery delivery2;
-    Delivery delivery3;
-    Delivery delivery4;
+    Delivery delivery;
     Album album;
     Book book;
     Movie movie;
@@ -35,11 +37,7 @@ class OrderTest {
     @BeforeEach
     void beforeEach() {
         member = Member.builder().city("Seoul").street("Gangnam").zipcode("01234").build();
-
-        delivery1 = new Delivery(member);
-        delivery2 = new Delivery(member);
-        delivery3 = new Delivery(member);
-        delivery4 = new Delivery(member);
+        delivery = new Delivery(member);
 
         album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
         book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).build();
@@ -48,600 +46,611 @@ class OrderTest {
         orderProduct1 = OrderProduct.createOrderProduct(album, 5);
         orderProduct2 = OrderProduct.createOrderProduct(book, 3);
 
-        order = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
+        order = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
     }
 
     @Nested
-    class SuccessCase {
+    class Create {
 
-        @Test
-        void create() {
-            //when
-            Order createdOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
+        @Nested
+        class SuccessCase {
 
-            //then
-            assertAll(
-                    () -> assertThat(createdOrder.getMember().getAddress()).isEqualTo(createdOrder.getDelivery().getAddress()),
-                    () -> assertThat(createdOrder.getOrderProducts())
-                            .isNotEmpty()
-                            .extracting("order", "product", "orderPrice", "count")
-                            .containsExactlyInAnyOrder(tuple(createdOrder, album, 75000, 5), tuple(createdOrder, book, 45000, 3)),
-                    () -> assertThat(createdOrder.getTotalAmount()).isEqualTo(120000)
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(5),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(4)
-            );
+            @Test
+            void basic() {
+                //when
+                Order createdOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+
+                //then
+                assertAll(
+                        () -> assertThat(createdOrder.getMember().getAddress()).isEqualTo(createdOrder.getDelivery().getAddress()),
+                        () -> assertThat(createdOrder.getOrderProducts())
+                                .isNotEmpty()
+                                .extracting("order", "product", "orderPrice", "count")
+                                .containsExactlyInAnyOrder(tuple(createdOrder, album, 75000, 5), tuple(createdOrder, book, 45000, 3)),
+                        () -> assertThat(createdOrder.getTotalAmount()).isEqualTo(120000)
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(5),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(4)
+                );
+            }
         }
 
-        @Test
-        void clear() {
-            //when
-            order.clearOrderProduct();
+        @Nested
+        class FailureCase {
 
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderProducts()).isEmpty(),
-                    () -> assertThat(order.getTotalAmount()).isEqualTo(0)
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-            );
-        }
+            @Test
+            void addressNull() {
+                //given
+                Member nullAddressMember = new Member();
+                Delivery nullAddressDelivery = new Delivery();
 
-        @Test
-        void clear_idempotency() {
-            //when 첫 번째 호출
-            order.clearOrderProduct();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderProducts()).isEmpty(),
-                    () -> assertThat(order.getTotalAmount()).isEqualTo(0)
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-            );
-
-            //when 두 번째 호출
-            order.clearOrderProduct();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderProducts()).isEmpty(),
-                    () -> assertThat(order.getTotalAmount()).isEqualTo(0)
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-            );
-        }
-
-        @Test
-        void getOrderProductsAsMap() {
-            //when
-            Map<String, Integer> orderProductsAsMap = order.getOrderProductsAsMap();
-
-            //then
-            assertThat(orderProductsAsMap)
-                    .hasSize(2)
-                    .containsOnly(entry("BANG BANG", 5), entry("자바 ORM 표준 JPA 프로그래밍", 3));
-        }
-
-        @Test
-        void update() {
-            //given
-            order.clearOrderProduct();
-
-            OrderProduct orderProduct3 = OrderProduct.createOrderProduct(movie, 2);
-            OrderProduct orderProduct4 = OrderProduct.createOrderProduct(album, 2);
-
-            //when
-            order.updateOrder(List.of(orderProduct3, orderProduct4));
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderProducts())
-                            .isNotEmpty()
-                            .extracting("product", "orderPrice", "count")
-                            .containsExactlyInAnyOrder(tuple(movie, 30000, 2), tuple(album, 30000, 2)),
-                    () -> assertThat(order.getTotalAmount()).isEqualTo(60000)
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(8),
-                    () -> assertThat(movie.getStockQuantity()).isEqualTo(3)
-            );
-        }
-
-        @Test
-        void cancel_withoutPayment() {
-            //when
-            order.cancel();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                    () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                    () -> assertThat(order.getPayment()).isNull()
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-            );
-        }
-
-        @Test
-        void cancel_withPayment() {
-            //given
-            Payment payment = new Payment();
-
-            ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.PENDING);
-            ReflectionTestUtils.setField(order, "payment", payment);
-
-            //when
-            order.cancel();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                    () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                    () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED)
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-            );
-        }
-
-        @Test
-        void cancel_idempotency() {
-            //when 첫 번째 호출
-            order.cancel();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                    () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                    () -> assertThat(order.getPayment()).isNull()
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-            );
-
-            //when 두 번째 호출
-            order.cancel();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                    () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                    () -> assertThat(order.getPayment()).isNull()
-            );
-            assertAll(
-                    () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                    () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-            );
-        }
-
-        @Test
-        void completePaid() {
-            //given
-            Payment payment = new Payment();
-
-            ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.COMPLETED);
-            ReflectionTestUtils.setField(order, "payment", payment);
-
-            //when
-            order.completePaid();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                    () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                    () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
-            );
-        }
-
-        @Test
-        void completePaid_idempotency() {
-            //given
-            Payment payment = new Payment();
-
-            ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.COMPLETED);
-            ReflectionTestUtils.setField(order, "payment", payment);
-
-            //when 첫 번째 호출
-            order.completePaid();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                    () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                    () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
-            );
-
-            //when 두 번째 호출
-            order.completePaid();
-
-            //then
-            assertAll(
-                    () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                    () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                    () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
-            );
-        }
-
-        @Test
-        void validateDeletable_withoutPayment() {
-            //given
-            order.cancel();
-
-            //when
-            assertDoesNotThrow(() -> order.validateDeletable());
-        }
-
-        @Test
-        void validateDeletable_withPayment() {
-            //given
-            Payment payment = new Payment();
-
-            ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.PENDING);
-            ReflectionTestUtils.setField(order, "payment", payment);
-
-            order.cancel();
-
-            //when
-            assertDoesNotThrow(() -> order.validateDeletable());
+                //when
+                assertAll(
+                        () -> assertThatThrownBy(() -> Order.createOrder(nullAddressMember, delivery, List.of(orderProduct1, orderProduct2)))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("배송될 주소가 없습니다."),
+                        () -> assertThatThrownBy(() -> Order.createOrder(member, nullAddressDelivery, List.of(orderProduct1, orderProduct2)))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("배송될 주소가 없습니다.")
+                );
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class Clear {
 
-        @Test
-        void create_addressNull() {
-            //given
-            Member nullAddressMember = new Member();
-            Delivery nullAddressDelivery = new Delivery(nullAddressMember);
+        @Nested
+        class SuccessCase {
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> Order.createOrder(nullAddressMember, delivery1, List.of(orderProduct1, orderProduct2)))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("배송될 주소가 없습니다."),
-                    () -> assertThatThrownBy(() -> Order.createOrder(member, nullAddressDelivery, List.of(orderProduct1, orderProduct2)))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("배송될 주소가 없습니다.")
-            );
+            @Test
+            void basic() {
+                //when
+                order.clearOrderProduct();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderProducts()).isEmpty(),
+                        () -> assertThat(order.getTotalAmount()).isEqualTo(0)
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
+                );
+            }
+
+            @Test
+            void idempotency() {
+                //when 첫 번째 호출
+                order.clearOrderProduct();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderProducts()).isEmpty(),
+                        () -> assertThat(order.getTotalAmount()).isEqualTo(0)
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
+                );
+
+                //when 두 번째 호출
+                order.clearOrderProduct();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderProducts()).isEmpty(),
+                        () -> assertThat(order.getTotalAmount()).isEqualTo(0)
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
+                );
+            }
         }
 
-        @Test
-        void clear_orderStatusIsNotCreated() {
-            //given
-            Order canceledOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order paidOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order deliveredOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
+        @Nested
+        class FailureCase {
 
-            ReflectionTestUtils.setField(canceledOrder, "orderStatus", OrderStatus.CANCELED);
-            ReflectionTestUtils.setField(paidOrder, "orderStatus", OrderStatus.PAID);
-            ReflectionTestUtils.setField(deliveredOrder, "orderStatus", OrderStatus.DELIVERED);
+            @ParameterizedTest
+            @MethodSource("orderStatusProvider")
+            void orderStatusIsNotCreated(OrderStatus orderStatus) {
+                //given
+                ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> canceledOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다. OrderStatus: " + canceledOrder.getOrderStatus()),
-                    () -> assertThatThrownBy(() -> paidOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다. OrderStatus: " + paidOrder.getOrderStatus()),
-                    () -> assertThatThrownBy(() -> deliveredOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다. OrderStatus: " + deliveredOrder.getOrderStatus())
-            );
+                //when
+                assertThatThrownBy(() -> order.clearOrderProduct())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다. OrderStatus: " + orderStatus);
+            }
+
+            @ParameterizedTest
+            @MethodSource("paymentStatusProvider")
+            void paymentStatusIsNotPending(PaymentStatus paymentStatus) {
+                //given
+                Payment.requestPayment(order);
+
+                ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
+
+                //when
+                assertThatThrownBy(() -> order.clearOrderProduct())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. PaymentStatus: " + paymentStatus);
+            }
+
+            @ParameterizedTest
+            @MethodSource("deliveryStatusProvider")
+            void deliveryStatusIsNotWaiting(DeliveryStatus deliveryStatus) {
+                //given
+                ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
+
+                //when
+                assertThatThrownBy(() -> order.clearOrderProduct())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. DeliveryStatus: " + deliveryStatus);
+            }
+
+            static Stream<Arguments> orderStatusProvider() {
+                return Stream.of(
+                        argumentSet("OrderStatus: CANCELED", OrderStatus.CANCELED),
+                        argumentSet("OrderStatus: PAID", OrderStatus.PAID),
+                        argumentSet("OrderStatus: DELIVERED", OrderStatus.DELIVERED)
+                );
+            }
+
+            static Stream<Arguments> paymentStatusProvider() {
+                return Stream.of(
+                        argumentSet("PaymentStatus: CANCELED", PaymentStatus.CANCELED),
+                        argumentSet("PaymentStatus: FAILED", PaymentStatus.FAILED),
+                        argumentSet("PaymentStatus: COMPLETED", PaymentStatus.COMPLETED)
+                );
+            }
+
+            static Stream<Arguments> deliveryStatusProvider() {
+                return Stream.of(
+                        argumentSet("DeliveryStatus: CANCELED", DeliveryStatus.CANCELED),
+                        argumentSet("DeliveryStatus: PREPARING", DeliveryStatus.PREPARING),
+                        argumentSet("DeliveryStatus: SHIPPED", DeliveryStatus.SHIPPED),
+                        argumentSet("DeliveryStatus: DELIVERED", DeliveryStatus.DELIVERED)
+                );
+            }
+        }
+    }
+
+    @Nested
+    class GetOrderProductAsMap {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //when
+                Map<String, Integer> orderProductsAsMap = order.getOrderProductsAsMap();
+
+                //then
+                assertThat(orderProductsAsMap)
+                        .hasSize(2)
+                        .containsOnly(entry("BANG BANG", 5), entry("자바 ORM 표준 JPA 프로그래밍", 3));
+            }
+        }
+    }
+
+    @Nested
+    class Update {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                order.clearOrderProduct();
+
+                OrderProduct orderProduct3 = OrderProduct.createOrderProduct(movie, 2);
+                OrderProduct orderProduct4 = OrderProduct.createOrderProduct(album, 2);
+
+                //when
+                order.updateOrder(List.of(orderProduct3, orderProduct4));
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderProducts())
+                                .isNotEmpty()
+                                .extracting("product", "orderPrice", "count")
+                                .containsExactlyInAnyOrder(tuple(movie, 30000, 2), tuple(album, 30000, 2)),
+                        () -> assertThat(order.getTotalAmount()).isEqualTo(60000)
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(8),
+                        () -> assertThat(movie.getStockQuantity()).isEqualTo(3)
+                );
+            }
+        }
+    }
+
+    @Nested
+    class Cancel {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void withoutPayment() {
+                //when
+                order.cancel();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
+                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
+                        () -> assertThat(order.getPayment()).isNull()
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
+                );
+            }
+
+            @Test
+            void withPayment() {
+                //given
+                Payment payment = new Payment();
+
+                ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.PENDING);
+                ReflectionTestUtils.setField(order, "payment", payment);
+
+                //when
+                order.cancel();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
+                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
+                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED)
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
+                );
+            }
+
+            @Test
+            void idempotency() {
+                //when 첫 번째 호출
+                order.cancel();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
+                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
+                        () -> assertThat(order.getPayment()).isNull()
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
+                );
+
+                //when 두 번째 호출
+                order.cancel();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
+                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
+                        () -> assertThat(order.getPayment()).isNull()
+                );
+                assertAll(
+                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
+                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
+                );
+            }
         }
 
-        @Test
-        void clear_paymentStatusIsNotPending() {
-            //given
-            Order canceledOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order failedOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order completedOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
+        @Nested
+        class FailureCase {
 
-            Payment.requestPayment(canceledOrder);
-            Payment.requestPayment(failedOrder);
-            Payment.requestPayment(completedOrder);
+            @ParameterizedTest
+            @MethodSource("orderStatusProvider")
+            void orderStatusIsPaid(OrderStatus orderStatus) {
+                //given
+                ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
 
-            ReflectionTestUtils.setField(canceledOrder.getPayment(), "paymentStatus", PaymentStatus.CANCELED);
-            ReflectionTestUtils.setField(failedOrder.getPayment(), "paymentStatus", PaymentStatus.FAILED);
-            ReflectionTestUtils.setField(completedOrder.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
+                //when
+                assertThatThrownBy(() -> order.cancel())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("결제 완료된 주문이어서 취소할 수 없습니다. OrderStatus: " + orderStatus);
+            }
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> canceledOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. PaymentStatus: " + canceledOrder.getPayment().getPaymentStatus()),
-                    () -> assertThatThrownBy(() -> failedOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. PaymentStatus: " + failedOrder.getPayment().getPaymentStatus()),
-                    () -> assertThatThrownBy(() -> completedOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. PaymentStatus: " + completedOrder.getPayment().getPaymentStatus())
-            );
+            @Test
+            void paymentStatusIsCompleted() {
+                //given
+                Payment.requestPayment(order);
+
+                ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
+
+                //when
+                assertThatThrownBy(() -> order.cancel())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("결제 완료돼서 취소할 수 없습니다.");
+            }
+
+            @ParameterizedTest
+            @MethodSource("deliveryStatusProvider")
+            void deliveryStatusIsNotWaiting(DeliveryStatus deliveryStatus) {
+                //given
+                ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
+
+                //when
+                assertThatThrownBy(() -> order.cancel())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("배송 대기 상태가 아니여서 취소할 수 없습니다. DeliveryStatus: " + deliveryStatus);
+            }
+
+            static Stream<Arguments> orderStatusProvider() {
+                return Stream.of(
+                        argumentSet("OrderStatus: PAID", OrderStatus.PAID),
+                        argumentSet("OrderStatus: DELIVERED", OrderStatus.DELIVERED)
+                );
+            }
+
+            static Stream<Arguments> deliveryStatusProvider() {
+                return Stream.of(
+                        argumentSet("DeliveryStatus: PREPARING", DeliveryStatus.PREPARING),
+                        argumentSet("DeliveryStatus: SHIPPED", DeliveryStatus.SHIPPED),
+                        argumentSet("DeliveryStatus: DELIVERED", DeliveryStatus.DELIVERED)
+                );
+            }
+        }
+    }
+
+    @Nested
+    class CompletePaid {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Payment payment = new Payment();
+
+                ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.COMPLETED);
+                ReflectionTestUtils.setField(order, "payment", payment);
+
+                //when
+                order.completePaid();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
+                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
+                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
+                );
+            }
+
+            @Test
+            void idempotency() {
+                //given
+                Payment payment = new Payment();
+
+                ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.COMPLETED);
+                ReflectionTestUtils.setField(order, "payment", payment);
+
+                //when 첫 번째 호출
+                order.completePaid();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
+                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
+                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
+                );
+
+                //when 두 번째 호출
+                order.completePaid();
+
+                //then
+                assertAll(
+                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
+                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
+                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
+                );
+            }
         }
 
-        @Test
-        void clear_deliveryStatusIsNotWaiting() {
-            //given
-            Order canceledOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order preparingOrder = Order.createOrder(member, delivery2, List.of(orderProduct1, orderProduct2));
-            Order shippedOrder = Order.createOrder(member, delivery3, List.of(orderProduct1, orderProduct2));
-            Order deliveredOrder = Order.createOrder(member, delivery4, List.of(orderProduct1, orderProduct2));
+        @Nested
+        class FailureCase {
 
-            ReflectionTestUtils.setField(canceledOrder.getDelivery(), "deliveryStatus", DeliveryStatus.CANCELED);
-            ReflectionTestUtils.setField(preparingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.PREPARING);
-            ReflectionTestUtils.setField(shippedOrder.getDelivery(), "deliveryStatus", DeliveryStatus.SHIPPED);
-            ReflectionTestUtils.setField(deliveredOrder.getDelivery(), "deliveryStatus", DeliveryStatus.DELIVERED);
+            @ParameterizedTest
+            @MethodSource("paymentStatusProvider")
+            void paymentStatusIsNotCompleted(PaymentStatus paymentStatus) {
+                //given
+                Payment.requestPayment(order);
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> canceledOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. DeliveryStatus: " + canceledOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> preparingOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. DeliveryStatus: " + preparingOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> shippedOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. DeliveryStatus: " + shippedOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> deliveredOrder.clearOrderProduct())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. DeliveryStatus: " + deliveredOrder.getDelivery().getDeliveryStatus())
-            );
+                ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
+
+                //when
+                assertThatThrownBy(() -> order.completePaid())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("결제가 완료되지 않았습니다. PaymentStatus: " + paymentStatus);
+            }
+
+            @ParameterizedTest
+            @MethodSource("orderStatusProvider")
+            void orderStatusIsNotCreated(OrderStatus orderStatus) {
+                //given
+                Payment.requestPayment(order);
+
+                ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
+                ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
+
+                //when
+                assertThatThrownBy(() -> order.completePaid())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("결제 완료할 수 없는 상태입니다. OrderStatus: " + orderStatus);
+            }
+
+            @ParameterizedTest
+            @MethodSource("deliveryStatusProvider")
+            void deliveryStatusIsNotWaiting(DeliveryStatus deliveryStatus) {
+                //given
+                Payment.requestPayment(order);
+
+                ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
+                ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
+
+                //when
+                assertThatThrownBy(() -> order.completePaid())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("결제 완료할 수 없는 상태입니다. DeliveryStatus: " + deliveryStatus);
+            }
+
+            static Stream<Arguments> paymentStatusProvider() {
+                return Stream.of(
+                        argumentSet("PaymentStatus: PENDING", PaymentStatus.PENDING),
+                        argumentSet("PaymentStatus: CANCELED", PaymentStatus.CANCELED),
+                        argumentSet("PaymentStatus: FAILED", PaymentStatus.FAILED)
+                );
+            }
+
+            static Stream<Arguments> orderStatusProvider() {
+                return Stream.of(
+                        argumentSet("OrderStatus: CANCELED", OrderStatus.CANCELED),
+                        argumentSet("OrderStatus: DELIVERED", OrderStatus.DELIVERED)
+                );
+            }
+
+            static Stream<Arguments> deliveryStatusProvider() {
+                return Stream.of(
+                        argumentSet("DeliveryStatus: CANCELED", DeliveryStatus.CANCELED),
+                        argumentSet("DeliveryStatus: PREPARING", DeliveryStatus.PREPARING),
+                        argumentSet("DeliveryStatus: SHIPPED", DeliveryStatus.SHIPPED),
+                        argumentSet("DeliveryStatus: DELIVERED", DeliveryStatus.DELIVERED)
+                );
+            }
+        }
+    }
+
+    @Nested
+    class ValidateDeletable {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void withoutPayment() {
+                //given
+                order.cancel();
+
+                //when
+                assertDoesNotThrow(() -> order.validateDeletable());
+            }
+
+            @Test
+            void withPayment() {
+                //given
+                Payment payment = new Payment();
+
+                ReflectionTestUtils.setField(payment, "paymentStatus", PaymentStatus.PENDING);
+                ReflectionTestUtils.setField(order, "payment", payment);
+
+                order.cancel();
+
+                //when
+                assertDoesNotThrow(() -> order.validateDeletable());
+            }
         }
 
-        @Test
-        void cancel_orderStatusIsPaid() {
-            //given
-            Order paidOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order deliveredOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
+        @Nested
+        class FailureCase {
 
-            ReflectionTestUtils.setField(paidOrder, "orderStatus", OrderStatus.PAID);
-            ReflectionTestUtils.setField(deliveredOrder, "orderStatus", OrderStatus.DELIVERED);
+            @Test
+            void orderStatusIsCreated() {
+                //given
+                Order createdOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> paidOrder.cancel())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료된 주문이어서 취소할 수 없습니다. OrderStatus: " + paidOrder.getOrderStatus()),
-                    () -> assertThatThrownBy(() -> deliveredOrder.cancel())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료된 주문이어서 취소할 수 없습니다. OrderStatus: " + deliveredOrder.getOrderStatus())
-            );
-        }
+                ReflectionTestUtils.setField(createdOrder, "orderStatus", OrderStatus.CREATED);
 
-        @Test
-        void cancel_paymentStatusIsCompleted() {
-            //given
-            Payment.requestPayment(order);
+                //when
+                assertThatThrownBy(() -> createdOrder.validateDeletable())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("주문을 취소해야 삭제할 수 있습니다.");
+            }
 
-            ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
+            @Test
+            void orderStatusIsPaid() {
+                //given
+                Order paidOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+                Payment.requestPayment(paidOrder);
 
-            //when
-            assertThatThrownBy(() -> order.cancel())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("결제 완료돼서 취소할 수 없습니다.");
-        }
+                ReflectionTestUtils.setField(paidOrder, "orderStatus", OrderStatus.PAID);
 
-        @Test
-        void cancel_deliveryStatusIsNotWaiting() {
-            //given
-            Order preparingOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order shippedOrder = Order.createOrder(member, delivery2, List.of(orderProduct1, orderProduct2));
-            Order deliveredOrder = Order.createOrder(member, delivery3, List.of(orderProduct1, orderProduct2));
+                //when
+                assertThatThrownBy(() -> paidOrder.validateDeletable())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("배송이 완료돼야 삭제할 수 있습니다.");
+            }
 
-            ReflectionTestUtils.setField(preparingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.PREPARING);
-            ReflectionTestUtils.setField(shippedOrder.getDelivery(), "deliveryStatus", DeliveryStatus.SHIPPED);
-            ReflectionTestUtils.setField(deliveredOrder.getDelivery(), "deliveryStatus", DeliveryStatus.DELIVERED);
+            @Test
+            void deliveryStatusIsWaiting() {
+                //given
+                Order waitingOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> preparingOrder.cancel())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송 대기 상태가 아니여서 취소할 수 없습니다. DeliveryStatus: " + preparingOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> shippedOrder.cancel())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송 대기 상태가 아니여서 취소할 수 없습니다. DeliveryStatus: " + shippedOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> deliveredOrder.cancel())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송 대기 상태가 아니여서 취소할 수 없습니다. DeliveryStatus: " + deliveredOrder.getDelivery().getDeliveryStatus())
-            );
-        }
+                ReflectionTestUtils.setField(waitingOrder, "orderStatus", OrderStatus.CANCELED);
+                ReflectionTestUtils.setField(waitingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.WAITING);
 
-        @Test
-        void completePaid_paymentStatusIsNotCompleted() {
-            //given
-            Order pendingOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order failedOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order canceledOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
+                //when
+                assertThatThrownBy(() -> waitingOrder.validateDeletable())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("주문을 취소해야 삭제할 수 있습니다. DeliveryStatus: " + waitingOrder.getDelivery().getDeliveryStatus());
+            }
 
-            Payment.requestPayment(pendingOrder);
-            Payment.requestPayment(failedOrder);
-            Payment.requestPayment(canceledOrder);
+            @ParameterizedTest
+            @MethodSource("deliveryStatusProvider")
+            void deliveryStatusIsPreparingOrShipped(DeliveryStatus deliveryStatus) {
+                //given
+                Payment.requestPayment(order);
 
-            ReflectionTestUtils.setField(pendingOrder.getPayment(), "paymentStatus", PaymentStatus.PENDING);
-            ReflectionTestUtils.setField(failedOrder.getPayment(), "paymentStatus", PaymentStatus.FAILED);
-            ReflectionTestUtils.setField(canceledOrder.getPayment(), "paymentStatus", PaymentStatus.CANCELED);
+                ReflectionTestUtils.setField(order, "orderStatus", OrderStatus.DELIVERED);
+                ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> pendingOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제가 완료되지 않았습니다. PaymentStatus: " + pendingOrder.getPayment().getPaymentStatus()),
-                    () -> assertThatThrownBy(() -> failedOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제가 완료되지 않았습니다. PaymentStatus: " + failedOrder.getPayment().getPaymentStatus()),
-                    () -> assertThatThrownBy(() -> canceledOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제가 완료되지 않았습니다. PaymentStatus: " + canceledOrder.getPayment().getPaymentStatus())
-            );
-        }
+                //when
+                assertThatThrownBy(() -> order.validateDeletable())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("배송이 완료돼야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
+            }
 
-        @Test
-        void completePaid_orderStatusIsNotCreated() {
-            //given
-            Order canceldOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order deliveredOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
+            @ParameterizedTest
+            @MethodSource("paymentStatusProvider")
+            void paymentStatusIsPendingOrFailed(PaymentStatus paymentStatus) {
+                //given
+                Payment.requestPayment(order);
 
-            Payment.requestPayment(canceldOrder);
-            Payment.requestPayment(deliveredOrder);
+                ReflectionTestUtils.setField(order, "orderStatus", OrderStatus.CANCELED);
+                ReflectionTestUtils.setField(delivery, "deliveryStatus", DeliveryStatus.CANCELED);
+                ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
 
-            ReflectionTestUtils.setField(canceldOrder, "orderStatus", OrderStatus.CANCELED);
-            ReflectionTestUtils.setField(deliveredOrder, "orderStatus", OrderStatus.DELIVERED);
-            ReflectionTestUtils.setField(canceldOrder.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
-            ReflectionTestUtils.setField(deliveredOrder.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
+                //when
+                assertThatThrownBy(() -> order.validateDeletable())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("주문을 취소해야 삭제할 수 있습니다. PaymentStatus: " + paymentStatus);
+            }
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> canceldOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료할 수 없는 상태입니다. OrderStatus: " + canceldOrder.getOrderStatus()),
-                    () -> assertThatThrownBy(() -> deliveredOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료할 수 없는 상태입니다. OrderStatus: " + deliveredOrder.getOrderStatus())
-            );
-        }
+            static Stream<Arguments> deliveryStatusProvider() {
+                return Stream.of(
+                        argumentSet("DeliveryStatus: PREPARING", DeliveryStatus.PREPARING),
+                        argumentSet("DeliveryStatus: SHIPPED", DeliveryStatus.SHIPPED)
+                );
+            }
 
-        @Test
-        void completePaid_deliveryStatusIsNotWaiting() {
-            //given
-            Order canceledOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order preparingOrder = Order.createOrder(member, delivery2, List.of(orderProduct1, orderProduct2));
-            Order shippedOrder = Order.createOrder(member, delivery2, List.of(orderProduct1, orderProduct2));
-            Order deliveredOrder = Order.createOrder(member, delivery2, List.of(orderProduct1, orderProduct2));
-
-            Payment.requestPayment(canceledOrder);
-            Payment.requestPayment(preparingOrder);
-            Payment.requestPayment(shippedOrder);
-            Payment.requestPayment(deliveredOrder);
-
-            ReflectionTestUtils.setField(canceledOrder.getDelivery(), "deliveryStatus", DeliveryStatus.CANCELED);
-            ReflectionTestUtils.setField(preparingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.PREPARING);
-            ReflectionTestUtils.setField(shippedOrder.getDelivery(), "deliveryStatus", DeliveryStatus.SHIPPED);
-            ReflectionTestUtils.setField(deliveredOrder.getDelivery(), "deliveryStatus", DeliveryStatus.DELIVERED);
-            ReflectionTestUtils.setField(canceledOrder.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
-            ReflectionTestUtils.setField(preparingOrder.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
-            ReflectionTestUtils.setField(shippedOrder.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
-            ReflectionTestUtils.setField(deliveredOrder.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
-
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> canceledOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료할 수 없는 상태입니다. DeliveryStatus: " + canceledOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> preparingOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료할 수 없는 상태입니다. DeliveryStatus: " + preparingOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> shippedOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료할 수 없는 상태입니다. DeliveryStatus: " + shippedOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> deliveredOrder.completePaid())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("결제 완료할 수 없는 상태입니다. DeliveryStatus: " + deliveredOrder.getDelivery().getDeliveryStatus())
-            );
-        }
-
-        @Test
-        void validateDeletable_orderStatusIsCreated() {
-            //given
-            Order createdOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-
-            ReflectionTestUtils.setField(createdOrder, "orderStatus", OrderStatus.CREATED);
-
-            //when
-            assertThatThrownBy(() -> createdOrder.validateDeletable())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("주문을 취소해야 삭제할 수 있습니다.");
-        }
-
-        @Test
-        void validateDeletable_orderStatusIsPaid() {
-            //given
-            Order paidOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Payment.requestPayment(paidOrder);
-
-            ReflectionTestUtils.setField(paidOrder, "orderStatus", OrderStatus.PAID);
-
-            //when
-            assertThatThrownBy(() -> paidOrder.validateDeletable())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("배송이 완료돼야 삭제할 수 있습니다.");
-        }
-
-        @Test
-        void validateDeletable_deliveryStatusIsWaiting() {
-            //given
-            Order waitingOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-
-            ReflectionTestUtils.setField(waitingOrder, "orderStatus", OrderStatus.CANCELED);
-            ReflectionTestUtils.setField(waitingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.WAITING);
-
-            //when
-            assertThatThrownBy(() -> waitingOrder.validateDeletable())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("주문을 취소해야 삭제할 수 있습니다. DeliveryStatus: " + waitingOrder.getDelivery().getDeliveryStatus());
-        }
-
-        @Test
-        void validateDeletable_deliveryStatusIsPreparingOrShipped() {
-            //given
-            Order preparingOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order shippedOrder = Order.createOrder(member, delivery2, List.of(orderProduct1, orderProduct2));
-            Payment.requestPayment(preparingOrder);
-            Payment.requestPayment(shippedOrder);
-
-            ReflectionTestUtils.setField(preparingOrder, "orderStatus", OrderStatus.DELIVERED);
-            ReflectionTestUtils.setField(shippedOrder, "orderStatus", OrderStatus.DELIVERED);
-            ReflectionTestUtils.setField(preparingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.PREPARING);
-            ReflectionTestUtils.setField(shippedOrder.getDelivery(), "deliveryStatus", DeliveryStatus.SHIPPED);
-
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> preparingOrder.validateDeletable())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송이 완료돼야 삭제할 수 있습니다. DeliveryStatus: " + preparingOrder.getDelivery().getDeliveryStatus()),
-                    () -> assertThatThrownBy(() -> shippedOrder.validateDeletable())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("배송이 완료돼야 삭제할 수 있습니다. DeliveryStatus: " + shippedOrder.getDelivery().getDeliveryStatus())
-            );
-        }
-
-        @Test
-        void validateDeletable_paymentStatusIsPendingOrFailed() {
-            //given
-            Order pendingOrder = Order.createOrder(member, delivery1, List.of(orderProduct1, orderProduct2));
-            Order failedOrder = Order.createOrder(member, delivery2, List.of(orderProduct1, orderProduct2));
-            Payment.requestPayment(pendingOrder);
-            Payment.requestPayment(failedOrder);
-
-            ReflectionTestUtils.setField(pendingOrder, "orderStatus", OrderStatus.CANCELED);
-            ReflectionTestUtils.setField(failedOrder, "orderStatus", OrderStatus.CANCELED);
-            ReflectionTestUtils.setField(pendingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.CANCELED);
-            ReflectionTestUtils.setField(failedOrder.getDelivery(), "deliveryStatus", DeliveryStatus.CANCELED);
-            ReflectionTestUtils.setField(pendingOrder.getPayment(), "paymentStatus", PaymentStatus.PENDING);
-            ReflectionTestUtils.setField(failedOrder.getPayment(), "paymentStatus", PaymentStatus.FAILED);
-
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> pendingOrder.validateDeletable())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("주문을 취소해야 삭제할 수 있습니다. PaymentStatus: " + pendingOrder.getPayment().getPaymentStatus()),
-                    () -> assertThatThrownBy(() -> failedOrder.validateDeletable())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("주문을 취소해야 삭제할 수 있습니다. PaymentStatus: " + failedOrder.getPayment().getPaymentStatus())
-            );
+            static Stream<Arguments> paymentStatusProvider() {
+                return Stream.of(
+                        argumentSet("PaymentStatus: PENDING", PaymentStatus.PENDING),
+                        argumentSet("PaymentStatus: FAILED", PaymentStatus.FAILED)
+                );
+            }
         }
     }
 }

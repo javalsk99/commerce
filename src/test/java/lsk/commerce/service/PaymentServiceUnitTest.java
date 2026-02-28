@@ -209,37 +209,19 @@ class PaymentServiceUnitTest {
                             multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant());
         }
 
-        private void givenCustomData(String orderNumber) {
-            String json = "{\"orderNumber\":\"" + orderNumber + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
-        }
+        @Test
+        void failedPayment() {
+            //given
+            given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
 
-        private void findOrderAndProducts(Order order, List<OrderProductDto> orderProductDto) {
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
-            given(orderRequest.getOrderProducts()).willReturn(orderProductDto);
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+            //when
+            paymentService.failedPayment(multipleOrder.getPayment().getPaymentId());
 
-            given(productService.findProducts()).willReturn(List.of(album, book, movie));
-        }
-
-        private String givenOrderNameAndAmount(Order order, OrderRequest orderRequest) {
-            given(paidPayment.getAmount().getTotal()).willReturn(order.getTotalAmount().longValue());
-            given(orderRequest.getTotalAmount()).willReturn(order.getTotalAmount());
-
-            String orderName;
-            if (orderRequest.getOrderProducts().size() == 1) {
-                orderName = orderRequest.getOrderProducts().getFirst().getName();
-            } else {
-                orderName = orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
-            }
-
-            given(paidPayment.getOrderName()).willReturn(orderName);
-            return orderName;
-        }
-
-        private void paidPaymentToString(String orderName) {
-            long total = paidPayment.getAmount().getTotal();
-            given(paidPayment.toString()).willReturn("orderName = " + orderName + ", total = " + total);
+            //then
+            assertAll(
+                    () -> then(paymentRepository).should().findByPaymentId(anyString()),
+                    () -> assertThat(multipleOrder.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.FAILED)
+            );
         }
 
         private void givenCompletePayment(Order order) {
@@ -315,8 +297,7 @@ class PaymentServiceUnitTest {
         @Test
         void verifyAndComplete_orderNotFound() {
             //given
-            String json = "{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(multipleOrder.getOrderNumber());
 
             given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다."));
 
@@ -339,8 +320,7 @@ class PaymentServiceUnitTest {
         @Test
         void verifyAndComplete_orderProductDtoIsEmpty() {
             //given
-            String json = "{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(multipleOrder.getOrderNumber());
 
             given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
             given(orderRequest.getOrderProducts()).willReturn(Collections.emptyList());
@@ -370,8 +350,7 @@ class PaymentServiceUnitTest {
             OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
             OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
 
-            String json = "{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(multipleOrder.getOrderNumber());
 
             given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
             given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
@@ -401,14 +380,9 @@ class PaymentServiceUnitTest {
             OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
             OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
 
-            String json = "{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(multipleOrder.getOrderNumber());
 
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-            given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
-
-            given(productService.findProducts()).willReturn(List.of(album, book, movie));
+            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
             given(paidPayment.getAmount().getTotal()).willReturn(10000L);
             given(orderRequest.getTotalAmount()).willReturn(120000);
@@ -434,14 +408,9 @@ class PaymentServiceUnitTest {
             OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
             OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
 
-            String json = "{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(multipleOrder.getOrderNumber());
 
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-            given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
-
-            given(productService.findProducts()).willReturn(List.of(album, book, movie));
+            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
             given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
             given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
@@ -471,14 +440,9 @@ class PaymentServiceUnitTest {
             OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
             OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
 
-            String json = "{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(multipleOrder.getOrderNumber());
 
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-            given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
-
-            given(productService.findProducts()).willReturn(List.of(album, book, movie));
+            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
             given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
             given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
@@ -510,24 +474,12 @@ class PaymentServiceUnitTest {
             OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
             OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
 
-            String json = "{\"orderNumber\":\"" + notRequestOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(notRequestOrder.getOrderNumber());
 
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(notRequestOrder);
-            given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+            findOrderAndProducts(notRequestOrder, List.of(orderProductDto1, orderProductDto2));
 
-            given(productService.findProducts()).willReturn(List.of(album, book, movie));
-
-            given(paidPayment.getAmount().getTotal()).willReturn(notRequestOrder.getTotalAmount().longValue());
-            given(orderRequest.getTotalAmount()).willReturn(notRequestOrder.getTotalAmount());
-
-            String orderName = orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
-
-            given(paidPayment.getOrderName()).willReturn(orderName);
-
-            long total = paidPayment.getAmount().getTotal();
-            given(paidPayment.toString()).willReturn("orderName = " + orderName + ", total = " + total);
+            String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+            paidPaymentToString(orderName);
 
             String paymentId = "jfdioj23489fkjn2";
             given(paidPayment.getId()).willReturn(paymentId);
@@ -555,24 +507,12 @@ class PaymentServiceUnitTest {
             OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
             OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
 
-            String json = "{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}";
-            given(paidPayment.getCustomData()).willReturn(json);
+            givenCustomData(multipleOrder.getOrderNumber());
 
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-            given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
-            given(productService.findProducts()).willReturn(List.of(album, book, movie));
-
-            given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
-            given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
-
-            String orderName = orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
-
-            given(paidPayment.getOrderName()).willReturn(orderName);
-
-            long total = paidPayment.getAmount().getTotal();
-            given(paidPayment.toString()).willReturn("orderName = " + orderName + ", total = " + total);
+            String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+            paidPaymentToString(orderName);
 
             String paymentId = multipleOrder.getPayment().getPaymentId();
             given(paidPayment.getId()).willReturn(paymentId);
@@ -596,47 +536,52 @@ class PaymentServiceUnitTest {
                     () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
             );
         }
+
+        @Test
+        void failedPayment_paymentNotFound() {
+            //given
+            given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.empty());
+
+            //when
+            assertThatThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("존재하지 않는 결제 번호입니다.");
+
+            //then
+            then(paymentRepository).should().findByPaymentId(anyString());
+        }
     }
 
-/*
-    @Test
-    void failedPayment() {
-        //when
-        Payment failedPayment = paymentService.failedPayment(paymentId);
-
-        //then
-        assertThat(failedPayment.getPaymentStatus()).isEqualTo(PaymentStatus.FAILED);
-        assertThat(failedPayment.getPaymentDate()).isNull();
+    private void givenCustomData(String orderNumber) {
+        String json = "{\"orderNumber\":\"" + orderNumber + "\"}";
+        given(paidPayment.getCustomData()).willReturn(json);
     }
 
-    @Test
-    void failedPayment_reFailed() {
-        //given
-        paymentService.failedPayment(paymentId);
+    private void findOrderAndProducts(Order order, List<OrderProductDto> orderProductDto) {
+        given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
+        given(orderRequest.getOrderProducts()).willReturn(orderProductDto);
+        given(orderService.getOrderRequest(any())).willReturn(orderRequest);
 
-        //when
-        Payment failedPayment = paymentService.failedPayment(paymentId);
-
-        //then
-        assertThat(failedPayment.getPaymentStatus()).isEqualTo(PaymentStatus.FAILED);
-        assertThat(failedPayment.getPaymentDate()).isNull();
+        given(productService.findProducts()).willReturn(List.of(album, book, movie));
     }
 
-*/
-/*
+    private String givenOrderNameAndAmount(Order order, OrderRequest orderRequest) {
+        given(paidPayment.getAmount().getTotal()).willReturn(order.getTotalAmount().longValue());
+        given(orderRequest.getTotalAmount()).willReturn(order.getTotalAmount());
 
+        String orderName;
+        if (orderRequest.getOrderProducts().size() == 1) {
+            orderName = orderRequest.getOrderProducts().getFirst().getName();
+        } else {
+            orderName = orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+        }
 
-    @Test
-    void delete_order() {
-        //given
-        orderService.cancelOrder(orderNumber1);
-
-        //when
-        orderService.deleteOrder(orderNumber1);
-
-        //then
-        assertThrows(IllegalArgumentException.class, () ->
-                paymentService.findPaymentByPaymentId(paymentId));
+        given(paidPayment.getOrderName()).willReturn(orderName);
+        return orderName;
     }
-*/
+
+    private void paidPaymentToString(String orderName) {
+        long total = paidPayment.getAmount().getTotal();
+        given(paidPayment.toString()).willReturn("orderName = " + orderName + ", total = " + total);
+    }
 }

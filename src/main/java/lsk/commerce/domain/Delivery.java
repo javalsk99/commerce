@@ -60,12 +60,14 @@ public class Delivery {
 
     //주문을 결제해야 배송 준비가 시작돼서 결제 대기 상태 추가
     public Delivery(Member member) {
+        validateMemberAddress(member);
+
         this.address = member.getAddress();
         this.deliveryStatus = DeliveryStatus.WAITING;
     }
 
     public void startDelivery() {
-        validatePaidOrder();
+        validatePaidOrderAndCompletedPayment();
         validateCanShip();
 
         this.deliveryStatus = DeliveryStatus.SHIPPED;
@@ -73,7 +75,7 @@ public class Delivery {
     }
 
     public void completeDelivery() {
-        validatePaidOrder();
+        validatePaidOrderAndCompletedPayment();
         validateShipped();
 
         this.deliveryStatus = DeliveryStatus.DELIVERED;
@@ -81,29 +83,49 @@ public class Delivery {
         this.order.setOrderStatus(OrderStatus.DELIVERED);
     }
 
-    private void validatePaidOrder() {
-        if (this.order.getOrderStatus() == OrderStatus.CREATED || this.order.getOrderStatus() == OrderStatus.CANCELED) {
-            throw new IllegalStateException("결제가 완료된 주문이 아닙니다.");
-        } else if (this.order.getOrderStatus() == OrderStatus.DELIVERED) {
-            throw new IllegalStateException("이미 배송 완료된 주문입니다.");
+    private static void validateMemberAddress(Member member) {
+        Address address = member.getAddress();
+        if (address == null) {
+            throw new IllegalArgumentException("회원의 주소 정보가 없습니다.");
+        } else if (address.getCity() == null || address.getStreet() == null || address.getZipcode() == null) {
+            throw new IllegalArgumentException("회원의 주소 정보가 잘못됐습니다. address.city = " + address.getCity() +
+                    ", address.street = " + address.getStreet() + ", address.zipcode = " + address.getZipcode());
+        }
+    }
+
+    private void validatePaidOrderAndCompletedPayment() {
+        OrderStatus orderStatus = this.order.getOrderStatus();
+        if (orderStatus == OrderStatus.CREATED || orderStatus == OrderStatus.CANCELED) {
+            throw new IllegalStateException("결제 완료된 주문이 아닙니다. OrderStatus: " + orderStatus);
+        } else if (orderStatus == OrderStatus.DELIVERED) {
+            throw new IllegalStateException("이미 배송 완료된 주문입니다. OrderStatus: " + orderStatus);
+        }
+
+        if (this.order.getPayment() == null) {
+            throw new IllegalStateException("주문의 결제 정보가 없습니다.");
+        }
+
+        PaymentStatus paymentStatus = this.order.getPayment().getPaymentStatus();
+        if (paymentStatus != PaymentStatus.COMPLETED) {
+            throw new IllegalStateException("결제 완료된 주문이 아닙니다. PaymentStatus: " + paymentStatus);
         }
     }
 
     private void validateCanShip() {
-        if (this.deliveryStatus == DeliveryStatus.WAITING) {
-            throw new IllegalStateException("결제가 완료된 주문이 아닙니다.");
-        } else if (this.deliveryStatus == DeliveryStatus.CANCELED) {
-            throw new IllegalStateException("취소된 주문입니다.");
-        } else if (this.deliveryStatus == DeliveryStatus.SHIPPED || this.deliveryStatus == DeliveryStatus.DELIVERED) {
-            throw new IllegalStateException("이미 발송된 주문입니다.");
+        DeliveryStatus deliveryStatus = this.deliveryStatus;
+        if (deliveryStatus == DeliveryStatus.WAITING || deliveryStatus == DeliveryStatus.CANCELED) {
+            throw new IllegalStateException("결제 완료된 주문이 아닙니다. DeliveryStatus: " + deliveryStatus);
+        } else if (deliveryStatus == DeliveryStatus.SHIPPED || deliveryStatus == DeliveryStatus.DELIVERED) {
+            throw new IllegalStateException("이미 발송된 주문입니다. DeliveryStatus: " + deliveryStatus);
         }
     }
 
     private void validateShipped() {
-        if (this.deliveryStatus == DeliveryStatus.DELIVERED) {
-            throw new IllegalStateException("이미 배송 완료된 주문입니다.");
-        } else if (this.deliveryStatus != DeliveryStatus.SHIPPED) {
-            throw new IllegalStateException("발송된 주문이 아닙니다.");
+        DeliveryStatus deliveryStatus = this.deliveryStatus;
+        if (deliveryStatus == DeliveryStatus.DELIVERED) {
+            throw new IllegalStateException("이미 배송 완료된 주문입니다. DeliveryStatus: " + deliveryStatus);
+        } else if (deliveryStatus != DeliveryStatus.SHIPPED) {
+            throw new IllegalStateException("발송된 주문이 아닙니다. DeliveryStatus: " + deliveryStatus);
         }
     }
 
