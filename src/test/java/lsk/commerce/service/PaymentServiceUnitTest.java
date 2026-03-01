@@ -21,9 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -36,12 +33,17 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.Arguments.*;
-import static org.mockito.BDDMockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.times;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceUnitTest {
@@ -86,7 +88,6 @@ class PaymentServiceUnitTest {
     @BeforeEach
     void beforeEach() {
         member = Member.builder().city("Seoul").street("Gangnam").zipcode("01234").build();
-
         delivery = new Delivery(member);
 
         album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
@@ -105,483 +106,523 @@ class PaymentServiceUnitTest {
     }
 
     @Nested
-    class SuccessCase {
+    class Request {
 
-        @Test
-        void request() {
-            //given
-            Order newOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+        @Nested
+        class SuccessCase {
 
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(newOrder);
+            @Test
+            void basic() {
+                //given
+                Order newOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
 
-            //when
-            paymentService.request(newOrder.getOrderNumber());
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(newOrder);
 
-            //then
-            assertAll(
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(paymentRepository).should().save(newOrder.getPayment())
-            );
-            assertThat(newOrder.getPayment())
-                    .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
-                    .containsExactly(newOrder, newOrder.getTotalAmount(), null, PaymentStatus.PENDING);
+                //when
+                paymentService.request(newOrder.getOrderNumber());
+
+                //then
+                assertAll(
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(paymentRepository).should().save(newOrder.getPayment())
+                );
+                assertThat(newOrder.getPayment())
+                        .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
+                        .containsExactly(newOrder, newOrder.getTotalAmount(), null, PaymentStatus.PENDING);
+            }
         }
 
-        @Test
-        void find() {
-            //given
-            given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
+        @Nested
+        class FailureCase {
 
-            //when
-            Payment payment = paymentService.findPaymentByPaymentId(multipleOrder.getPayment().getPaymentId());
+            @Test
+            void orderNotFound() {
+                //given
+                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다."));
 
-            //then
-            assertAll(
-                    () -> then(paymentRepository).should().findByPaymentId(anyString()),
-                    () -> assertThat(payment).isEqualTo(multipleOrder.getPayment())
-            );
-        }
+                //when
+                assertThatThrownBy(() -> paymentService.request(wrongOrderNumber))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 주문입니다.");
 
-        @Test
-        void verifyAndComplete_hasSingleOrderProduct() {
-            //given
-            OrderProductDto orderProductDto = new OrderProductDto("범죄도시", 15000, 2, 30000);
+                //then
+                assertAll(
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(paymentRepository).should(never()).save(any())
+                );
+            }
 
-            givenCustomData(singleOrder.getOrderNumber());
+            @Test
+            void duplicateRequest() {
+                //given
+                Order newOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
 
-            findOrderAndProducts(singleOrder, List.of(orderProductDto));
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(newOrder);
 
-            String orderName = givenOrderNameAndAmount(singleOrder, orderRequest);
-            paidPaymentToString(orderName);
+                //when 첫 번째 호출
+                paymentService.request(newOrder.getOrderNumber());
 
-            givenCompletePayment(singleOrder);
+                //then
+                assertAll(
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(paymentRepository).should().save(newOrder.getPayment())
+                );
+                assertThat(newOrder.getPayment())
+                        .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
+                        .containsExactly(newOrder, newOrder.getTotalAmount(), null, PaymentStatus.PENDING);
 
-            //when
-            paymentService.verifyAndComplete(paidPayment);
+                //when 두 번째 호출
+                assertThatThrownBy(() -> paymentService.request(newOrder.getOrderNumber()))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("이미 결제 정보가 있습니다.");
 
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(singleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                    () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
-            );
-            assertThat(paidPayment)
-                    .extracting("customData", "amount.total", "orderName", "id", "paidAt")
-                    .containsExactly("{\"orderNumber\":\"" + singleOrder.getOrderNumber() + "\"}", 30000L,
-                            orderRequest.getOrderProducts().getFirst().getName(), singleOrder.getPayment().getPaymentId(),
-                            singleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant());
-        }
-
-        @Test
-        void verifyAndComplete_hasMultipleOrderProducts() {
-            //given
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
-
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
-
-            String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
-            paidPaymentToString(orderName);
-
-            givenCompletePayment(multipleOrder);
-
-            //when
-            paymentService.verifyAndComplete(paidPayment);
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(multipleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                    () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
-            );
-            assertThat(paidPayment)
-                    .extracting("customData", "amount.total", "orderName", "id", "paidAt")
-                    .containsExactly("{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}", 120000L,
-                            orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건",
-                            multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant());
-        }
-
-        @Test
-        void failedPayment() {
-            //given
-            given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
-
-            //when
-            paymentService.failedPayment(multipleOrder.getPayment().getPaymentId());
-
-            //then
-            assertAll(
-                    () -> then(paymentRepository).should().findByPaymentId(anyString()),
-                    () -> assertThat(multipleOrder.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.FAILED)
-            );
-        }
-
-        private void givenCompletePayment(Order order) {
-            String paymentId = order.getPayment().getPaymentId();
-            given(paidPayment.getId()).willReturn(paymentId);
-            given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.of(order.getPayment()));
-            given(paidPayment.getPaidAt()).willReturn(LocalDateTime.now().atZone(ZoneId.of("Asia/Seoul")).toInstant());
+                //then
+                assertAll(
+                        () -> then(orderService).should(times(2)).findOrderWithAllExceptMember(anyString()),
+                        () -> then(paymentRepository).should().save(any())
+                );
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class Find {
 
-        @Test
-        void request_orderNotFound() {
-            //given
-            given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다."));
+        @Nested
+        class SuccessCase {
 
-            //when
-            assertThatThrownBy(() -> paymentService.request(wrongOrderNumber))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 주문입니다.");
+            @Test
+            void basic() {
+                //given
+                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
 
-            //then
-            assertAll(
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(paymentRepository).should(never()).save(any())
-            );
+                //when
+                Payment payment = paymentService.findPaymentByPaymentId(multipleOrder.getPayment().getPaymentId());
+
+                //then
+                assertAll(
+                        () -> then(paymentRepository).should().findByPaymentId(anyString()),
+                        () -> assertThat(payment).isEqualTo(multipleOrder.getPayment())
+                );
+            }
         }
 
-        @Test
-        void request_duplicateRequest() {
-            //given
-            Order newOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+        @Nested
+        class FailureCase {
 
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(newOrder);
+            @Test
+            void paymentNotFound() {
+                //given
+                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.empty());
 
-            //when 첫 번째 호출
-            paymentService.request(newOrder.getOrderNumber());
+                //when
+                assertThatThrownBy(() -> paymentService.findPaymentByPaymentId(wrongPaymentId))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 결제 번호입니다.");
+            }
+        }
+    }
 
-            //then
-            assertAll(
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(paymentRepository).should().save(newOrder.getPayment())
-            );
-            assertThat(newOrder.getPayment())
-                    .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
-                    .containsExactly(newOrder, newOrder.getTotalAmount(), null, PaymentStatus.PENDING);
+    @Nested
+    class VerityAndComplete {
 
-            //when 두 번째 호출
-            assertThatThrownBy(() -> paymentService.request(newOrder.getOrderNumber()))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("이미 결제 정보가 있습니다.");
+        @Nested
+        class SuccessCase {
 
-            //then
-            assertAll(
-                    () -> then(orderService).should(times(2)).findOrderWithAllExceptMember(anyString()),
-                    () -> then(paymentRepository).should().save(any())
-            );
+            @Test
+            void hasSingleOrderProduct() {
+                //given
+                OrderProductDto orderProductDto = new OrderProductDto("범죄도시", 15000, 2, 30000);
+
+                givenCustomData(singleOrder.getOrderNumber());
+
+                findOrderAndProducts(singleOrder, List.of(orderProductDto));
+
+                String orderName = givenOrderNameAndAmount(singleOrder, orderRequest);
+                paidPaymentToString(orderName);
+
+                givenCompletePayment(singleOrder);
+
+                //when
+                paymentService.verifyAndComplete(paidPayment);
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(singleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
+                        () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
+                );
+                assertThat(paidPayment)
+                        .extracting("customData", "amount.total", "orderName", "id", "paidAt")
+                        .containsExactly("{\"orderNumber\":\"" + singleOrder.getOrderNumber() + "\"}", 30000L,
+                                orderRequest.getOrderProducts().getFirst().getName(), singleOrder.getPayment().getPaymentId(),
+                                singleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant());
+            }
+
+            @Test
+            void hasMultipleOrderProducts() {
+                //given
+                OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
+                OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
+
+                String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+                paidPaymentToString(orderName);
+
+                givenCompletePayment(multipleOrder);
+
+                //when
+                paymentService.verifyAndComplete(paidPayment);
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(multipleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
+                        () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
+                );
+                assertThat(paidPayment)
+                        .extracting("customData", "amount.total", "orderName", "id", "paidAt")
+                        .containsExactly("{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}", 120000L,
+                                orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건",
+                                multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant());
+            }
+
+            private void givenCompletePayment(Order order) {
+                String paymentId = order.getPayment().getPaymentId();
+                given(paidPayment.getId()).willReturn(paymentId);
+                given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.of(order.getPayment()));
+                given(paidPayment.getPaidAt()).willReturn(LocalDateTime.now().atZone(ZoneId.of("Asia/Seoul")).toInstant());
+            }
         }
 
-        @Test
-        void find_paymentNotFound() {
-            //given
-            given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.empty());
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> paymentService.findPaymentByPaymentId(wrongPaymentId))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 결제 번호입니다.");
+            @Test
+            void orderNotFound() {
+                //given
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 주문입니다.");
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should(never()).getOrderRequest(any()),
+                        () -> then(productService).should(never()).findProducts(),
+                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
+                        () -> then(eventPublisher).should(never()).publishEvent(any())
+                );
+            }
+
+            @Test
+            void orderProductDtoIsEmpty() {
+                //given
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
+                given(orderRequest.getOrderProducts()).willReturn(Collections.emptyList());
+                given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+
+                given(productService.findProducts()).willReturn(List.of(album, book, movie));
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("주문 상품이 비어 있습니다.");
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(multipleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
+                        () -> then(eventPublisher).should(never()).publishEvent(any())
+                );
+            }
+
+            @Test
+            void wrongProducts() {
+                //given
+                OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
+                OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
+                given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
+                given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+
+                given(productService.findProducts()).willReturn(List.of(movie));
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("잘못된 상품이 있습니다.");
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(multipleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
+                        () -> then(eventPublisher).should(never()).publishEvent(any())
+                );
+            }
+
+            @Test
+            void amountMismatch() {
+                //given
+                OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
+                OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
+
+                given(paidPayment.getAmount().getTotal()).willReturn(10000L);
+                given(orderRequest.getTotalAmount()).willReturn(120000);
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(SyncPaymentException.class);
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(multipleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
+                        () -> then(eventPublisher).should(never()).publishEvent(any())
+                );
+            }
+
+            @Test
+            void orderNameMismatch_IsNotFirstName() {
+                //given
+                OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
+                OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
+
+                given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
+                given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
+
+                String orderName = orderRequest.getOrderProducts().getLast().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+
+                given(paidPayment.getOrderName()).willReturn(orderName);
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(SyncPaymentException.class);
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(multipleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
+                        () -> then(eventPublisher).should(never()).publishEvent(any())
+                );
+            }
+
+            @Test
+            void orderNameMismatch_multipleOrderProducts_withSingleFormat() {
+                //given
+                OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
+                OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
+
+                given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
+                given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
+
+                String orderName = orderRequest.getOrderProducts().getFirst().getName();
+
+                given(paidPayment.getOrderName()).willReturn(orderName);
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(SyncPaymentException.class);
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(multipleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
+                        () -> then(eventPublisher).should(never()).publishEvent(any())
+                );
+            }
+
+            @Test
+            void wrongPaymentId() {
+                //given
+                Order notRequestOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+
+                OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
+                OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+
+                givenCustomData(notRequestOrder.getOrderNumber());
+
+                findOrderAndProducts(notRequestOrder, List.of(orderProductDto1, orderProductDto2));
+
+                String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+                paidPaymentToString(orderName);
+
+                String paymentId = "jfdioj23489fkjn2";
+                given(paidPayment.getId()).willReturn(paymentId);
+                given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.empty());
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 결제 번호입니다.");
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(notRequestOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
+                        () -> then(eventPublisher).should(never()).publishEvent(any())
+                );
+            }
+
+            @Test
+            void failedEventPublisher() {
+                //given
+                OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
+                OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
+
+                String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+                paidPaymentToString(orderName);
+
+                String paymentId = multipleOrder.getPayment().getPaymentId();
+                given(paidPayment.getId()).willReturn(paymentId);
+                given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
+                given(paidPayment.getPaidAt()).willReturn(LocalDateTime.now().atZone(ZoneId.of("Asia/Seoul")).toInstant());
+
+                willThrow(new RuntimeException("Event Publish Failed")).given(eventPublisher).publishEvent(any(PaymentCompletedEvent.class));
+
+                //when
+                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                        .isInstanceOf(RuntimeException.class)
+                        .hasMessage("Event Publish Failed");
+
+                //then
+                assertAll(
+                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
+                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
+                        () -> then(orderService).should().getOrderRequest(multipleOrder),
+                        () -> then(productService).should().findProducts(),
+                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
+                        () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
+                );
+            }
         }
 
-        @Test
-        void verifyAndComplete_orderNotFound() {
-            //given
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다."));
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 주문입니다.");
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should(never()).getOrderRequest(any()),
-                    () -> then(productService).should(never()).findProducts(),
-                    () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                    () -> then(eventPublisher).should(never()).publishEvent(any())
-            );
+        private void givenCustomData(String orderNumber) {
+            String json = "{\"orderNumber\":\"" + orderNumber + "\"}";
+            given(paidPayment.getCustomData()).willReturn(json);
         }
 
-        @Test
-        void verifyAndComplete_orderProductDtoIsEmpty() {
-            //given
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-            given(orderRequest.getOrderProducts()).willReturn(Collections.emptyList());
+        private void findOrderAndProducts(Order order, List<OrderProductDto> orderProductDto) {
+            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
+            given(orderRequest.getOrderProducts()).willReturn(orderProductDto);
             given(orderService.getOrderRequest(any())).willReturn(orderRequest);
 
             given(productService.findProducts()).willReturn(List.of(album, book, movie));
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("주문 상품이 비어 있습니다.");
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(multipleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                    () -> then(eventPublisher).should(never()).publishEvent(any())
-            );
         }
 
-        @Test
-        void verifyAndComplete_wrongProducts() {
-            //given
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
+        private String givenOrderNameAndAmount(Order order, OrderRequest orderRequest) {
+            given(paidPayment.getAmount().getTotal()).willReturn(order.getTotalAmount().longValue());
+            given(orderRequest.getTotalAmount()).willReturn(order.getTotalAmount());
 
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-            given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
-
-            given(productService.findProducts()).willReturn(List.of(movie));
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("잘못된 상품이 있습니다.");
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(multipleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                    () -> then(eventPublisher).should(never()).publishEvent(any())
-            );
-        }
-
-        @Test
-        void verifyAndComplete_amountMismatch() {
-            //given
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
-
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
-
-            given(paidPayment.getAmount().getTotal()).willReturn(10000L);
-            given(orderRequest.getTotalAmount()).willReturn(120000);
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(SyncPaymentException.class);
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(multipleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                    () -> then(eventPublisher).should(never()).publishEvent(any())
-            );
-        }
-
-        @Test
-        void verifyAndComplete_orderNameMismatch_IsNotFirstName() {
-            //given
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
-
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
-
-            given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
-            given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
-
-            String orderName = orderRequest.getOrderProducts().getLast().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+            String orderName;
+            if (orderRequest.getOrderProducts().size() == 1) {
+                orderName = orderRequest.getOrderProducts().getFirst().getName();
+            } else {
+                orderName = orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+            }
 
             given(paidPayment.getOrderName()).willReturn(orderName);
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(SyncPaymentException.class);
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(multipleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                    () -> then(eventPublisher).should(never()).publishEvent(any())
-            );
+            return orderName;
         }
 
-        @Test
-        void verifyAndComplete_orderNameMismatch_multipleOrderProducts_withSingleFormat() {
-            //given
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
-
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
-
-            given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
-            given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
-
-            String orderName = orderRequest.getOrderProducts().getFirst().getName();
-
-            given(paidPayment.getOrderName()).willReturn(orderName);
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(SyncPaymentException.class);
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(multipleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                    () -> then(eventPublisher).should(never()).publishEvent(any())
-            );
-        }
-
-        @Test
-        void verifyAndComplete_wrongPaymentId() {
-            //given
-            Order notRequestOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
-
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
-
-            givenCustomData(notRequestOrder.getOrderNumber());
-
-            findOrderAndProducts(notRequestOrder, List.of(orderProductDto1, orderProductDto2));
-
-            String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
-            paidPaymentToString(orderName);
-
-            String paymentId = "jfdioj23489fkjn2";
-            given(paidPayment.getId()).willReturn(paymentId);
-            given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.empty());
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 결제 번호입니다.");
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(notRequestOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                    () -> then(eventPublisher).should(never()).publishEvent(any())
-            );
-        }
-
-        @Test
-        void verifyAndComplete_failedEventPublisher() {
-            //given
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
-
-            givenCustomData(multipleOrder.getOrderNumber());
-
-            findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
-
-            String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
-            paidPaymentToString(orderName);
-
-            String paymentId = multipleOrder.getPayment().getPaymentId();
-            given(paidPayment.getId()).willReturn(paymentId);
-            given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
-            given(paidPayment.getPaidAt()).willReturn(LocalDateTime.now().atZone(ZoneId.of("Asia/Seoul")).toInstant());
-
-            willThrow(new RuntimeException("Event Publish Failed")).given(eventPublisher).publishEvent(any(PaymentCompletedEvent.class));
-
-            //when
-            assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessage("Event Publish Failed");
-
-            //then
-            assertAll(
-                    () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                    () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                    () -> then(orderService).should().getOrderRequest(multipleOrder),
-                    () -> then(productService).should().findProducts(),
-                    () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                    () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
-            );
-        }
-
-        @Test
-        void failedPayment_paymentNotFound() {
-            //given
-            given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.empty());
-
-            //when
-            assertThatThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 결제 번호입니다.");
-
-            //then
-            then(paymentRepository).should().findByPaymentId(anyString());
+        private void paidPaymentToString(String orderName) {
+            long total = paidPayment.getAmount().getTotal();
+            given(paidPayment.toString()).willReturn("orderName = " + orderName + ", total = " + total);
         }
     }
 
-    private void givenCustomData(String orderNumber) {
-        String json = "{\"orderNumber\":\"" + orderNumber + "\"}";
-        given(paidPayment.getCustomData()).willReturn(json);
-    }
+    @Nested
+    class FailedPayment {
 
-    private void findOrderAndProducts(Order order, List<OrderProductDto> orderProductDto) {
-        given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
-        given(orderRequest.getOrderProducts()).willReturn(orderProductDto);
-        given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+        @Nested
+        class SuccessCase {
 
-        given(productService.findProducts()).willReturn(List.of(album, book, movie));
-    }
+            @Test
+            void basic() {
+                //given
+                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
 
-    private String givenOrderNameAndAmount(Order order, OrderRequest orderRequest) {
-        given(paidPayment.getAmount().getTotal()).willReturn(order.getTotalAmount().longValue());
-        given(orderRequest.getTotalAmount()).willReturn(order.getTotalAmount());
+                //when
+                paymentService.failedPayment(multipleOrder.getPayment().getPaymentId());
 
-        String orderName;
-        if (orderRequest.getOrderProducts().size() == 1) {
-            orderName = orderRequest.getOrderProducts().getFirst().getName();
-        } else {
-            orderName = orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+                //then
+                assertAll(
+                        () -> then(paymentRepository).should().findByPaymentId(anyString()),
+                        () -> assertThat(multipleOrder.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.FAILED)
+                );
+            }
         }
 
-        given(paidPayment.getOrderName()).willReturn(orderName);
-        return orderName;
-    }
+        @Nested
+        class FailureCase {
 
-    private void paidPaymentToString(String orderName) {
-        long total = paidPayment.getAmount().getTotal();
-        given(paidPayment.toString()).willReturn("orderName = " + orderName + ", total = " + total);
+            @Test
+            void paymentNotFound() {
+                //given
+                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.empty());
+
+                //when
+                assertThatThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 결제 번호입니다.");
+
+                //then
+                then(paymentRepository).should().findByPaymentId(anyString());
+            }
+        }
     }
 }

@@ -60,273 +60,317 @@ class ProductServiceUnitTest {
     }
 
     @Nested
-    class SuccessCase {
+    class Request {
 
-        @Test
-        void register_album() {
-            //given
-            Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
+        @Nested
+        class SuccessCase {
 
-            given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(false);
-            given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category1));
+            @Test
+            void album() {
+                //given
+                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
 
-            //when
-            productService.register(album, List.of("가요"));
+                given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(false);
+                given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category1));
 
-            //then
-            assertAll(
-                    () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should().validateAndGetCategories(List.of("가요")),
-                    () -> then(productRepository).should().save(argThat(p -> p.getName().equals("BANG BANG"))),
-                    () -> assertThat(album.getCategoryProducts())
-                            .isNotEmpty()
-                            .extracting("category.name")
-                            .containsExactly("가요")
-            );
+                //when
+                productService.register(album, List.of("가요"));
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
+                        () -> then(categoryService).should().validateAndGetCategories(List.of("가요")),
+                        () -> then(productRepository).should().save(argThat(p -> p.getName().equals("BANG BANG"))),
+                        () -> assertThat(album.getCategoryProducts())
+                                .isNotEmpty()
+                                .extracting("category.name")
+                                .containsExactly("가요")
+                );
+            }
+
+            @Test
+            void book() {
+                //given
+                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(10).author("김영한").isbn("9788960777330").build();
+
+                given(productRepository.existsBook(anyString(), anyString(), anyString())).willReturn(false);
+                given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category2));
+
+                //when
+                productService.register(book, List.of("컴퓨터/IT"));
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should().existsBook(anyString(), anyString(), anyString()),
+                        () -> then(categoryService).should().validateAndGetCategories(List.of("컴퓨터/IT")),
+                        () -> then(productRepository).should().save(argThat(p -> p.getName().equals("자바 ORM 표준 JPA 프로그래밍"))),
+                        () -> assertThat(book.getCategoryProducts())
+                                .isNotEmpty()
+                                .extracting("category.name")
+                                .containsExactly("컴퓨터/IT")
+                );
+            }
+
+            @Test
+            void movie() {
+                //given
+                Movie movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(10).actor("마동석").director("강윤성").build();
+
+                given(productRepository.existsMovie(anyString(), anyString(), anyString())).willReturn(false);
+                given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category3));
+
+                //when
+                productService.register(movie, List.of("국내 영화"));
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should().existsMovie(anyString(), anyString(), anyString()),
+                        () -> then(categoryService).should().validateAndGetCategories(List.of("국내 영화")),
+                        () -> then(productRepository).should().save(argThat(p -> p.getName().equals("범죄도시"))),
+                        () -> assertThat(movie.getCategoryProducts())
+                                .isNotEmpty()
+                                .extracting("category.name")
+                                .containsExactly("국내 영화")
+                );
+            }
         }
 
-        @Test
-        void register_book() {
-            //given
-            Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(10).author("김영한").isbn("9788960777330").build();
+        @Nested
+        class FailureCase {
 
-            given(productRepository.existsBook(anyString(), anyString(), anyString())).willReturn(false);
-            given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category2));
+            @Test
+            void duplicateProduct() {
+                //given
+                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
 
-            //when
-            productService.register(book, List.of("컴퓨터/IT"));
+                given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(true);
 
-            //then
-            assertAll(
-                    () -> then(productRepository).should().existsBook(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should().validateAndGetCategories(List.of("컴퓨터/IT")),
-                    () -> then(productRepository).should().save(argThat(p -> p.getName().equals("자바 ORM 표준 JPA 프로그래밍"))),
-                    () -> assertThat(book.getCategoryProducts())
-                            .isNotEmpty()
-                            .extracting("category.name")
-                            .containsExactly("컴퓨터/IT")
-            );
-        }
+                //when
+                assertThatThrownBy(() -> productService.register(album, List.of("가요")))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("이미 존재하는 상품입니다.");
 
-        @Test
-        void register_movie() {
-            //given
-            Movie movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(10).actor("마동석").director("강윤성").build();
+                //then
+                assertAll(
+                        () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
+                        () -> then(categoryService).should(never()).validateAndGetCategories(any()),
+                        () -> then(productRepository).should(never()).save(any())
+                );
+            }
 
-            given(productRepository.existsMovie(anyString(), anyString(), anyString())).willReturn(false);
-            given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category3));
+            @Test
+            void failedValidateCategories() {
+                //given
+                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
 
-            //when
-            productService.register(movie, List.of("국내 영화"));
+                given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(false);
+                given(categoryService.validateAndGetCategories(anyList())).willThrow(new IllegalArgumentException());
 
-            //then
-            assertAll(
-                    () -> then(productRepository).should().existsMovie(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should().validateAndGetCategories(List.of("국내 영화")),
-                    () -> then(productRepository).should().save(argThat(p -> p.getName().equals("범죄도시"))),
-                    () -> assertThat(movie.getCategoryProducts())
-                            .isNotEmpty()
-                            .extracting("category.name")
-                            .containsExactly("국내 영화")
-            );
-        }
+                //when
+                assertThatThrownBy(() -> productService.register(album, List.of("가요")))
+                        .isInstanceOf(IllegalArgumentException.class);
 
-        @Test
-        void find() {
-            //given
-            Album album = Album.builder().name("BANG BANG").build();
-
-            given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
-
-            //when
-            Product findProduct = productService.findProductByName("BANG BANG");
-
-            //then
-            assertAll(
-                    () -> then(productRepository).should().findByName(anyString()),
-                    () -> assertThat(findProduct.getName()).isEqualTo("BANG BANG")
-            );
-        }
-
-        @Test
-        void findAll() {
-            //given
-            Album album = Album.builder().name("BANG BANG").build();
-            Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").build();
-            Movie movie = Movie.builder().name("범죄도시").build();
-
-            given(productRepository.findAll()).willReturn(List.of(album, book, movie));
-
-            //when
-            List<Product> products = productService.findProducts();
-
-            //then
-            assertThat(products)
-                    .hasSize(3)
-                    .extracting("name")
-                    .containsExactlyInAnyOrder("BANG BANG", "자바 ORM 표준 JPA 프로그래밍", "범죄도시");
-        }
-
-        @Test
-        void update() {
-            //given
-            Album album = Album.builder().name("BANG BANG").build();
-
-            given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
-
-            //when
-            productService.updateProduct("BANG BANG", 12000, 20);
-
-            //then
-            assertThat(album)
-                    .extracting("price", "stockQuantity")
-                    .containsExactly(12000, 20);
-        }
-
-        @Test
-        void delete() {
-            //given
-            Album album = Album.builder().name("BANG BANG").build();
-
-            given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.of(album));
-
-            //when
-            productService.deleteProduct("BANG BANG");
-
-            //then
-            assertAll(
-                    () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
-                    () -> then(productRepository).should().delete(album)
-            );
-        }
-
-        @Test
-        void changeDto() {
-            //given
-            Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
-            Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").build();
-
-            book.connectCategory(category2);
-
-            //when
-            ProductResponse productDto = productService.getProductDto(album);
-            ProductWithCategoryResponse productWithCategoryDto = productService.getProductWithCategoryDto(book);
-
-            //then
-            assertAll(
-                    () -> assertThat(productDto)
-                            .extracting("name", "price", "stockQuantity", "artist", "studio")
-                            .containsExactly("BANG BANG", 15000, 10, "IVE", "STARSHIP"),
-                    () -> assertThat(productWithCategoryDto.getCategoryNames())
-                            .isNotEmpty()
-                            .extracting("categoryName")
-                            .containsExactly("컴퓨터/IT")
-            );
+                //then
+                assertAll(
+                        () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
+                        () -> then(categoryService).should().validateAndGetCategories(anyList()),
+                        () -> then(productRepository).should(never()).save(any())
+                );
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class Find {
 
-        @Test
-        void register_duplicateProduct() {
-            //given
-            Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
+        @Nested
+        class SuccessCase {
 
-            given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(true);
+            @Test
+            void byName() {
+                //given
+                Album album = Album.builder().name("BANG BANG").build();
 
-            //when
-            assertThatThrownBy(() -> productService.register(album, List.of("가요")))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("이미 존재하는 상품입니다.");
+                given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
 
-            //then
-            assertAll(
-                    () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should(never()).validateAndGetCategories(any()),
-                    () -> then(productRepository).should(never()).save(any())
-            );
+                //when
+                Product findProduct = productService.findProductByName("BANG BANG");
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should().findByName(anyString()),
+                        () -> assertThat(findProduct.getName()).isEqualTo("BANG BANG")
+                );
+            }
+
+            @Test
+            void all() {
+                //given
+                Album album = Album.builder().name("BANG BANG").build();
+                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").build();
+                Movie movie = Movie.builder().name("범죄도시").build();
+
+                given(productRepository.findAll()).willReturn(List.of(album, book, movie));
+
+                //when
+                List<Product> products = productService.findProducts();
+
+                //then
+                assertThat(products)
+                        .hasSize(3)
+                        .extracting("name")
+                        .containsExactlyInAnyOrder("BANG BANG", "자바 ORM 표준 JPA 프로그래밍", "범죄도시");
+            }
         }
 
-        @Test
-        void register_failedValidateCategories() {
-            //given
-            Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
+        @Nested
+        class FailureCase {
 
-            given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(false);
-            given(categoryService.validateAndGetCategories(anyList())).willThrow(new IllegalArgumentException());
+            @Test
+            void byName_productNotFound() {
+                //given
+                given(productRepository.findByName(anyString())).willReturn(Optional.empty());
 
-            //when
-            assertThatThrownBy(() -> productService.register(album, List.of("가요")))
-                    .isInstanceOf(IllegalArgumentException.class);
+                //when
+                assertThatThrownBy(() -> productService.findProductByName("하얀 그리움"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
 
-            //then
-            assertAll(
-                    () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
-                    () -> then(categoryService).should().validateAndGetCategories(anyList()),
-                    () -> then(productRepository).should(never()).save(any())
-            );
+                //then
+                then(productRepository).should().findByName(anyString());
+            }
+        }
+    }
+
+    @Nested
+    class Update {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Album album = Album.builder().name("BANG BANG").build();
+
+                given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
+
+                //when
+                productService.updateProduct("BANG BANG", 12000, 20);
+
+                //then
+                assertThat(album)
+                        .extracting("price", "stockQuantity")
+                        .containsExactly(12000, 20);
+            }
+        }
+    }
+
+    @Nested
+    class Delete {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Album album = Album.builder().name("BANG BANG").build();
+
+                given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.of(album));
+
+                //when
+                productService.deleteProduct("BANG BANG");
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
+                        () -> then(productRepository).should().delete(album)
+                );
+            }
         }
 
-        @Test
-        void find_productNotFound() {
-            //given
-            given(productRepository.findByName(anyString())).willReturn(Optional.empty());
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> productService.findProductByName("하얀 그리움"))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
+            @Test
+            void productNotFound() {
+                //given
+                given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.empty());
 
-            //then
-            then(productRepository).should().findByName(anyString());
+                //when
+                assertThatThrownBy(() -> productService.deleteProduct("하얀 그리움"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
+                        () -> then(productRepository).should(never()).delete(any())
+                );
+            }
+
+            @Test
+            void alreadyDeleted() {
+                //given
+                Album album = Album.builder().name("BANG BANG").build();
+
+                given(productRepository.findWithCategoryProductCategory(anyString()))
+                        .willReturn(Optional.of(album))
+                        .willReturn(Optional.empty());
+
+                //when 첫 번째 호출
+                productService.deleteProduct("BANG BANG");
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
+                        () -> then(productRepository).should().delete(album)
+                );
+
+                //when 두 번째 호출
+                assertThatThrownBy(() -> productService.deleteProduct("BANG BANG"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 상품입니다. name: " + "BANG BANG");
+
+                //then
+                assertAll(
+                        () -> then(productRepository).should(times(2)).findWithCategoryProductCategory(anyString()),
+                        () -> then(productRepository).should().delete(any())
+                );
+            }
         }
+    }
 
-        @Test
-        void delete_productNotFound() {
-            //given
-            given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.empty());
+    @Nested
+    class ChangeDto {
 
-            //when
-            assertThatThrownBy(() -> productService.deleteProduct("하얀 그리움"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
+        @Nested
+        class SuccessCase {
 
-            //then
-            assertAll(
-                    () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
-                    () -> then(productRepository).should(never()).delete(any())
-            );
-        }
+            @Test
+            void basic() {
+                //given
+                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
+                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").build();
 
-        @Test
-        void delete_alreadyDeleted() {
-            //given
-            Album album = Album.builder().name("BANG BANG").build();
+                book.connectCategory(category2);
 
-            given(productRepository.findWithCategoryProductCategory(anyString()))
-                    .willReturn(Optional.of(album))
-                    .willReturn(Optional.empty());
+                //when
+                ProductResponse productDto = productService.getProductDto(album);
+                ProductWithCategoryResponse productWithCategoryDto = productService.getProductWithCategoryDto(book);
 
-            //when 첫 번째 호출
-            productService.deleteProduct("BANG BANG");
-
-            //then
-            assertAll(
-                    () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
-                    () -> then(productRepository).should().delete(album)
-            );
-
-            //when 두 번째 호출
-            assertThatThrownBy(() -> productService.deleteProduct("BANG BANG"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 상품입니다. name: " + "BANG BANG");
-
-            //then
-            assertAll(
-                    () -> then(productRepository).should(times(2)).findWithCategoryProductCategory(anyString()),
-                    () -> then(productRepository).should().delete(any())
-            );
+                //then
+                assertAll(
+                        () -> assertThat(productDto)
+                                .extracting("name", "price", "stockQuantity", "artist", "studio")
+                                .containsExactly("BANG BANG", 15000, 10, "IVE", "STARSHIP"),
+                        () -> assertThat(productWithCategoryDto.getCategoryNames())
+                                .isNotEmpty()
+                                .extracting("categoryName")
+                                .containsExactly("컴퓨터/IT")
+                );
+            }
         }
     }
 }

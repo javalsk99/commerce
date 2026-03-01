@@ -2,7 +2,6 @@ package lsk.commerce.event;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.service.DeliveryService;
-import lsk.commerce.service.OrderService;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -15,7 +14,6 @@ import java.time.Instant;
 public class DeliveryEventListener {
 
     private final TaskScheduler scheduler;
-    private final OrderService orderService;
     private final DeliveryService deliveryService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

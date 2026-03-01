@@ -70,418 +70,479 @@ class CategoryServiceUnitTest {
     }
 
     @Nested
-    class SuccessCase {
+    class Create {
 
-        @Test
-        void createParent() {
-            //given
-            given(categoryRepository.existsByCategoryName(anyString(), any())).willReturn(Collections.emptyList());
+        @Nested
+        class SuccessCase {
 
-            //when
-            categoryService.create("컴퓨터/IT", null);
+            @Test
+            void parentCategory() {
+                //given
+                given(categoryRepository.existsByCategoryName(anyString(), any())).willReturn(Collections.emptyList());
 
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().existsByCategoryName(anyString(), any()),
-                    () -> then(categoryRepository).should().save(argThat(c ->
-                            c.getName().equals("컴퓨터/IT") && c.getParent() == null))
-            );
+                //when
+                categoryService.create("컴퓨터/IT", null);
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), any()),
+                        () -> then(categoryRepository).should().save(argThat(c ->
+                                c.getName().equals("컴퓨터/IT") && c.getParent() == null))
+                );
+            }
+
+            @Test
+            void childCategory() {
+                //given
+                given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(categories1);
+
+                //when
+                categoryService.create("프로그래밍 언어", "컴퓨터/IT");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), anyString()),
+                        () -> then(categoryRepository).should().save(argThat(c ->
+                                c.getName().equals("프로그래밍 언어") && c.getParent().getName().equals("컴퓨터/IT")))
+                );
+            }
         }
 
-        @Test
-        void createChild() {
-            //given
-            given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(categories1);
+        @Nested
+        class FailureCase {
 
-            //when
-            categoryService.create("프로그래밍 언어", "컴퓨터/IT");
+            @Test
+            void existsName() {
+                //given
+                given(categoryRepository.existsByCategoryName(anyString(), any())).willReturn(categories1);
 
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().existsByCategoryName(anyString(), anyString()),
-                    () -> then(categoryRepository).should().save(argThat(c ->
-                            c.getName().equals("프로그래밍 언어") && c.getParent().getName().equals("컴퓨터/IT")))
-            );
-        }
+                //when
+                assertThatThrownBy(() -> categoryService.create("컴퓨터/IT", null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("이미 존재하는 카테고리입니다. name: " + "컴퓨터/IT");
 
-        @Test
-        void findByName() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories1);
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), any()),
+                        () -> then(categoryRepository).should(never()).save(any())
+                );
+            }
 
-            //when
-            categoryService.findCategoryByName("컴퓨터/IT");
+            @Test
+            void childCategory_parentNotFound() {
+                //given
+                given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(Collections.emptyList());
 
-            //then
-            then(categoryRepository).should().findAll();
-        }
+                //when
+                assertThatThrownBy(() -> categoryService.create("프로그래밍 언어", "컴퓨터/IT"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "컴퓨터/IT");
 
-        @Test
-        void findByNames() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories2);
-
-            //when
-            List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findAll(),
-                    () -> assertThat(categories)
-                            .extracting("name")
-                            .containsExactlyInAnyOrder("컴퓨터/IT", "프로그래밍 언어")
-            );
-        }
-
-        @Test
-        void findByNames_ignoreDuplicateNames() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories1);
-
-            //when
-            List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "컴퓨터/IT");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findAll(),
-                    () -> assertThat(categories.size()).isEqualTo(1)
-            );
-        }
-
-        @Test
-        void findAll() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories2);
-
-            //when
-            List<Category> categories = categoryService.findCategories();
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findAll(),
-                    () -> assertThat(categories)
-                            .extracting("name")
-                            .containsExactlyInAnyOrder("컴퓨터/IT")
-            );
-        }
-
-        @Test
-        void changeParent() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories2);
-
-            //when
-            categoryService.changeParentCategory("Python", "프로그래밍 언어");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findAll(),
-                    () -> assertThat(category2.getChild().getFirst()).isEqualTo(category3),
-                    () -> assertThat(category3.getParent()).isEqualTo(category2)
-            );
-        }
-
-        @Test
-        void changeParent_hasChild() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories2);
-
-            //when
-            categoryService.changeParentCategory("프로그래밍 언어", "Python");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findAll(),
-                    () -> assertThat(category2.getParent()).isEqualTo(category4),
-                    () -> assertThat(category2.getParent().getParent()).isEqualTo(category1),
-                    () -> assertThat(category2.getChild())
-                            .extracting("name")
-                            .containsExactlyInAnyOrder("Java")
-            );
-        }
-
-        @Test
-        void delete() {
-            //given
-            given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category4));
-
-            //when
-            categoryService.deleteCategory("Python");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findWithChild(anyString()),
-                    () -> then(categoryRepository).should().delete(category4)
-            );
-        }
-
-        @Test
-        void changeDto() {
-            //given
-            Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
-            book.connectCategory(category1);
-
-            //when
-            CategoryResponse categoryDto = categoryService.getCategoryDto(category2);
-            CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category1);
-
-            //then
-            assertAll(
-                    () -> assertThat(categoryDto.getName()).isEqualTo(category2.getName()),
-                    () -> assertThat(categoryDto.getChild())
-                            .extracting("name")
-                            .containsExactly(category3.getName())
-            );
-            assertAll(
-                    () -> assertThat(categoryDisconnectResponse.getName()).isEqualTo(category1.getName()),
-                    () -> assertThat(categoryDisconnectResponse.getProducts())
-                            .isNotEmpty()
-                            .extracting("name", "author")
-                            .containsExactly(tuple("자바 ORM 표준 JPA 프로그래밍", "김영한"))
-            );
-        }
-
-        @Test
-        void validateAndGet() {
-            //given
-            given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category3, category4));
-
-            //when
-            List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python"));
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findByNameSet(anySet()),
-                    () -> assertThat(categories)
-                            .extracting("name")
-                            .containsExactlyInAnyOrder("Java", "Python")
-            );
-        }
-        @Test
-        void validateAndGet_ignoreDuplicateNames() {
-            //given
-            given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category3, category4));
-
-            //when
-            List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python", "Java"));
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findByNameSet(anySet()),
-                    () -> assertThat(categories)
-                            .extracting("name")
-                            .containsExactlyInAnyOrder("Java", "Python")
-            );
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), anyString()),
+                        () -> then(categoryRepository).should(never()).save(any())
+                );
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class Find {
 
-        @Test
-        void create_existsName() {
-            //given
-            given(categoryRepository.existsByCategoryName(anyString(), any())).willReturn(categories1);
+        @Nested
+        class SuccessCase {
 
-            //when
-            assertThatThrownBy(() -> categoryService.create("컴퓨터/IT", null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("이미 존재하는 카테고리입니다. name: " + "컴퓨터/IT");
+            @Test
+            void byName() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories1);
 
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().existsByCategoryName(anyString(), any()),
-                    () -> then(categoryRepository).should(never()).save(any())
-            );
+                //when
+                categoryService.findCategoryByName("컴퓨터/IT");
+
+                //then
+                then(categoryRepository).should().findAll();
+            }
+
+            @Test
+            void byNames() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories2);
+
+                //when
+                List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findAll(),
+                        () -> assertThat(categories)
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("컴퓨터/IT", "프로그래밍 언어")
+                );
+            }
+
+            @Test
+            void byNames_ignoreDuplicateNames() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories1);
+
+                //when
+                List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "컴퓨터/IT");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findAll(),
+                        () -> assertThat(categories.size()).isEqualTo(1)
+                );
+            }
+
+            @Test
+            void all() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories2);
+
+                //when
+                List<Category> categories = categoryService.findCategories();
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findAll(),
+                        () -> assertThat(categories)
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("컴퓨터/IT")
+                );
+            }
         }
 
-        @Test
-        void createChild_parentNotFound() {
-            //given
-            given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(Collections.emptyList());
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> categoryService.create("프로그래밍 언어", "컴퓨터/IT"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "컴퓨터/IT");
+            @Test
+            void byName_categoryNotFound() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories1);
 
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().existsByCategoryName(anyString(), anyString()),
-                    () -> then(categoryRepository).should(never()).save(any())
-            );
+                //when
+                assertThatThrownBy(() -> categoryService.findCategoryByName("프로그래밍 언어"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
+
+                //then
+                then(categoryRepository).should().findAll();
+            }
+
+            @Test
+            void byNames_categoryNotFound() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories1);
+
+                //when
+                assertThatThrownBy(() -> categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
+
+                //then
+                then(categoryRepository).should().findAll();
+            }
+        }
+    }
+
+    @Nested
+    class ChangeParent {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories2);
+
+                //when
+                categoryService.changeParentCategory("Python", "프로그래밍 언어");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findAll(),
+                        () -> assertThat(category2.getChild().getFirst()).isEqualTo(category3),
+                        () -> assertThat(category3.getParent()).isEqualTo(category2)
+                );
+            }
+
+            @Test
+            void hasChild() {
+                //given
+                given(categoryRepository.findAll()).willReturn(categories2);
+
+                //when
+                categoryService.changeParentCategory("프로그래밍 언어", "Python");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findAll(),
+                        () -> assertThat(category2.getParent()).isEqualTo(category4),
+                        () -> assertThat(category2.getParent().getParent()).isEqualTo(category1),
+                        () -> assertThat(category2.getChild())
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("Java")
+                );
+            }
         }
 
-        @Test
-        void findByName_categoryNotFound() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories1);
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> categoryService.findCategoryByName("프로그래밍 언어"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
+            @ParameterizedTest
+            @MethodSource("nameProvider")
+            void categoryNotFound(String name) {
+                //given
+                given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
 
-            //then
-            then(categoryRepository).should().findAll();
+                //when
+                assertAll(
+                        () -> assertThatThrownBy(() -> categoryService.changeParentCategory(name, "프로그래밍 언어"))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("존재하지 않는 카테고리입니다. name: " + name),
+                        () -> assertThatThrownBy(() -> categoryService.changeParentCategory("Java", name))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("존재하지 않는 카테고리입니다. name: " + name)
+                );
+
+                //then
+                then(categoryRepository).should(times(2)).findAll();
+            }
+
+            static Stream<Arguments> nameProvider() {
+                return Stream.of(
+                        argumentSet("카테고리 이름 null", (Object) null),
+                        argumentSet("카테고리 이름 빈 문자열", ""),
+                        argumentSet("카테고리 이름 공백", " "),
+                        argumentSet("존재하지 않는 카테고리 이름", "C++")
+                );
+            }
+        }
+    }
+
+    @Nested
+    class Delete {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category4));
+
+                //when
+                categoryService.deleteCategory("Python");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findWithChild(anyString()),
+                        () -> then(categoryRepository).should().delete(category4)
+                );
+            }
         }
 
-        @Test
-        void findByNames_categoryNotFound() {
-            //given
-            given(categoryRepository.findAll()).willReturn(categories1);
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
+            @Test
+            void categoryNotFound() {
+                //given
+                given(categoryRepository.findWithChild(anyString())).willReturn(Optional.empty());
 
-            //then
-            then(categoryRepository).should().findAll();
+                //when
+                assertThatThrownBy(() -> categoryService.deleteCategory("C++"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "C++");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findWithChild(anyString()),
+                        () -> then(categoryRepository).should(never()).delete(any())
+                );
+            }
+
+            @Test
+            void hasChild() {
+                //given
+                given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category2));
+
+                //when
+                assertThatThrownBy(() -> categoryService.deleteCategory("프로그래밍 언어"))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("자식 카테고리가 있어서 삭제할 수 없습니다.");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findWithChild(anyString()),
+                        () -> then(categoryRepository).should(never()).delete(any())
+                );
+            }
+
+            @Test
+            void hasProduct() {
+                //given
+                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
+                book.connectCategory(category4);
+
+                given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category4));
+
+                //when
+                assertThatThrownBy(() -> categoryService.deleteCategory("Python"))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("카테고리에 상품이 있어서 삭제할 수 없습니다.");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findWithChild(anyString()),
+                        () -> assertThat(category4.getCategoryProducts())
+                                .isNotEmpty()
+                                .extracting("category.name", "product.name", "product.author")
+                                .containsExactly(tuple("Python", "자바 ORM 표준 JPA 프로그래밍", "김영한"))
+                );
+            }
+
+            @Test
+            void alreadyDeleted() {
+                //given
+                given(categoryRepository.findWithChild(anyString()))
+                        .willReturn(Optional.of(category4))
+                        .willReturn(Optional.empty());
+
+                //when 첫 번째 호출
+                categoryService.deleteCategory("Python");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should(times(1)).findWithChild(anyString()),
+                        () -> then(categoryRepository).should(times(1)).delete(category4)
+                );
+
+                //when 두 번째 호출
+                assertThatThrownBy(() -> categoryService.deleteCategory("Python"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "Python");
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should(times(2)).findWithChild(anyString()),
+                        () -> then(categoryRepository).should(times(1)).delete(any())
+                );
+            }
+        }
+    }
+
+    @Nested
+    class ChangeDto {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
+                book.connectCategory(category1);
+
+                //when
+                CategoryResponse categoryDto = categoryService.getCategoryDto(category2);
+                CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category1);
+
+                //then
+                assertAll(
+                        () -> assertThat(categoryDto.getName()).isEqualTo(category2.getName()),
+                        () -> assertThat(categoryDto.getChild())
+                                .extracting("name")
+                                .containsExactly(category3.getName())
+                );
+                assertAll(
+                        () -> assertThat(categoryDisconnectResponse.getName()).isEqualTo(category1.getName()),
+                        () -> assertThat(categoryDisconnectResponse.getProducts())
+                                .isNotEmpty()
+                                .extracting("name", "author")
+                                .containsExactly(tuple("자바 ORM 표준 JPA 프로그래밍", "김영한"))
+                );
+            }
+        }
+    }
+
+    @Nested
+    class ValidateAndGet {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category3, category4));
+
+                //when
+                List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python"));
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findByNameSet(anySet()),
+                        () -> assertThat(categories)
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("Java", "Python")
+                );
+            }
+
+            @Test
+            void ignoreDuplicateNames() {
+                //given
+                given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category3, category4));
+
+                //when
+                List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python", "Java"));
+
+                //then
+                assertAll(
+                        () -> then(categoryRepository).should().findByNameSet(anySet()),
+                        () -> assertThat(categories)
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("Java", "Python")
+                );
+            }
         }
 
-        @ParameterizedTest
-        @MethodSource("nameProvider")
-        void changeParent_categoryNotFound(String name) {
-            //given
-            given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
+        @Nested
+        class FailureCase {
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> categoryService.changeParentCategory(name, "프로그래밍 언어"))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("존재하지 않는 카테고리입니다. name: " + name),
-                    () -> assertThatThrownBy(() -> categoryService.changeParentCategory("Java", name))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("존재하지 않는 카테고리입니다. name: " + name)
-            );
+            @Test
+            void categoryNotFound() {
+                //when
+                assertAll(
+                        () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(null))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("카테고리가 존재하지 않습니다."),
+                        () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(Collections.emptyList()))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("카테고리가 존재하지 않습니다.")
+                );
 
-            //then
-            then(categoryRepository).should(times(2)).findAll();
-        }
+                //then
+                then(categoryRepository).should(never()).findByNameSet(any());
+            }
 
-        @Test
-        void delete_categoryNotFound() {
-            //given
-            given(categoryRepository.findWithChild(anyString())).willReturn(Optional.empty());
+            @Test
+            void sizeMismatch() {
+                //given
+                given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category2, category3, category4));
 
-            //when
-            assertThatThrownBy(() -> categoryService.deleteCategory("C++"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "C++");
+                //when
+                assertThatThrownBy(() -> categoryService.validateAndGetCategories(List.of("Java", "Python")))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리가 있습니다.");
 
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findWithChild(anyString()),
-                    () -> then(categoryRepository).should(never()).delete(any())
-            );
-        }
-
-        @Test
-        void delete_hasChild() {
-            //given
-            given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category2));
-
-            //when
-            assertThatThrownBy(() -> categoryService.deleteCategory("프로그래밍 언어"))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("자식 카테고리가 있어서 삭제할 수 없습니다.");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findWithChild(anyString()),
-                    () -> then(categoryRepository).should(never()).delete(any())
-            );
-        }
-
-        @Test
-        void delete_hasProduct() {
-            //given
-            Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
-            book.connectCategory(category4);
-
-            given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category4));
-
-            //when
-            assertThatThrownBy(() -> categoryService.deleteCategory("Python"))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("카테고리에 상품이 있어서 삭제할 수 없습니다.");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should().findWithChild(anyString()),
-                    () -> assertThat(category4.getCategoryProducts())
-                            .isNotEmpty()
-                            .extracting("category.name", "product.name", "product.author")
-                            .containsExactly(tuple("Python", "자바 ORM 표준 JPA 프로그래밍", "김영한"))
-            );
-        }
-
-        @Test
-        void delete_alreadyDeleted() {
-            //given
-            given(categoryRepository.findWithChild(anyString()))
-                    .willReturn(Optional.of(category4))
-                    .willReturn(Optional.empty());
-
-            //when 첫 번째 호출
-            categoryService.deleteCategory("Python");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should(times(1)).findWithChild(anyString()),
-                    () -> then(categoryRepository).should(times(1)).delete(category4)
-            );
-
-            //when 두 번째 호출
-            assertThatThrownBy(() -> categoryService.deleteCategory("Python"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "Python");
-
-            //then
-            assertAll(
-                    () -> then(categoryRepository).should(times(2)).findWithChild(anyString()),
-                    () -> then(categoryRepository).should(times(1)).delete(any())
-            );
-        }
-
-        @Test
-        void validateAndGet_categoryNotFound() {
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(null))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("카테고리가 존재하지 않습니다."),
-                    () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(Collections.emptyList()))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("카테고리가 존재하지 않습니다.")
-            );
-
-            //then
-            then(categoryRepository).should(never()).findByNameSet(any());
-        }
-
-        @Test
-        void validateAndGet_sizeMismatch() {
-            //given
-            given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category2, category3, category4));
-
-            //when
-            assertThatThrownBy(() -> categoryService.validateAndGetCategories(List.of("Java", "Python")))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리가 있습니다.");
-
-            //then
-            then(categoryRepository).should().findByNameSet(anySet());
-        }
-
-        static Stream<Arguments> nameProvider() {
-            return Stream.of(
-                    argumentSet("카테고리 이름 null", (Object) null),
-                    argumentSet("카테고리 이름 빈 문자열", ""),
-                    argumentSet("카테고리 이름 공백", " "),
-                    argumentSet("존재하지 않는 카테고리 이름", "C++")
-            );
+                //then
+                then(categoryRepository).should().findByNameSet(anySet());
+            }
         }
     }
 }

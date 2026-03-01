@@ -44,305 +44,361 @@ class MemberServiceUnitTest {
     String newEncodedPassword = "$2a$jgio2383dshnj987";
 
     @Nested
-    class SuccessCase {
+    class Join {
 
-        @Test
-        void join() {
-            //given
-            MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
+        @Nested
+        class SuccessCase {
 
-            given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
-            given(memberRepository.existsByLoginId(anyString())).willReturn(false);
+            @Test
+            void user() {
+                //given
+                MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
 
-            //when
-            memberService.join(request);
+                given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
+                given(memberRepository.existsByLoginId(anyString())).willReturn(false);
 
-            //then
-            assertAll(
-                    () -> then(passwordEncoder).should().encode(anyString()),
-                    () -> then(memberRepository).should().existsByLoginId(anyString()),
-                    () -> then(memberRepository).should().save(argThat(m ->
-                            m.getPassword().equals(encodedPassword) && m.getGrade() == Grade.USER))
-            );
+                //when
+                memberService.join(request);
+
+                //then
+                assertAll(
+                        () -> then(passwordEncoder).should().encode(anyString()),
+                        () -> then(memberRepository).should().existsByLoginId(anyString()),
+                        () -> then(memberRepository).should().save(argThat(m ->
+                                m.getPassword().equals(encodedPassword) && m.getGrade() == Grade.USER))
+                );
+            }
+
+            @Test
+            void admin() {
+                //given
+                MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
+
+                given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
+                given(memberRepository.existsByLoginId(anyString())).willReturn(false);
+
+                //when
+                memberService.adminJoin(request);
+
+                //then
+                assertAll(
+                        () -> then(passwordEncoder).should().encode(anyString()),
+                        () -> then(memberRepository).should().existsByLoginId(anyString()),
+                        () -> then(memberRepository).should().save(argThat(m -> m.getGrade() == Grade.ADMIN))
+                );
+            }
         }
 
-        @Test
-        void adminJoin() {
-            //given
-            MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
+        @Nested
+        class FailureCase {
 
-            given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
-            given(memberRepository.existsByLoginId(anyString())).willReturn(false);
+            @Test
+            void existsLoginId() {
+                //given
+                MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
 
-            //when
-            memberService.adminJoin(request);
+                given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
+                given(memberRepository.existsByLoginId(anyString())).willReturn(true);
 
-            //then
-            assertAll(
-                    () -> then(passwordEncoder).should().encode(anyString()),
-                    () -> then(memberRepository).should().existsByLoginId(anyString()),
-                    () -> then(memberRepository).should().save(argThat(m -> m.getGrade() == Grade.ADMIN))
-            );
-        }
+                //when
+                assertThatThrownBy(() -> memberService.join(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("이미 사용 중인 아이디입니다.");
 
-        @Test
-        void findByLoginId() {
-            //given
-            Member member = Member.builder().loginId(loginId).build();
+                //then
+                assertAll(
+                        () -> then(passwordEncoder).should().encode(anyString()),
+                        () -> then(memberRepository).should().existsByLoginId(anyString()),
+                        () -> then(memberRepository).should(never()).save(any())
+                );
+            }
 
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
+            @Test
+            void passwordBlank() {
+                //given
+                MemberRequest request1 = MemberRequest.builder().password(null).build();
+                MemberRequest request2 = MemberRequest.builder().password(" ").build();
 
-            //when
-            memberService.findMemberByLoginId(loginId);
+                //when
+                assertAll(
+                        () -> assertThatThrownBy(() -> memberService.join(request1))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("비밀번호가 비어있습니다."),
+                        () -> assertThatThrownBy(() -> memberService.join(request2))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessage("비밀번호가 비어있습니다.")
+                );
 
-            //then
-            then(memberRepository).should().findByLoginId(anyString());
-        }
+                //then
+                assertAll(
+                        () -> then(passwordEncoder).should(never()).encode(any()),
+                        () -> then(memberRepository).should(never()).save(any())
+                );
+            }
 
-        @Test
-        void findForLogin() {
-            //given
-            Member member = Member.builder().loginId(loginId).build();
+            @Test
+            void rawPassword() {
+                //given
+                MemberRequest request = MemberRequest.builder().password(rawPassword).build();
 
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
+                given(passwordEncoder.encode(anyString())).willReturn(rawPassword);
 
-            //when
-            memberService.findMemberForLogin(loginId);
+                //when
+                assertThatThrownBy(() -> memberService.join(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("암호화되지 않은 비밀번호입니다.");
 
-            //then
-            then(memberRepository).should().findByLoginId(anyString());
-        }
-
-        @Test
-        void changePassword() {
-            //given
-            Member member = Member.builder().loginId(loginId).password(encodedPassword).build();
-
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
-            given(passwordEncoder.encode(anyString())).willReturn(newEncodedPassword);
-            given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
-
-            //when
-            memberService.changePassword(loginId, "11111111");
-
-            //then
-            assertAll(
-                    () -> then(memberRepository).should().findByLoginId(anyString()),
-                    () -> then(passwordEncoder).should().encode(anyString()),
-                    () -> then(passwordEncoder).should().matches(anyString(), anyString()),
-                    () -> assertThat(member.getPassword()).isEqualTo(newEncodedPassword)
-            );
-        }
-
-        @Test
-        void changeAddress() {
-            //given
-            Member member = Member.builder().loginId(loginId).city("Seoul").street("Gangnam").street("01234").build();
-
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
-
-            //when
-            memberService.changeAddress(loginId, "Gyeonggi-do", "Gangbuk", "01235");
-
-            //then
-            assertAll(
-                    () -> then(memberRepository).should().findByLoginId(anyString()),
-                    () -> assertThat(member.getAddress())
-                            .extracting("city", "street", "zipcode")
-                            .contains("Gyeonggi-do", "Gangbuk", "01235")
-            );
-        }
-
-        @Test
-        void delete() {
-            //given
-            Member member = Member.builder().loginId(loginId).build();
-
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
-
-            //when
-            memberService.deleteMember(loginId);
-
-            //then
-            assertAll(
-                    () -> then(memberRepository).should().findByLoginId(anyString()),
-                    () -> then(memberRepository).should().delete(member)
-            );
-        }
-
-        @Test
-        void changeDto() {
-            //given
-            Member member = Member.builder().loginId(loginId).build();
-
-            //when
-            MemberResponse memberDto = memberService.getMemberDto(member);
-
-            //then
-            assertAll(
-                    () -> assertThat(memberDto.getLoginId()).isEqualTo(loginId),
-                    () -> assertThat(memberDto.getGrade()).isEqualTo(Grade.USER)
-            );
+                //then
+                assertAll(
+                        () -> then(passwordEncoder).should().encode(anyString()),
+                        () -> then(memberRepository).should(never()).save(any())
+                );
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class Find {
 
-        @Test
-        void join_existsLoginId() {
-            //given
-            MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
+        @Nested
+        class SuccessCase {
 
-            given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
-            given(memberRepository.existsByLoginId(anyString())).willReturn(true);
+            @Test
+            void byLoginId() {
+                //given
+                Member member = Member.builder().loginId(loginId).build();
 
-            //when
-            assertThatThrownBy(() -> memberService.join(request))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("이미 사용 중인 아이디입니다.");
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
 
-            //then
-            assertAll(
-                    () -> then(passwordEncoder).should().encode(anyString()),
-                    () -> then(memberRepository).should().existsByLoginId(anyString()),
-                    () -> then(memberRepository).should(never()).save(any())
-            );
+                //when
+                memberService.findMemberByLoginId(loginId);
+
+                //then
+                then(memberRepository).should().findByLoginId(anyString());
+            }
+
+            @Test
+            void forLogin() {
+                //given
+                Member member = Member.builder().loginId(loginId).build();
+
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
+
+                //when
+                memberService.findMemberForLogin(loginId);
+
+                //then
+                then(memberRepository).should().findByLoginId(anyString());
+            }
         }
 
-        @Test
-        void join_passwordBlank() {
-            //given
-            MemberRequest request1 = MemberRequest.builder().password(null).build();
-            MemberRequest request2 = MemberRequest.builder().password(" ").build();
+        @Nested
+        class FailureCase {
 
-            //when
-            assertAll(
-                    () -> assertThatThrownBy(() -> memberService.join(request1))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("비밀번호가 비어있습니다."),
-                    () -> assertThatThrownBy(() -> memberService.join(request2))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("비밀번호가 비어있습니다.")
-            );
+            @Test
+            void byLoginId_memberNotFound() {
+                //given
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
-            //then
-            assertAll(
-                    () -> then(passwordEncoder).should(never()).encode(any()),
-                    () -> then(memberRepository).should(never()).save(any())
-            );
+                //when
+                assertThatThrownBy(() -> memberService.findMemberByLoginId(loginId))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 아이디입니다.");
+
+                //then
+                then(memberRepository).should().findByLoginId(anyString());
+            }
+
+            @Test
+            void forLogin_memberNotFound() {
+                //given
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
+
+                //when
+                assertThatThrownBy(() -> memberService.findMemberForLogin(loginId))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+
+                //then
+                then(memberRepository).should().findByLoginId(anyString());
+            }
+        }
+    }
+
+    @Nested
+    class ChangePassword {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Member member = Member.builder().loginId(loginId).password(encodedPassword).build();
+
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
+                given(passwordEncoder.encode(anyString())).willReturn(newEncodedPassword);
+                given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
+
+                //when
+                memberService.changePassword(loginId, "11111111");
+
+                //then
+                assertAll(
+                        () -> then(memberRepository).should().findByLoginId(anyString()),
+                        () -> then(passwordEncoder).should().encode(anyString()),
+                        () -> then(passwordEncoder).should().matches(anyString(), anyString()),
+                        () -> assertThat(member.getPassword()).isEqualTo(newEncodedPassword)
+                );
+            }
         }
 
-        @Test
-        void join_rawPassword() {
-            //given
-            MemberRequest request = MemberRequest.builder().password(rawPassword).build();
+        @Nested
+        class FailureCase {
 
-            given(passwordEncoder.encode(anyString())).willReturn(rawPassword);
+            @Test
+            void memberNotFound() {
+                //given
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
-            //when
-            assertThatThrownBy(() -> memberService.join(request))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("암호화되지 않은 비밀번호입니다.");
+                //when
+                assertThatThrownBy(() -> memberService.changePassword(loginId, "11111111"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 아이디입니다.");
 
-            //then
-            assertAll(
-                    () -> then(passwordEncoder).should().encode(anyString()),
-                    () -> then(memberRepository).should(never()).save(any())
-            );
+                //then
+                assertAll(
+                        () -> then(memberRepository).should().findByLoginId(anyString()),
+                        () -> then(passwordEncoder).should(never()).encode(any()),
+                        () -> then(passwordEncoder).should(never()).matches(any(), any())
+                );
+            }
+        }
+    }
+
+    @Nested
+    class ChangeAddress {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Member member = Member.builder().loginId(loginId).city("Seoul").street("Gangnam").street("01234").build();
+
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
+
+                //when
+                memberService.changeAddress(loginId, "Gyeonggi-do", "Gangbuk", "01235");
+
+                //then
+                assertAll(
+                        () -> then(memberRepository).should().findByLoginId(anyString()),
+                        () -> assertThat(member.getAddress())
+                                .extracting("city", "street", "zipcode")
+                                .contains("Gyeonggi-do", "Gangbuk", "01235")
+                );
+            }
+        }
+    }
+
+    @Nested
+    class Delete {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Member member = Member.builder().loginId(loginId).build();
+
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
+
+                //when
+                memberService.deleteMember(loginId);
+
+                //then
+                assertAll(
+                        () -> then(memberRepository).should().findByLoginId(anyString()),
+                        () -> then(memberRepository).should().delete(member)
+                );
+            }
         }
 
-        @Test
-        void findByLoginId_memberNotFound() {
-            //given
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> memberService.findMemberByLoginId(loginId))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 아이디입니다.");
+            @Test
+            void memberNotFound() {
+                //given
+                given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
-            //then
-            then(memberRepository).should().findByLoginId(anyString());
+                //when
+                assertThatThrownBy(() -> memberService.deleteMember(loginId))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 아이디입니다.");
+
+                //then
+                assertAll(
+                        () -> then(memberRepository).should().findByLoginId(anyString()),
+                        () -> then(memberRepository).should(never()).delete(any())
+                );
+            }
+
+            @Test
+            void alreadyDeleted() {
+                //given
+                Member member = Member.builder().loginId(loginId).build();
+
+                given(memberRepository.findByLoginId(anyString()))
+                        .willReturn(Optional.of(member))
+                        .willReturn(Optional.empty());
+
+                //when 첫 번째 호출
+                memberService.deleteMember(loginId);
+
+                //then
+                assertAll(
+                        () -> then(memberRepository).should(times(1)).findByLoginId(anyString()),
+                        () -> then(memberRepository).should(times(1)).delete(member)
+                );
+
+                //when 두 번째 호출
+                assertThatThrownBy(() -> memberService.deleteMember(loginId))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 아이디입니다.");
+
+                //then
+                assertAll(
+                        () -> then(memberRepository).should(times(2)).findByLoginId(anyString()),
+                        () -> then(memberRepository).should(times(1)).delete(any())
+                );
+            }
         }
+    }
 
-        @Test
-        void findForLogin_memberNotFound() {
-            //given
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
+    @Nested
+    class ChangeDto {
 
-            //when
-            assertThatThrownBy(() -> memberService.findMemberForLogin(loginId))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+        @Nested
+        class SuccessCase {
 
-            //then
-            then(memberRepository).should().findByLoginId(anyString());
-        }
+            @Test
+            void basic() {
+                //given
+                Member member = Member.builder().loginId(loginId).build();
 
-        @Test
-        void changePassword_memberNotFound() {
-            //given
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
+                //when
+                MemberResponse memberDto = memberService.getMemberDto(member);
 
-            //when
-            assertThatThrownBy(() -> memberService.changePassword(loginId, "11111111"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 아이디입니다.");
-
-            //then
-            assertAll(
-                    () -> then(memberRepository).should().findByLoginId(anyString()),
-                    () -> then(passwordEncoder).should(never()).encode(any()),
-                    () -> then(passwordEncoder).should(never()).matches(any(), any())
-            );
-        }
-
-        @Test
-        void delete_memberNotFound() {
-            //given
-            given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
-
-            //when
-            assertThatThrownBy(() -> memberService.deleteMember(loginId))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 아이디입니다.");
-
-            //then
-            assertAll(
-                    () -> then(memberRepository).should().findByLoginId(anyString()),
-                    () -> then(memberRepository).should(never()).delete(any())
-            );
-        }
-
-        @Test
-        void delete_alreadyDeleted() {
-            //given
-            Member member = Member.builder().loginId(loginId).build();
-
-            given(memberRepository.findByLoginId(anyString()))
-                    .willReturn(Optional.of(member))
-                    .willReturn(Optional.empty());
-
-            //when 첫 번째 호출
-            memberService.deleteMember(loginId);
-
-            //then
-            assertAll(
-                    () -> then(memberRepository).should(times(1)).findByLoginId(anyString()),
-                    () -> then(memberRepository).should(times(1)).delete(member)
-            );
-
-            //when 두 번째 호출
-            assertThatThrownBy(() -> memberService.deleteMember(loginId))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 아이디입니다.");
-
-            //then
-            assertAll(
-                    () -> then(memberRepository).should(times(2)).findByLoginId(anyString()),
-                    () -> then(memberRepository).should(times(1)).delete(any())
-            );
+                //then
+                assertAll(
+                        () -> assertThat(memberDto.getLoginId()).isEqualTo(loginId),
+                        () -> assertThat(memberDto.getGrade()).isEqualTo(Grade.USER)
+                );
+            }
         }
     }
 }

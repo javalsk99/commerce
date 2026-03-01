@@ -74,308 +74,344 @@ class CategoryProductServiceUnitTest {
     }
 
     @Nested
-    class SuccessCase {
+    class Find {
 
-        @Test
-        void findCategoryProducts() {
-            //given
-            given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(category1.getCategoryProducts());
+        @Nested
+        class SuccessCase {
 
-            //when
-            List<CategoryProduct> categoryProducts = categoryProductService.findCategoryProductsWithProductByCategory(category1);
+            @Test
+            void basic() {
+                //given
+                given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(category1.getCategoryProducts());
 
-            //then
-            assertAll(
-                    () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
-                    () -> assertThat(categoryProducts)
-                            .extracting("category.name", "product.name")
-                            .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("가요", "타임 캡슐"))
-            );
-        }
+                //when
+                List<CategoryProduct> categoryProducts = categoryProductService.findCategoryProductsWithProductByCategory(category1);
 
-        @Test
-        void disconnect() {
-            //given
-            given(categoryService.findCategoryByName(anyString())).willReturn(category1);
-            given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-
-            //when
-            categoryProductService.disconnect("가요", "BANG BANG");
-
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(productService).should().findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryProductRepository).should().delete(captor.capture())
-            );
-
-            CategoryProduct deletedCategoryProduct = captor.getValue();
-            assertThat(deletedCategoryProduct)
-                    .extracting("category.name", "product.name")
-                    .containsExactly("가요", "BANG BANG");
-        }
-
-        @Test
-        void disconnectAll() {
-            //given
-            given(categoryService.findCategoryByName(anyString())).willReturn(category1);
-            given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(category1.getCategoryProducts());
-
-            //when
-            categoryProductService.disconnectAll("가요");
-
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
-                    () -> then(categoryProductRepository).should(times(2)).delete(captor.capture())
-            );
-
-            List<CategoryProduct> deletedCategoryProducts = captor.getAllValues();
-            assertThat(deletedCategoryProducts)
-                    .hasSize(2)
-                    .extracting("category.name", "product.name")
-                    .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("가요", "타임 캡슐"));
-        }
-
-        @Test
-        void connect() {
-            //given
-            given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-            given(categoryService.findCategoryByName(anyString())).willReturn(category3);
-
-            //when
-            categoryProductService.connect("BANG BANG", "발라드");
-
-            //then
-            assertAll(
-                    () -> then(productService).should().findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> assertThat(album1.getCategoryProducts())
-                            .hasSize(3)
-                            .extracting("category.name")
-                            .containsExactlyInAnyOrder("가요", "댄스", "발라드")
-            );
+                //then
+                assertAll(
+                        () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
+                        () -> assertThat(categoryProducts)
+                                .extracting("category.name", "product.name")
+                                .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("가요", "타임 캡슐"))
+                );
+            }
         }
     }
 
     @Nested
-    class FailureCase {
+    class Disconnect {
 
-        @Test
-        void disconnect_categoryNotFound() {
-            //given
-            given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
+        @Nested
+        class SuccessCase {
 
-            //when
-            assertThatThrownBy(() -> categoryProductService.disconnect("OST", "BANG BANG"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "OST");
+            @Test
+            void basic() {
+                //given
+                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(productService).should(never()).findProductWithCategoryProduct(any()),
-                    () -> then(categoryProductRepository).should(never()).delete(any())
-            );
+                //when
+                categoryProductService.disconnect("가요", "BANG BANG");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(productService).should().findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryProductRepository).should().delete(captor.capture())
+                );
+
+                CategoryProduct deletedCategoryProduct = captor.getValue();
+                assertThat(deletedCategoryProduct)
+                        .extracting("category.name", "product.name")
+                        .containsExactly("가요", "BANG BANG");
+            }
         }
 
-        @Test
-        void disconnect_productNotFound() {
-            //given
-            given(categoryService.findCategoryByName(anyString())).willReturn(category2);
-            given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> categoryProductService.disconnect("댄스", "천상연"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 상품입니다. name: " + "천상연");
+            @Test
+            void categoryNotFound() {
+                //given
+                given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(productService).should().findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryProductRepository).should(never()).delete(any())
-            );
+                //when
+                assertThatThrownBy(() -> categoryProductService.disconnect("OST", "BANG BANG"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "OST");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(productService).should(never()).findProductWithCategoryProduct(any()),
+                        () -> then(categoryProductRepository).should(never()).delete(any())
+                );
+            }
+
+            @Test
+            void productNotFound() {
+                //given
+                given(categoryService.findCategoryByName(anyString())).willReturn(category2);
+                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
+
+                //when
+                assertThatThrownBy(() -> categoryProductService.disconnect("댄스", "천상연"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 상품입니다. name: " + "천상연");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(productService).should().findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryProductRepository).should(never()).delete(any())
+                );
+            }
+
+            @Test
+            void alreadyDisconnect() {
+                //given
+                CategoryProduct categoryProduct = album1.getCategoryProducts().getFirst();
+
+                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
+
+                //when 첫 번째 호출
+                categoryProductService.disconnect("가요", "BANG BANG");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(productService).should().findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryProductRepository).should().delete(categoryProduct)
+                );
+
+                //when 두 번째 호출
+                assertThatThrownBy(() -> categoryProductService.disconnect("가요", "BANG BANG"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("상품이 해당 카테고리에 없습니다.");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should(times(2)).findCategoryByName(anyString()),
+                        () -> then(productService).should(times(2)).findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryProductRepository).should().delete(any())
+                );
+            }
+        }
+    }
+
+    @Nested
+    class DisconnectAll {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(category1.getCategoryProducts());
+
+                //when
+                categoryProductService.disconnectAll("가요");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
+                        () -> then(categoryProductRepository).should(times(2)).delete(captor.capture())
+                );
+
+                List<CategoryProduct> deletedCategoryProducts = captor.getAllValues();
+                assertThat(deletedCategoryProducts)
+                        .hasSize(2)
+                        .extracting("category.name", "product.name")
+                        .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("가요", "타임 캡슐"));
+            }
         }
 
-        @Test
-        void disconnect_alreadyDisconnect() {
-            //given
-            CategoryProduct categoryProduct = album1.getCategoryProducts().getFirst();
+        @Nested
+        class FailureCase {
 
-            given(categoryService.findCategoryByName(anyString())).willReturn(category1);
-            given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
+            @Test
+            void categoryNotFound() {
+                //given
+                given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
 
-            //when 첫 번째 호출
-            categoryProductService.disconnect("가요", "BANG BANG");
+                //when
+                assertThatThrownBy(() -> categoryProductService.disconnectAll("OST"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "OST");
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(productService).should().findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryProductRepository).should().delete(categoryProduct)
-            );
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(categoryProductRepository).should(never()).findAllWithProductByCategory(any()),
+                        () -> then(categoryProductRepository).should(never()).delete(any())
+                );
+            }
 
-            //when 두 번째 호출
-            assertThatThrownBy(() -> categoryProductService.disconnect("가요", "BANG BANG"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("상품이 해당 카테고리에 없습니다.");
+            @Test
+            void categoryProductsIsEmpty_byProduct() {
+                //given
+                given(categoryService.findCategoryByName(anyString())).willReturn(category4);
+                given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(Collections.emptyList());
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should(times(2)).findCategoryByName(anyString()),
-                    () -> then(productService).should(times(2)).findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryProductRepository).should().delete(any())
-            );
+                //when
+                assertThatThrownBy(() -> categoryProductService.disconnectAll("록"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("카테고리에 상품이 없습니다.");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
+                        () -> then(categoryProductRepository).should(never()).delete(any())
+                );
+            }
+
+            @Test
+            void alreadyDisconnectAll() {
+                //given
+                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(categoryProductRepository.findAllWithProductByCategory(any()))
+                        .willReturn(category1.getCategoryProducts())
+                        .willReturn(Collections.emptyList());
+
+                //when 첫 번째 호출
+                categoryProductService.disconnectAll("가요");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
+                        () -> then(categoryProductRepository).should(times(2)).delete(captor.capture())
+                );
+
+                List<CategoryProduct> deletedCategoryProducts = captor.getAllValues();
+                assertThat(deletedCategoryProducts)
+                        .hasSize(2)
+                        .extracting("category.name", "product.name")
+                        .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("가요", "타임 캡슐"));
+
+                //when 두 번째 호출
+                assertThatThrownBy(() -> categoryProductService.disconnectAll("가요"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("카테고리에 상품이 없습니다.");
+
+                //then
+                assertAll(
+                        () -> then(categoryService).should(times(2)).findCategoryByName(anyString()),
+                        () -> then(categoryProductRepository).should(times(2)).findAllWithProductByCategory(any()),
+                        () -> then(categoryProductRepository).should(times(2)).delete(any())
+                );
+            }
+        }
+    }
+
+    @Nested
+    class Connect {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
+                given(categoryService.findCategoryByName(anyString())).willReturn(category3);
+
+                //when
+                categoryProductService.connect("BANG BANG", "발라드");
+
+                //then
+                assertAll(
+                        () -> then(productService).should().findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> assertThat(album1.getCategoryProducts())
+                                .hasSize(3)
+                                .extracting("category.name")
+                                .containsExactlyInAnyOrder("가요", "댄스", "발라드")
+                );
+            }
         }
 
-        @Test
-        void disconnectAll_categoryNotFound() {
-            //given
-            given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
+        @Nested
+        class FailureCase {
 
-            //when
-            assertThatThrownBy(() -> categoryProductService.disconnectAll("OST"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "OST");
+            @Test
+            void productNotFound() {
+                //given
+                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(categoryProductRepository).should(never()).findAllWithProductByCategory(any()),
-                    () -> then(categoryProductRepository).should(never()).delete(any())
-            );
-        }
+                //when
+                assertThatThrownBy(() -> categoryProductService.connect("천상연", "발라드"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 상품입니다. name: " + "천상연");
 
-        @Test
-        void disconnectAll_categoryProductsIsEmpty_byProduct() {
-            //given
-            given(categoryService.findCategoryByName(anyString())).willReturn(category4);
-            given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(Collections.emptyList());
+                //then
+                assertAll(
+                        () -> then(productService).should().findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryService).should(never()).findCategoryByName(any())
+                );
+            }
 
-            //when
-            assertThatThrownBy(() -> categoryProductService.disconnectAll("록"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("카테고리에 상품이 없습니다.");
+            @Test
+            void categoryNotFound() {
+                //given
+                given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
+                given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
-                    () -> then(categoryProductRepository).should(never()).delete(any())
-            );
-        }
+                //when
+                assertThatThrownBy(() -> categoryProductService.connect("BANG BANG", "OST"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "OST");
 
-        @Test
-        void disconnectAll_alreadyDisconnectAll() {
-            //given
-            given(categoryService.findCategoryByName(anyString())).willReturn(category1);
-            given(categoryProductRepository.findAllWithProductByCategory(any()))
-                    .willReturn(category1.getCategoryProducts())
-                    .willReturn(Collections.emptyList());
+                //then
+                assertAll(
+                        () -> then(productService).should().findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> assertThat(album1.getCategoryProducts())
+                                .hasSize(2)
+                                .extracting("category.name")
+                                .containsExactlyInAnyOrder("가요", "댄스")
+                );
+            }
 
-            //when 첫 번째 호출
-            categoryProductService.disconnectAll("가요");
+            @Test
+            void alreadyConnected() {
+                //given
+                given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
+                given(categoryService.findCategoryByName(anyString())).willReturn(category3);
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> then(categoryProductRepository).should().findAllWithProductByCategory(any()),
-                    () -> then(categoryProductRepository).should(times(2)).delete(captor.capture())
-            );
+                //when 첫 번째 호출
+                categoryProductService.connect("BANG BANG", "발라드");
 
-            List<CategoryProduct> deletedCategoryProducts = captor.getAllValues();
-            assertThat(deletedCategoryProducts)
-                    .hasSize(2)
-                    .extracting("category.name", "product.name")
-                    .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("가요", "타임 캡슐"));
+                //then
+                assertAll(
+                        () -> then(productService).should().findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryService).should().findCategoryByName(anyString()),
+                        () -> assertThat(album1.getCategoryProducts())
+                                .hasSize(3)
+                                .extracting("category.name")
+                                .containsExactlyInAnyOrder("가요", "댄스", "발라드")
+                );
 
-            //when 두 번째 호출
-            assertThatThrownBy(() -> categoryProductService.disconnectAll("가요"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("카테고리에 상품이 없습니다.");
+                //when 두 번째 호출
+                assertThatThrownBy(() -> categoryProductService.connect("BANG BANG", "발라드"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("이미 상품이 해당 카테고리에 연결되어 있습니다.");
 
-            //then
-            assertAll(
-                    () -> then(categoryService).should(times(2)).findCategoryByName(anyString()),
-                    () -> then(categoryProductRepository).should(times(2)).findAllWithProductByCategory(any()),
-                    () -> then(categoryProductRepository).should(times(2)).delete(any())
-            );
-        }
-
-        @Test
-        void connect_productNotFound() {
-            //given
-            given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
-
-            //when
-            assertThatThrownBy(() -> categoryProductService.connect("천상연", "발라드"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 상품입니다. name: " + "천상연");
-
-            //then
-            assertAll(
-                    () -> then(productService).should().findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryService).should(never()).findCategoryByName(any())
-            );
-        }
-
-        @Test
-        void connect_categoryNotFound() {
-            //given
-            given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-            given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "OST"));
-
-            //when
-            assertThatThrownBy(() -> categoryProductService.connect("BANG BANG", "OST"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("존재하지 않는 카테고리입니다. name: " + "OST");
-
-            //then
-            assertAll(
-                    () -> then(productService).should().findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> assertThat(album1.getCategoryProducts())
-                            .hasSize(2)
-                            .extracting("category.name")
-                            .containsExactlyInAnyOrder("가요", "댄스")
-            );
-        }
-
-        @Test
-        void connect_alreadyConnected() {
-            //given
-            given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-            given(categoryService.findCategoryByName(anyString())).willReturn(category3);
-
-            //when 첫 번째 호출
-            categoryProductService.connect("BANG BANG", "발라드");
-
-            //then
-            assertAll(
-                    () -> then(productService).should().findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryService).should().findCategoryByName(anyString()),
-                    () -> assertThat(album1.getCategoryProducts())
-                            .hasSize(3)
-                            .extracting("category.name")
-                            .containsExactlyInAnyOrder("가요", "댄스", "발라드")
-            );
-
-            //when 두 번째 호출
-            assertThatThrownBy(() -> categoryProductService.connect("BANG BANG", "발라드"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("이미 상품이 해당 카테고리에 연결되어 있습니다.");
-
-            //then
-            assertAll(
-                    () -> then(productService).should(times(2)).findProductWithCategoryProduct(anyString()),
-                    () -> then(categoryService).should(times(2)).findCategoryByName(anyString()),
-                    () -> assertThat(album1.getCategoryProducts())
-                            .hasSize(3)
-                            .extracting("category.name")
-                            .containsExactlyInAnyOrder("가요", "댄스", "발라드")
-            );
+                //then
+                assertAll(
+                        () -> then(productService).should(times(2)).findProductWithCategoryProduct(anyString()),
+                        () -> then(categoryService).should(times(2)).findCategoryByName(anyString()),
+                        () -> assertThat(album1.getCategoryProducts())
+                                .hasSize(3)
+                                .extracting("category.name")
+                                .containsExactlyInAnyOrder("가요", "댄스", "발라드")
+                );
+            }
         }
     }
 }
