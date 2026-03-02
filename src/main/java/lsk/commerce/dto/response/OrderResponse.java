@@ -1,8 +1,12 @@
 package lsk.commerce.dto.response;
 
 import lombok.Getter;
+import lsk.commerce.domain.DeliveryStatus;
+import lsk.commerce.domain.Order;
+import lsk.commerce.domain.OrderProduct;
+import lsk.commerce.domain.OrderStatus;
+import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.dto.OrderProductDto;
-import lsk.commerce.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

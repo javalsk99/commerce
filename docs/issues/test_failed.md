@@ -249,3 +249,43 @@
 
   추가 문제: 강제로 커밋시켜서 데이터가 롤백되지 않아서 이 후의 테스트가 실패한다.  
   해결: OrderServiceTest에는 테스트가 10개가 넘는다. 이 테스트 때문에 afterEach로 모든 테스트에 데이터를 지우는 것이 좋지 않으므로 새 테스트 클래스를 만들어서 테스트한다.
+
+
+- 비동기 테스트 중 검증에 실패하는 문제 발생
+
+      //when
+      paymentSyncService.syncPayment(order.getPayment().getPaymentId());
+
+      //then
+      assertAll(
+              () -> then(paymentClient).should().getPayment(anyString()),
+              () -> then(paymentService).should().verifyAndComplete(any(PaidPayment.class)),
+              () -> then(paymentService).should().getPaymentRequest(any(Payment.class))
+      );
+
+  원인: 비동기 방식의 Mono는 구독하지 않으면 작동을 하지 않는다.  
+  해결: 구독해서 작동을 시킨다.
+
+      Mono<PaymentRequest> paymentRequestMono = paymentSyncService.syncPayment(order.getPayment().getPaymentId());
+      paymentRequestMono.subscribe();
+
+  테스트는 성공하지만 검증이 가능한 StepVerifier로 변경한다.
+
+      StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
+              .assertNext(paymentRequest ->
+                      assertThat(paymentRequest)
+                              .extracting("paymentId", "paymentStatus")
+                              .containsExactly(order.getPayment().getPaymentId(), PaymentStatus.COMPLETED)
+              )
+              .verifyComplete();
+
+  추가 문제: PaymentStatus가 변경되지 않는다.  
+  원인: PaymentStatus 변경은 PaymentService에 있는 verifyAndComplete 메서드 내부에 있어서 변경되지 않는다.  
+  해결: willAnswer를 사용해서 PaymentStatus를 변경한다.
+
+      given(paymentService.verifyAndComplete(any(PaidPayment.class))).willAnswer(invocation -> {
+          Payment payment = order.getPayment();
+          payment.complete(LocalDateTime.now());
+          return payment;
+      });
+      given(paymentService.getPaymentRequest(any(Payment.class))).willAnswer(invocation -> new PaymentRequest(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));

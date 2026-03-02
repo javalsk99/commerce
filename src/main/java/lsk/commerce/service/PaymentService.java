@@ -30,7 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final ObjectMapper objectMapper;
     private final PaymentRepository paymentRepository;

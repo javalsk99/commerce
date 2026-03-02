@@ -54,7 +54,7 @@ import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
-class OrderServiceUnitTest {
+class OrderServiceTest {
 
     @Mock
     EntityManager em;
@@ -199,7 +199,7 @@ class OrderServiceUnitTest {
             }
 
             @ParameterizedTest
-            @MethodSource("lsk.commerce.service.OrderServiceUnitTest#keyValueProvider")
+            @MethodSource("lsk.commerce.service.OrderServiceTest#keyValueProvider")
             void productMapContainsNullEntry(String key, Integer value, String message) {
                 //given
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
@@ -518,7 +518,7 @@ class OrderServiceUnitTest {
             }
 
             @ParameterizedTest
-            @MethodSource("lsk.commerce.service.OrderServiceUnitTest#keyValueProvider")
+            @MethodSource("lsk.commerce.service.OrderServiceTest#keyValueProvider")
             void productMapContainsNullEntry(String key, Integer value, String message) {
                 //given
                 Order order = createOrder();

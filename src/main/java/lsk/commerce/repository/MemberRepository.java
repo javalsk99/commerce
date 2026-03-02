@@ -1,8 +1,8 @@
 package lsk.commerce.repository;
 
-import lsk.commerce.domain.Member;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.domain.Member;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

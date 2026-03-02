@@ -1,6 +1,5 @@
 package lsk.commerce.service;
 
-import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Delivery;
 import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Member;
@@ -11,10 +10,7 @@ import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.event.DeliveryStartedEvent;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,19 +19,24 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.times;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
-class DeliveryServiceUnitTest {
+class DeliveryServiceTest {
 
     @Mock
     OrderService orderService;
@@ -56,7 +57,6 @@ class DeliveryServiceUnitTest {
     OrderProduct orderProduct3;
     Order order;
     String wrongOrderNumber = "lllIIllIO00O";
-    String wrongPaymentId = "dfoijxjfd342987jdfk";
 
     @BeforeEach
     void beforeEach() {
@@ -240,23 +240,4 @@ class DeliveryServiceUnitTest {
             }
         }
     }
-/*
-
-    @Test
-    void failed_completeDelivery_alreadyDelivered() {
-        //given
-//        paymentService.completePayment(paymentId);
-
-        TestTransaction.flagForCommit();
-        TestTransaction.end();
-
-        deliveryService.startDelivery(orderNumber);
-        deliveryService.completeDelivery(orderNumber);
-
-        //when
-        assertThatThrownBy(() -> deliveryService.completeDelivery(orderNumber))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("이미 배송 완료된 주문입니다.");
-    }
-*/
 }

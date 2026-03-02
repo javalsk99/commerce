@@ -27,7 +27,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
-class MemberServiceUnitTest {
+class MemberServiceTest {
 
     @Mock
     MemberRepository memberRepository;

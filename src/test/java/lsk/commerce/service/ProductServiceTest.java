@@ -33,7 +33,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 
 @ExtendWith(MockitoExtension.class)
-class ProductServiceUnitTest {
+class ProductServiceTest {
 
     @Mock
     ProductRepository productRepository;

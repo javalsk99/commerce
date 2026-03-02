@@ -37,7 +37,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 
 @ExtendWith(MockitoExtension.class)
-class CategoryServiceUnitTest {
+class CategoryServiceTest {
 
     @Mock
     CategoryRepository categoryRepository;

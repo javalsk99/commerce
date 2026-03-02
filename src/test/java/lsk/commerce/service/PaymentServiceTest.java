@@ -46,7 +46,7 @@ import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
-class PaymentServiceUnitTest {
+class PaymentServiceTest {
 
     @Mock
     OrderRequest orderRequest;

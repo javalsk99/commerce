@@ -4,8 +4,8 @@ import io.portone.sdk.server.webhook.Webhook;
 import io.portone.sdk.server.webhook.WebhookTransaction;
 import io.portone.sdk.server.webhook.WebhookVerifier;
 import kotlin.Unit;
+import lombok.RequiredArgsConstructor;
 import lsk.commerce.api.portone.CompletePaymentRequest;
-import lsk.commerce.api.portone.PortoneSecretProperties;
 import lsk.commerce.api.portone.SyncPaymentException;
 import lsk.commerce.domain.Order;
 import lsk.commerce.dto.request.OrderRequest;
@@ -21,19 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
+@RequiredArgsConstructor
 public class PaymentController {
 
     private final OrderService orderService;
-    private final PortoneSecretProperties secret;
     private final WebhookVerifier portoneWebhook;
     private final PaymentSyncService paymentSyncService;
-
-    public PaymentController(OrderService orderService, PaymentSyncService paymentSyncService, PortoneSecretProperties secret) {
-        this.orderService = orderService;
-        this.paymentSyncService = paymentSyncService;
-        this.secret = secret;
-        portoneWebhook = new WebhookVerifier(secret.webhook());
-    }
 
     @GetMapping("/api/payments/{orderNumber}")
     public OrderRequest getOrder(@PathVariable("orderNumber") String orderNumber) {

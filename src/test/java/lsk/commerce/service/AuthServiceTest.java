@@ -20,7 +20,7 @@ import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-class AuthServiceUnitTest {
+class AuthServiceTest {
 
     @Mock
     MemberService memberService;
