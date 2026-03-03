@@ -71,7 +71,7 @@ public class Category {
         Category check = newParentCategory;
         while (check != null) {
             if (this.getId().equals(check.getId())) {
-                throw new IllegalArgumentException("자신 또는 자식을 부모로 설정할 수 없습니다.");
+                throw new IllegalArgumentException("자신 또는 자식을 부모로 설정할 수 없습니다");
             }
 
             check = check.parent;

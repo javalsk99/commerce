@@ -66,8 +66,12 @@ class CategoryProductServiceTest {
         ReflectionTestUtils.setField(category3, "id", 3L);
         ReflectionTestUtils.setField(category4, "id", 4L);
 
-        album1 = Album.builder().name("BANG BANG").build();
-        album2 = Album.builder().name("타임 캡슐").build();
+        album1 = Album.builder()
+                .name("BANG BANG")
+                .build();
+        album2 = Album.builder()
+                .name("타임 캡슐")
+                .build();
 
         album1.connectCategories(List.of(category1, category2));
         album2.connectCategories(List.of(category1, category3));
@@ -188,7 +192,7 @@ class CategoryProductServiceTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> categoryProductService.disconnect("가요", "BANG BANG"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("상품이 해당 카테고리에 없습니다.");
+                        .hasMessage("상품이 해당 카테고리에 없습니다");
 
                 //then
                 assertAll(
@@ -260,7 +264,7 @@ class CategoryProductServiceTest {
                 //when
                 assertThatThrownBy(() -> categoryProductService.disconnectAll("록"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("카테고리에 상품이 없습니다.");
+                        .hasMessage("카테고리에 상품이 없습니다");
 
                 //then
                 assertAll(
@@ -297,7 +301,7 @@ class CategoryProductServiceTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> categoryProductService.disconnectAll("가요"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("카테고리에 상품이 없습니다.");
+                        .hasMessage("카테고리에 상품이 없습니다");
 
                 //then
                 assertAll(
@@ -400,7 +404,7 @@ class CategoryProductServiceTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> categoryProductService.connect("BANG BANG", "발라드"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 상품이 해당 카테고리에 연결되어 있습니다.");
+                        .hasMessage("이미 상품이 해당 카테고리에 연결되어 있습니다");
 
                 //then
                 assertAll(

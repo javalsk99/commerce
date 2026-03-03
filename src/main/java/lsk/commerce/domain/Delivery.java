@@ -86,7 +86,7 @@ public class Delivery {
     private static void validateMemberAddress(Member member) {
         Address address = member.getAddress();
         if (address == null) {
-            throw new IllegalArgumentException("회원의 주소 정보가 없습니다.");
+            throw new IllegalArgumentException("회원의 주소 정보가 없습니다");
         } else if (address.getCity() == null || address.getStreet() == null || address.getZipcode() == null) {
             throw new IllegalArgumentException("회원의 주소 정보가 잘못됐습니다. address.city = " + address.getCity() +
                     ", address.street = " + address.getStreet() + ", address.zipcode = " + address.getZipcode());
@@ -102,7 +102,7 @@ public class Delivery {
         }
 
         if (this.order.getPayment() == null) {
-            throw new IllegalStateException("주문의 결제 정보가 없습니다.");
+            throw new IllegalStateException("주문의 결제 정보가 없습니다");
         }
 
         PaymentStatus paymentStatus = this.order.getPayment().getPaymentStatus();

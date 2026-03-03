@@ -68,7 +68,7 @@ public abstract class Product {
 
     protected void addStock(Integer quantity) {
         if (quantity == null) {
-            throw new IllegalArgumentException("재고가 추가될 수량이 없습니다.");
+            throw new IllegalArgumentException("재고가 추가될 수량이 없습니다");
         }
 
         this.stockQuantity += quantity;
@@ -76,12 +76,12 @@ public abstract class Product {
 
     protected void removeStock(Integer quantity) {
         if (quantity == null) {
-            throw new IllegalArgumentException("재고가 감소될 수량이 없습니다.");
+            throw new IllegalArgumentException("재고가 감소될 수량이 없습니다");
         }
 
         int restStock = this.stockQuantity - quantity;
         if (restStock < 0) {
-            throw new IllegalArgumentException("재고가 부족합니다.");
+            throw new IllegalArgumentException("재고가 부족합니다");
         }
 
         this.stockQuantity = restStock;
@@ -89,14 +89,14 @@ public abstract class Product {
 
     protected void updateStock(Integer quantity, Integer newQuantity) {
         if (quantity == null) {
-            throw new IllegalArgumentException("재고가 추가될 수량이 없습니다.");
+            throw new IllegalArgumentException("재고가 추가될 수량이 없습니다");
         } else if (newQuantity == null) {
-            throw new IllegalArgumentException("재고가 감소될 수량이 없습니다.");
+            throw new IllegalArgumentException("재고가 감소될 수량이 없습니다");
         }
 
         int restStock = this.stockQuantity + quantity - newQuantity;
         if (restStock < 0) {
-            throw new IllegalArgumentException("재고가 부족합니다.");
+            throw new IllegalArgumentException("재고가 부족합니다");
         }
 
         this.stockQuantity = restStock;
@@ -105,7 +105,7 @@ public abstract class Product {
     //가격, 수량만 변경
     public void updateProduct(Integer newPrice, Integer newStockQuantity) {
         if (newPrice == null && newStockQuantity == null) {
-            throw new IllegalArgumentException("수정할 가격 또는 수량이 있어야 합니다.");
+            throw new IllegalArgumentException("수정할 가격 또는 수량이 있어야 합니다");
         }
 
         if (newPrice != null) {
@@ -118,7 +118,7 @@ public abstract class Product {
 
     public void connectCategory(Category category) {
         if (category.getId() == null) {
-            throw new IllegalArgumentException("식별자가 없는 잘못된 카테고리입니다.");
+            throw new IllegalArgumentException("식별자가 없는 잘못된 카테고리입니다");
         }
 
         CategoryProduct categoryProduct = new CategoryProduct();
@@ -156,12 +156,12 @@ public abstract class Product {
     //같은 카테고리 상품인 상품과 카테고리를 카테고리 상품 제거
     public CategoryProduct removeCategoryProduct(Category category) {
         if (this.categoryProducts.isEmpty()) {
-            throw new IllegalArgumentException("상품과 연결된 카테고리가 없습니다.");
+            throw new IllegalArgumentException("상품과 연결된 카테고리가 없습니다");
         }
 
         for (CategoryProduct categoryProduct : this.categoryProducts) {
             if (categoryProduct.getCategory() == null) {
-                throw new IllegalArgumentException("상품에 카테고리가 제대로 들어가지 않았습니다.");
+                throw new IllegalArgumentException("상품에 카테고리가 제대로 들어가지 않았습니다");
             }
 
             if (category.getId().equals(categoryProduct.getCategory().getId())) {
@@ -171,7 +171,7 @@ public abstract class Product {
             }
         }
 
-        throw new IllegalArgumentException("상품이 해당 카테고리에 없습니다.");
+        throw new IllegalArgumentException("상품이 해당 카테고리에 없습니다");
     }
 
     @PrePersist @PreUpdate

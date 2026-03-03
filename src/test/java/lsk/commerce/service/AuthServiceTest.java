@@ -48,7 +48,10 @@ class AuthServiceTest {
             @Test
             void basic() {
                 //given
-                Member member = Member.builder().loginId(loginId).password(encodedPassword).build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .password(encodedPassword)
+                        .build();
 
                 given(memberService.findMemberForLogin(any())).willReturn(member);
                 given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
@@ -71,14 +74,12 @@ class AuthServiceTest {
             @Test
             void wrongLoginId() {
                 //given
-                Member.builder().loginId("id_B").password(encodedPassword).build();
-
-                given(memberService.findMemberForLogin(any())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
+                given(memberService.findMemberForLogin(any())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다"));
 
                 //when
-                assertThatThrownBy(() -> authService.login(loginId, rawPassword))
+                assertThatThrownBy(() -> authService.login("id_B", rawPassword))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+                        .hasMessage("아이디 또는 비밀번호가 틀렸습니다");
 
                 //then
                 then(memberService).should().findMemberForLogin(any());
@@ -89,15 +90,18 @@ class AuthServiceTest {
             @Test
             void wrongPassword() {
                 //given
-                Member member = Member.builder().loginId(loginId).password("11111111").build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .password("11111111")
+                        .build();
 
                 given(memberService.findMemberForLogin(any())).willReturn(member);
-                given(passwordEncoder.matches(anyString(), anyString())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
+                given(passwordEncoder.matches(anyString(), anyString())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다"));
 
                 //when
                 assertThatThrownBy(() -> authService.login(loginId, rawPassword))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+                        .hasMessage("아이디 또는 비밀번호가 틀렸습니다");
 
                 //then
                 then(memberService).should().findMemberForLogin(any());

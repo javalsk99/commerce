@@ -84,7 +84,9 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 album.addStock(4);
@@ -100,12 +102,14 @@ class ProductTest {
             @Test
             void quantityNull() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> album.addStock(null))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 추가될 수량이 없습니다.");
+                        .hasMessage("재고가 추가될 수량이 없습니다");
 
                 //then
                 assertThat(album.getStockQuantity()).isEqualTo(3);
@@ -122,7 +126,9 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 album.removeStock(2);
@@ -138,12 +144,14 @@ class ProductTest {
             @Test
             void quantityNull() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> album.removeStock(null))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 감소될 수량이 없습니다.");
+                        .hasMessage("재고가 감소될 수량이 없습니다");
 
                 //then
                 assertThat(album.getStockQuantity()).isEqualTo(3);
@@ -152,12 +160,14 @@ class ProductTest {
             @Test
             void exceed() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> album.removeStock(4))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다.");
+                        .hasMessage("재고가 부족합니다");
 
                 //then
                 assertThat(album.getStockQuantity()).isEqualTo(3);
@@ -174,7 +184,9 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 album.updateStock(2, 3);
@@ -190,16 +202,18 @@ class ProductTest {
             @Test
             void quantityNull() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 assertAll(
                         () -> assertThatThrownBy(() -> album.updateStock(null, 3))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("재고가 추가될 수량이 없습니다."),
+                                .hasMessage("재고가 추가될 수량이 없습니다"),
                         () -> assertThatThrownBy(() -> album.updateStock(2, null))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("재고가 감소될 수량이 없습니다.")
+                                .hasMessage("재고가 감소될 수량이 없습니다")
                 );
 
                 //then
@@ -209,12 +223,14 @@ class ProductTest {
             @Test
             void exceed() {
                 //given
-                Album album = Album.builder().stockQuantity(3).build();
+                Album album = Album.builder()
+                        .stockQuantity(3)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> album.updateStock(1, 5))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다.");
+                        .hasMessage("재고가 부족합니다");
 
                 //then
                 assertThat(album.getStockQuantity()).isEqualTo(3);
@@ -231,7 +247,10 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
 
                 //when
                 album.updateProduct(12000, 20);
@@ -245,7 +264,10 @@ class ProductTest {
             @Test
             void priceNull() {
                 //given
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
 
                 //when
                 album.updateProduct(null, 20);
@@ -259,7 +281,10 @@ class ProductTest {
             @Test
             void stockQuantityNull() {
                 //given
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
 
                 //when
                 album.updateProduct(12000, null);
@@ -277,12 +302,15 @@ class ProductTest {
             @Test
             void priceQuantityNull() {
                 //given
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> album.updateProduct(null, null))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("수정할 가격 또는 수량이 있어야 합니다.");
+                        .hasMessage("수정할 가격 또는 수량이 있어야 합니다");
 
                 //then
                 assertThat(album)
@@ -302,7 +330,9 @@ class ProductTest {
             void basic() {
                 //given
                 Category category = Category.createCategory(null, "가요");
-                Album album = Album.builder().name("BANG BANG").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
 
                 ReflectionTestUtils.setField(category, "id", 1L);
 
@@ -330,7 +360,7 @@ class ProductTest {
                 //when
                 assertThatThrownBy(() -> album.connectCategory(category))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("식별자가 없는 잘못된 카테고리입니다.");
+                        .hasMessage("식별자가 없는 잘못된 카테고리입니다");
 
                 //then
                 assertThat(album.getCategoryProducts()).isEmpty();
@@ -349,7 +379,9 @@ class ProductTest {
                 //given
                 Category category1 = Category.createCategory(null, "가요");
                 Category category2 = Category.createCategory(category1, "댄스");
-                Album album = Album.builder().name("BANG BANG").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
 
                 ReflectionTestUtils.setField(category1, "id", 1L);
                 ReflectionTestUtils.setField(category2, "id", 2L);
@@ -380,7 +412,9 @@ class ProductTest {
                 //given
                 Category category1 = Category.createCategory(null, "가요");
                 Category category2 = Category.createCategory(category1, "댄스");
-                Album album = Album.builder().name("BANG BANG").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
 
                 ReflectionTestUtils.setField(category1, "id", 1L);
                 ReflectionTestUtils.setField(category2, "id", 2L);
@@ -511,7 +545,7 @@ class ProductTest {
                 //when
                 assertThatThrownBy(() -> album.removeCategoryProduct(category))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("상품과 연결된 카테고리가 없습니다.");
+                        .hasMessage("상품과 연결된 카테고리가 없습니다");
             }
 
             @Test
@@ -529,7 +563,7 @@ class ProductTest {
                 //when
                 assertThatThrownBy(() -> album.removeCategoryProduct(category2))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("상품이 해당 카테고리에 없습니다.");
+                        .hasMessage("상품이 해당 카테고리에 없습니다");
 
                 //then
                 assertThat(album.getCategoryProducts())

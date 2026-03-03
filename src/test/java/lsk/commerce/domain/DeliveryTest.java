@@ -32,12 +32,28 @@ class DeliveryTest {
 
     @BeforeEach
     void beforeEach() {
-        member = Member.builder().city("Seoul").street("Gangnam").zipcode("01234").build();
+        member = Member.builder()
+                .city("Seoul")
+                .street("Gangnam")
+                .zipcode("01234")
+                .build();
         delivery = new Delivery(member);
 
-        album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
-        book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).build();
-        movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(5).build();
+        album = Album.builder()
+                .name("BANG BANG")
+                .price(15000)
+                .stockQuantity(10)
+                .build();
+        book = Book.builder()
+                .name("자바 ORM 표준 JPA 프로그래밍")
+                .price(15000)
+                .stockQuantity(7)
+                .build();
+        movie = Movie.builder()
+                .name("범죄도시")
+                .price(15000)
+                .stockQuantity(5)
+                .build();
 
         orderProduct1 = OrderProduct.createOrderProduct(album, 5);
         orderProduct2 = OrderProduct.createOrderProduct(book, 3);
@@ -82,14 +98,18 @@ class DeliveryTest {
                 //when
                 assertThatThrownBy(() -> new Delivery(nullAddressMember))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("회원의 주소 정보가 없습니다.");
+                        .hasMessage("회원의 주소 정보가 없습니다");
             }
 
             @ParameterizedTest
             @MethodSource("addressProvider")
             void wrongMemberAddress(String city, String street, String zipcode, String message) {
                 //given
-                Member wrongAddressMember = Member.builder().city(city).street(street).zipcode(zipcode).build();
+                Member wrongAddressMember = Member.builder()
+                        .city(city)
+                        .street(street)
+                        .zipcode(zipcode)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> new Delivery(wrongAddressMember))
@@ -99,9 +119,9 @@ class DeliveryTest {
 
             static Stream<Arguments> addressProvider() {
                 return Stream.of(
-                        argumentSet("city null", null, "Gangnam", "01234", "회원의 주소 정보가 잘못됐습니다. address.city = null, address.street = Gangnam, address.zipcode = 01234"),
-                        argumentSet("street null", "Seoul", null, "01234", "회원의 주소 정보가 잘못됐습니다. address.city = Seoul, address.street = null, address.zipcode = 01234"),
-                        argumentSet("zipcode null", "Seoul", "Gangnam", null, "회원의 주소 정보가 잘못됐습니다. address.city = Seoul, address.street = Gangnam, address.zipcode = null")
+                        argumentSet("city null", null, "Gangnam", "01234", "회원의 주소 정보가 잘못됐습니다. address.city = " + null + ", address.street = " + "Gangnam" + ", address.zipcode = " + "01234"),
+                        argumentSet("street null", "Seoul", null, "01234", "회원의 주소 정보가 잘못됐습니다. address.city = " + "Seoul" + ", address.street = " + null + ", address.zipcode = " + "01234"),
+                        argumentSet("zipcode null", "Seoul", "Gangnam", null, "회원의 주소 정보가 잘못됐습니다. address.city = " + "Seoul" + ", address.street = " + "Gangnam" + ", address.zipcode = " + null)
                 );
             }
         }
@@ -170,10 +190,10 @@ class DeliveryTest {
 
             static Stream<Arguments> deliveryStatusProvider() {
                 return Stream.of(
-                        argumentSet("DeliveryStatus: WAITING", DeliveryStatus.WAITING, "결제 완료된 주문이 아닙니다. DeliveryStatus: WAITING"),
-                        argumentSet("DeliveryStatus: CANCELED", DeliveryStatus.CANCELED, "결제 완료된 주문이 아닙니다. DeliveryStatus: CANCELED"),
-                        argumentSet("DeliveryStatus: SHIPPED", DeliveryStatus.SHIPPED, "이미 발송된 주문입니다. DeliveryStatus: SHIPPED"),
-                        argumentSet("DeliveryStatus: DELIVERED", DeliveryStatus.DELIVERED, "이미 발송된 주문입니다. DeliveryStatus: DELIVERED")
+                        argumentSet("DeliveryStatus: WAITING", DeliveryStatus.WAITING, "결제 완료된 주문이 아닙니다. DeliveryStatus: " + DeliveryStatus.WAITING),
+                        argumentSet("DeliveryStatus: CANCELED", DeliveryStatus.CANCELED, "결제 완료된 주문이 아닙니다. DeliveryStatus: " + DeliveryStatus.CANCELED),
+                        argumentSet("DeliveryStatus: SHIPPED", DeliveryStatus.SHIPPED, "이미 발송된 주문입니다. DeliveryStatus: " + DeliveryStatus.SHIPPED),
+                        argumentSet("DeliveryStatus: DELIVERED", DeliveryStatus.DELIVERED, "이미 발송된 주문입니다. DeliveryStatus: " + DeliveryStatus.DELIVERED)
                 );
             }
         }
@@ -245,10 +265,10 @@ class DeliveryTest {
 
             static Stream<Arguments> deliveryStatusProvider() {
                 return Stream.of(
-                        argumentSet("DeliveryStatus: WAITING", DeliveryStatus.WAITING, "발송된 주문이 아닙니다. DeliveryStatus: WAITING"),
-                        argumentSet("DeliveryStatus: CANCELED", DeliveryStatus.CANCELED, "발송된 주문이 아닙니다. DeliveryStatus: CANCELED"),
-                        argumentSet("DeliveryStatus: PREPARING", DeliveryStatus.PREPARING, "발송된 주문이 아닙니다. DeliveryStatus: PREPARING"),
-                        argumentSet("DeliveryStatus: DELIVERED", DeliveryStatus.DELIVERED, "이미 배송 완료된 주문입니다. DeliveryStatus: DELIVERED")
+                        argumentSet("DeliveryStatus: WAITING", DeliveryStatus.WAITING, "발송된 주문이 아닙니다. DeliveryStatus: " + DeliveryStatus.WAITING),
+                        argumentSet("DeliveryStatus: CANCELED", DeliveryStatus.CANCELED, "발송된 주문이 아닙니다. DeliveryStatus: " + DeliveryStatus.CANCELED),
+                        argumentSet("DeliveryStatus: PREPARING", DeliveryStatus.PREPARING, "발송된 주문이 아닙니다. DeliveryStatus: " + DeliveryStatus.PREPARING),
+                        argumentSet("DeliveryStatus: DELIVERED", DeliveryStatus.DELIVERED, "이미 배송 완료된 주문입니다. DeliveryStatus: " + DeliveryStatus.DELIVERED)
                 );
             }
         }
@@ -256,17 +276,17 @@ class DeliveryTest {
 
     static Stream<Arguments> orderStatusProvider() {
         return Stream.of(
-                argumentSet("OrderStatus: CREATED", OrderStatus.CREATED, "결제 완료된 주문이 아닙니다. OrderStatus: CREATED"),
-                argumentSet("OrderStatus: CANCELED", OrderStatus.CANCELED, "결제 완료된 주문이 아닙니다. OrderStatus: CANCELED"),
-                argumentSet("OrderStatus: DELIVERED", OrderStatus.DELIVERED, "이미 배송 완료된 주문입니다. OrderStatus: DELIVERED")
+                argumentSet("OrderStatus: CREATED", OrderStatus.CREATED, "결제 완료된 주문이 아닙니다. OrderStatus: " + OrderStatus.CREATED),
+                argumentSet("OrderStatus: CANCELED", OrderStatus.CANCELED, "결제 완료된 주문이 아닙니다. OrderStatus: " + OrderStatus.CANCELED),
+                argumentSet("OrderStatus: DELIVERED", OrderStatus.DELIVERED, "이미 배송 완료된 주문입니다. OrderStatus: " + OrderStatus.DELIVERED)
         );
     }
 
     static Stream<Arguments> paymentStatusProvider() {
         return Stream.of(
-                argumentSet("PaymentStatus: PENDING", PaymentStatus.PENDING, "결제 완료된 주문이 아닙니다. PaymentStatus: PENDING"),
-                argumentSet("PaymentStatus: CANCELED", PaymentStatus.CANCELED, "결제 완료된 주문이 아닙니다. PaymentStatus: CANCELED"),
-                argumentSet("PaymentStatus: FAILED", PaymentStatus.FAILED, "결제 완료된 주문이 아닙니다. PaymentStatus: FAILED")
+                argumentSet("PaymentStatus: PENDING", PaymentStatus.PENDING, "결제 완료된 주문이 아닙니다. PaymentStatus: " + PaymentStatus.PENDING),
+                argumentSet("PaymentStatus: CANCELED", PaymentStatus.CANCELED, "결제 완료된 주문이 아닙니다. PaymentStatus: " + PaymentStatus.CANCELED),
+                argumentSet("PaymentStatus: FAILED", PaymentStatus.FAILED, "결제 완료된 주문이 아닙니다. PaymentStatus: " + PaymentStatus.FAILED)
         );
     }
 }

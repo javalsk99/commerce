@@ -37,7 +37,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         String token = getToken(request, authorization);
 
         if (!jwtProvider.validateToken(token)) {
-            throw new JwtException("유효하지 않은 토큰입니다.");
+            throw new JwtException("유효하지 않은 토큰입니다");
         }
 
         Claims claims = jwtProvider.extractClaims(token);
@@ -46,7 +46,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
 
         if (isAdminPath(requestURI, method)) {
             if (!"ADMIN".equals(grade)) {
-                throw new RuntimeException("관리자만 접근할 수 있습니다.");
+                throw new RuntimeException("관리자만 접근할 수 있습니다");
             }
         }
 
@@ -72,7 +72,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         }
 
         if (token == null) {
-            throw new RuntimeException("로그인을 해야 접근할 수 있습니다.");
+            throw new RuntimeException("로그인을 해야 접근할 수 있습니다");
         }
         return token;
     }

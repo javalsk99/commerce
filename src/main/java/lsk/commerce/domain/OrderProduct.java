@@ -51,7 +51,7 @@ public class OrderProduct {
 
     public static OrderProduct createOrderProduct(Product product, Integer count) {
         if (count == null) {
-            throw new IllegalArgumentException("수량이 없습니다.");
+            throw new IllegalArgumentException("수량이 없습니다");
         }
 
         OrderProduct orderProduct = new OrderProduct();
@@ -65,9 +65,9 @@ public class OrderProduct {
 
     public String getProductName() {
         if (this.product == null) {
-            throw new IllegalStateException("상품이 없습니다.");
+            throw new IllegalStateException("상품이 없습니다");
         } else if (this.product.getName() == null) {
-            throw new IllegalStateException("상품 이름이 없습니다.");
+            throw new IllegalStateException("상품 이름이 없습니다");
         }
 
         return this.product.getName();

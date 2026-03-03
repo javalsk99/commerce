@@ -11,7 +11,7 @@
 <body>
 <div id="root">
     <dialog id="loadingDialog" open>
-        <article aria-busy="true">결제 정보를 불러오는 중입니다.</article>
+        <article aria-busy="true">결제 정보를 불러오는 중입니다</article>
     </dialog>
     <main id="checkoutDialog" style="display: none">
         <form id="checkoutForm">
@@ -39,14 +39,14 @@
         <header>
             <h1>결제 성공</h1>
         </header>
-        <p>결제에 성공했습니다.</p>
+        <p>결제에 성공했습니다</p>
         <button type="button" class="closeDialog">닫기</button>
     </dialog>
     <dialog id="virtualAccountDialog">
         <header>
             <h1>가상계좌 발급 완료</h1>
         </header>
-        <p>가상계좌가 발급되었습니다.</p>
+        <p>가상계좌가 발급되었습니다</p>
         <button type="button" class="closeDialog">닫기</button>
     </dialog>
 </div>
@@ -87,7 +87,7 @@
           window.checkoutDialog.style.display = "block"
           await this.showCheckout()
         } catch (error) {
-          alert("결제 정보를 가져오지 못했습니다. 다시 시도해주세요.")
+          alert("결제 정보를 가져오지 못했습니다. 다시 시도해주세요")
         }
       }
 

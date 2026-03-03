@@ -180,9 +180,9 @@ public class Order {
 
     public void validateDeletable() {
         if (this.getOrderStatus() == OrderStatus.CREATED) {
-            throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다.");
+            throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다");
         } else if (this.getOrderStatus() == OrderStatus.PAID) {
-            throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다.");
+            throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다");
         }
 
         DeliveryStatus deliveryStatus = this.getDelivery().getDeliveryStatus();
@@ -210,7 +210,7 @@ public class Order {
 
     private static void validateAddress(Member member, Delivery delivery) {
         if (member.getAddress() == null || delivery.getAddress() == null) {
-            throw new IllegalArgumentException("배송될 주소가 없습니다.");
+            throw new IllegalArgumentException("배송될 주소가 없습니다");
         }
     }
 
@@ -239,7 +239,7 @@ public class Order {
 
         if (this.payment != null) {
             if (this.payment.getPaymentStatus() == PaymentStatus.COMPLETED) {
-                throw new IllegalStateException("결제 완료돼서 취소할 수 없습니다.");
+                throw new IllegalStateException("결제 완료돼서 취소할 수 없습니다");
             }
 
             this.payment.canceled();

@@ -374,7 +374,7 @@ class CategoryServiceTest {
                 //when
                 assertThatThrownBy(() -> categoryService.deleteCategory("프로그래밍 언어"))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("자식 카테고리가 있어서 삭제할 수 없습니다.");
+                        .hasMessage("자식 카테고리가 있어서 삭제할 수 없습니다");
 
                 //then
                 assertAll(
@@ -386,7 +386,13 @@ class CategoryServiceTest {
             @Test
             void hasProduct() {
                 //given
-                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
+                Book book = Book.builder()
+                        .name("자바 ORM 표준 JPA 프로그래밍")
+                        .price(15000)
+                        .stockQuantity(7)
+                        .author("김영한")
+                        .isbn("9788960777330")
+                        .build();
                 book.connectCategory(category4);
 
                 given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category4));
@@ -394,7 +400,7 @@ class CategoryServiceTest {
                 //when
                 assertThatThrownBy(() -> categoryService.deleteCategory("Python"))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("카테고리에 상품이 있어서 삭제할 수 없습니다.");
+                        .hasMessage("카테고리에 상품이 있어서 삭제할 수 없습니다");
 
                 //then
                 assertAll(
@@ -445,7 +451,13 @@ class CategoryServiceTest {
             @Test
             void basic() {
                 //given
-                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
+                Book book = Book.builder()
+                        .name("자바 ORM 표준 JPA 프로그래밍")
+                        .price(15000)
+                        .stockQuantity(7)
+                        .author("김영한")
+                        .isbn("9788960777330")
+                        .build();
                 book.connectCategory(category1);
 
                 //when
@@ -520,10 +532,10 @@ class CategoryServiceTest {
                 assertAll(
                         () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(null))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("카테고리가 존재하지 않습니다."),
+                                .hasMessage("카테고리가 존재하지 않습니다"),
                         () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(Collections.emptyList()))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("카테고리가 존재하지 않습니다.")
+                                .hasMessage("카테고리가 존재하지 않습니다")
                 );
 
                 //then
@@ -538,7 +550,7 @@ class CategoryServiceTest {
                 //when
                 assertThatThrownBy(() -> categoryService.validateAndGetCategories(List.of("Java", "Python")))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 카테고리가 있습니다.");
+                        .hasMessage("존재하지 않는 카테고리가 있습니다");
 
                 //then
                 then(categoryRepository).should().findByNameSet(anySet());

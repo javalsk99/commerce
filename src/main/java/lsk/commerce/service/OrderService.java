@@ -34,7 +34,7 @@ public class OrderService {
 
     public String order(String memberLoginId, Map<String, Integer> productNamesCount) {
         if (productNamesCount == null || productNamesCount.isEmpty()) {
-            throw new IllegalArgumentException("주문할 상품이 없습니다.");
+            throw new IllegalArgumentException("주문할 상품이 없습니다");
         }
 
         //엔티티 조회
@@ -77,42 +77,42 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Order findOrder(String orderNumber) {
         return orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithDelivery(String orderNumber) {
         return orderRepository.findWithDelivery(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithDeliveryPayment(String orderNumber) {
         return orderRepository.findWithDeliveryPayment(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithAllExceptMember(String orderNumber) {
         return orderRepository.findWithAllExceptMember(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithAll(String orderNumber) {
         return orderRepository.findWithAll(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
     }
 
     public void updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
         if (newProductNamesCount == null || newProductNamesCount.isEmpty()) {
-            throw new IllegalArgumentException("주문을 수정할 상품이 없습니다.");
+            throw new IllegalArgumentException("주문을 수정할 상품이 없습니다");
         }
 
         Order order = findOrderWithAllExceptMember(orderNumber);
 
         if (order.getId() == null) {
-            throw new IllegalArgumentException("식별자가 없는 잘못된 주문입니다.");
+            throw new IllegalArgumentException("식별자가 없는 잘못된 주문입니다");
         }
 
         Map<String, Integer> currentProductNamesCount = order.getOrderProductsAsMap();

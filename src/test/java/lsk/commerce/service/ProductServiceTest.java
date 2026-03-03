@@ -68,7 +68,13 @@ class ProductServiceTest {
             @Test
             void album() {
                 //given
-                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
+                        .build();
 
                 given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(false);
                 given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category1));
@@ -91,7 +97,13 @@ class ProductServiceTest {
             @Test
             void book() {
                 //given
-                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(10).author("김영한").isbn("9788960777330").build();
+                Book book = Book.builder()
+                        .name("자바 ORM 표준 JPA 프로그래밍")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .author("김영한")
+                        .isbn("9788960777330")
+                        .build();
 
                 given(productRepository.existsBook(anyString(), anyString(), anyString())).willReturn(false);
                 given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category2));
@@ -114,7 +126,13 @@ class ProductServiceTest {
             @Test
             void movie() {
                 //given
-                Movie movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(10).actor("마동석").director("강윤성").build();
+                Movie movie = Movie.builder()
+                        .name("범죄도시")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .actor("마동석")
+                        .director("강윤성")
+                        .build();
 
                 given(productRepository.existsMovie(anyString(), anyString(), anyString())).willReturn(false);
                 given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category3));
@@ -141,14 +159,20 @@ class ProductServiceTest {
             @Test
             void duplicateProduct() {
                 //given
-                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
+                        .build();
 
                 given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(true);
 
                 //when
                 assertThatThrownBy(() -> productService.register(album, List.of("가요")))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 존재하는 상품입니다.");
+                        .hasMessage("이미 존재하는 상품입니다");
 
                 //then
                 assertAll(
@@ -161,7 +185,13 @@ class ProductServiceTest {
             @Test
             void failedValidateCategories() {
                 //given
-                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
+                        .build();
 
                 given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(false);
                 given(categoryService.validateAndGetCategories(anyList())).willThrow(new IllegalArgumentException());
@@ -189,7 +219,9 @@ class ProductServiceTest {
             @Test
             void byName() {
                 //given
-                Album album = Album.builder().name("BANG BANG").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
 
                 given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
 
@@ -206,9 +238,15 @@ class ProductServiceTest {
             @Test
             void all() {
                 //given
-                Album album = Album.builder().name("BANG BANG").build();
-                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").build();
-                Movie movie = Movie.builder().name("범죄도시").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
+                Book book = Book.builder()
+                        .name("자바 ORM 표준 JPA 프로그래밍")
+                        .build();
+                Movie movie = Movie.builder()
+                        .name("범죄도시")
+                        .build();
 
                 given(productRepository.findAll()).willReturn(List.of(album, book, movie));
 
@@ -251,7 +289,9 @@ class ProductServiceTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().name("BANG BANG").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
 
                 given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
 
@@ -275,7 +315,9 @@ class ProductServiceTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().name("BANG BANG").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
 
                 given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.of(album));
 
@@ -313,7 +355,9 @@ class ProductServiceTest {
             @Test
             void alreadyDeleted() {
                 //given
-                Album album = Album.builder().name("BANG BANG").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .build();
 
                 given(productRepository.findWithCategoryProductCategory(anyString()))
                         .willReturn(Optional.of(album))
@@ -351,25 +395,40 @@ class ProductServiceTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
-                Book book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
+                        .build();
+
+                //when
+                ProductResponse productDto = productService.getProductDto(album);
+
+                //then
+                assertThat(productDto)
+                        .extracting("name", "price", "stockQuantity", "artist", "studio")
+                        .containsExactly("BANG BANG", 15000, 10, "IVE", "STARSHIP");
+            }
+
+            @Test
+            void withCategory() {
+                //given
+                Book book = Book.builder()
+                        .name("자바 ORM 표준 JPA 프로그래밍")
+                        .build();
 
                 book.connectCategory(category2);
 
                 //when
-                ProductResponse productDto = productService.getProductDto(album);
                 ProductWithCategoryResponse productWithCategoryDto = productService.getProductWithCategoryDto(book);
 
                 //then
-                assertAll(
-                        () -> assertThat(productDto)
-                                .extracting("name", "price", "stockQuantity", "artist", "studio")
-                                .containsExactly("BANG BANG", 15000, 10, "IVE", "STARSHIP"),
-                        () -> assertThat(productWithCategoryDto.getCategoryNames())
-                                .isNotEmpty()
-                                .extracting("categoryName")
-                                .containsExactly("컴퓨터/IT")
-                );
+                assertThat(productWithCategoryDto.getCategoryNames())
+                        .isNotEmpty()
+                        .extracting("categoryName")
+                        .containsExactly("컴퓨터/IT");
             }
         }
     }

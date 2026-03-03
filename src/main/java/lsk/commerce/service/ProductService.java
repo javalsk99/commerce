@@ -82,11 +82,11 @@ public class ProductService {
         } else if (product instanceof Movie m) {
             result = productRepository.existsMovie(m.getName(), m.getActor(), m.getDirector());
         } else {
-            throw new IllegalArgumentException("잘못된 상품입니다.");
+            throw new IllegalArgumentException("잘못된 상품입니다");
         }
 
         if (result) {
-            throw new IllegalArgumentException("이미 존재하는 상품입니다.");
+            throw new IllegalArgumentException("이미 존재하는 상품입니다");
         }
     }
 }

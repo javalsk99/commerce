@@ -89,12 +89,35 @@ class OrderServiceTest {
 
     @BeforeEach
     void beforeEach() {
-        member = Member.builder().loginId("id_A").city("Seoul").street("Gangnam").zipcode("01234").build();
+        member = Member.builder()
+                .loginId("id_A")
+                .city("Seoul")
+                .street("Gangnam")
+                .zipcode("01234")
+                .build();
         delivery = new Delivery(member);
 
-        album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
-        book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
-        movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(5).actor("마동석").director("강윤성").build();
+        album = Album.builder()
+                .name("BANG BANG")
+                .price(15000)
+                .stockQuantity(10)
+                .artist("IVE")
+                .studio("STARSHIP")
+                .build();
+        book = Book.builder()
+                .name("자바 ORM 표준 JPA 프로그래밍")
+                .price(15000)
+                .stockQuantity(7)
+                .author("김영한")
+                .isbn("9788960777330")
+                .build();
+        movie = Movie.builder()
+                .name("범죄도시")
+                .price(15000)
+                .stockQuantity(5)
+                .actor("마동석")
+                .director("강윤성")
+                .build();
     }
 
     @Nested
@@ -166,7 +189,7 @@ class OrderServiceTest {
                 //when
                 assertThatThrownBy(() -> orderService.order("id_A", emptyProductMap))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주문할 상품이 없습니다.");
+                        .hasMessage("주문할 상품이 없습니다");
 
                 //then
                 assertAll(
@@ -182,12 +205,12 @@ class OrderServiceTest {
                 //given
                 Map<String, Integer> productMap = Map.of("BANG BANG", 3, "자바 ORM 표준 JPA 프로그래밍", 2, "범죄도시", 4);
 
-                given(memberService.findMemberByLoginId(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 아이디입니다."));
+                given(memberService.findMemberByLoginId(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 아이디입니다"));
 
                 //when
                 assertThatThrownBy(() -> orderService.order("id_B", productMap))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다.");
+                        .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
                 assertAll(
@@ -304,7 +327,7 @@ class OrderServiceTest {
                 //when
                 assertThatThrownBy(() -> orderService.findOrder(wrongOrderNumber))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다.");
+                        .hasMessage("존재하지 않는 주문입니다");
 
                 //then
                 then(orderRepository).should().findByOrderNumber(anyString());
@@ -434,7 +457,7 @@ class OrderServiceTest {
                 //when
                 assertThatThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), emptyProductMap))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주문을 수정할 상품이 없습니다.");
+                        .hasMessage("주문을 수정할 상품이 없습니다");
 
                 //then
                 assertAll(
@@ -456,7 +479,7 @@ class OrderServiceTest {
                 //when
                 assertThatThrownBy(() -> orderService.updateOrder(wrongOrderNumber, newProductMap))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다.");
+                        .hasMessage("존재하지 않는 주문입니다");
 
                 //then
                 assertAll(
@@ -480,7 +503,7 @@ class OrderServiceTest {
                 //when
                 assertThatThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("식별자가 없는 잘못된 주문입니다.");
+                        .hasMessage("식별자가 없는 잘못된 주문입니다");
 
                 //then
                 assertAll(
@@ -744,7 +767,7 @@ class OrderServiceTest {
                 //when
                 assertThatThrownBy(() -> orderService.cancelOrder(wrongOrderNumber))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다.");
+                        .hasMessage("존재하지 않는 주문입니다");
 
                 //then
                 then(orderRepository).should().findWithAllExceptMember(anyString());
@@ -813,7 +836,7 @@ class OrderServiceTest {
                 //when
                 assertThatThrownBy(() -> orderService.deleteOrder(wrongOrderNumber))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다.");
+                        .hasMessage("존재하지 않는 주문입니다");
 
                 //then
                 assertAll(
@@ -897,7 +920,7 @@ class OrderServiceTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> orderService.deleteOrder(order.getOrderNumber()))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다.");
+                        .hasMessage("존재하지 않는 주문입니다");
 
                 //then
                 assertAll(
@@ -942,7 +965,7 @@ class OrderServiceTest {
     static Stream<Arguments> keyValueProvider() {
         return Stream.of(
                 argumentSet("키 null", null, 3, "존재하지 않는 상품입니다. name: " + "null"),
-                argumentSet("값 null", "BANG BANG", null, "수량이 없습니다."),
+                argumentSet("값 null", "BANG BANG", null, "수량이 없습니다"),
                 argumentSet("키, 값 모두 null", null, null, "존재하지 않는 상품입니다. name: " + "null")
         );
     }

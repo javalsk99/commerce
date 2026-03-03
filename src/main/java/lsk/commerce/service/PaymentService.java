@@ -50,13 +50,13 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public Payment findPaymentByPaymentId(String paymentId) {
         return paymentRepository.findByPaymentId(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제 번호입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제 번호입니다"));
     }
 
     @Transactional(readOnly = true)
     public Payment findPaymentWithOrderDelivery(String paymentId) {
         return paymentRepository.findWithOrderDelivery(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제 번호입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제 번호입니다"));
     }
 
     protected Payment verifyAndComplete(PaidPayment paidPayment) {
@@ -108,12 +108,12 @@ public class PaymentService {
         List<Product> products = productService.findProducts();
 
         if (orderRequest.getOrderProducts().isEmpty()) {
-            throw new IllegalArgumentException("주문 상품이 비어 있습니다.");
+            throw new IllegalArgumentException("주문 상품이 비어 있습니다");
         }
 
         for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
             if (products.stream().noneMatch(p -> p.getName().equals(orderProduct.getName()))) {
-                throw new IllegalArgumentException("잘못된 상품이 있습니다.");
+                throw new IllegalArgumentException("잘못된 상품이 있습니다");
             }
         }
 

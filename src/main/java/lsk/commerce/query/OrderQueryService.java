@@ -24,7 +24,7 @@ public class OrderQueryService {
 
     public OrderQueryDto findOrder(String orderNumber) {
         OrderQueryDto order = orderQueryRepository.findOrderByOrderNumber(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
 
         List<OrderProductQueryDto> orderProductList = orderProductQueryRepository.findOrderProductList(orderNumber);
 

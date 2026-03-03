@@ -52,7 +52,10 @@ class MemberServiceTest {
             @Test
             void user() {
                 //given
-                MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
+                MemberRequest request = MemberRequest.builder()
+                        .loginId(loginId)
+                        .password(rawPassword)
+                        .build();
 
                 given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
                 given(memberRepository.existsByLoginId(anyString())).willReturn(false);
@@ -72,7 +75,10 @@ class MemberServiceTest {
             @Test
             void admin() {
                 //given
-                MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
+                MemberRequest request = MemberRequest.builder()
+                        .loginId(loginId)
+                        .password(rawPassword)
+                        .build();
 
                 given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
                 given(memberRepository.existsByLoginId(anyString())).willReturn(false);
@@ -95,7 +101,10 @@ class MemberServiceTest {
             @Test
             void existsLoginId() {
                 //given
-                MemberRequest request = MemberRequest.builder().loginId(loginId).password(rawPassword).build();
+                MemberRequest request = MemberRequest.builder()
+                        .loginId(loginId)
+                        .password(rawPassword)
+                        .build();
 
                 given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
                 given(memberRepository.existsByLoginId(anyString())).willReturn(true);
@@ -103,7 +112,7 @@ class MemberServiceTest {
                 //when
                 assertThatThrownBy(() -> memberService.join(request))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 사용 중인 아이디입니다.");
+                        .hasMessage("이미 사용 중인 아이디입니다");
 
                 //then
                 assertAll(
@@ -116,17 +125,21 @@ class MemberServiceTest {
             @Test
             void passwordBlank() {
                 //given
-                MemberRequest request1 = MemberRequest.builder().password(null).build();
-                MemberRequest request2 = MemberRequest.builder().password(" ").build();
+                MemberRequest request1 = MemberRequest.builder()
+                        .password(null)
+                        .build();
+                MemberRequest request2 = MemberRequest.builder()
+                        .password(" ")
+                        .build();
 
                 //when
                 assertAll(
                         () -> assertThatThrownBy(() -> memberService.join(request1))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("비밀번호가 비어있습니다."),
+                                .hasMessage("비밀번호가 비어있습니다"),
                         () -> assertThatThrownBy(() -> memberService.join(request2))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("비밀번호가 비어있습니다.")
+                                .hasMessage("비밀번호가 비어있습니다")
                 );
 
                 //then
@@ -139,14 +152,16 @@ class MemberServiceTest {
             @Test
             void rawPassword() {
                 //given
-                MemberRequest request = MemberRequest.builder().password(rawPassword).build();
+                MemberRequest request = MemberRequest.builder()
+                        .password(rawPassword)
+                        .build();
 
                 given(passwordEncoder.encode(anyString())).willReturn(rawPassword);
 
                 //when
                 assertThatThrownBy(() -> memberService.join(request))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("암호화되지 않은 비밀번호입니다.");
+                        .hasMessage("암호화되지 않은 비밀번호입니다");
 
                 //then
                 assertAll(
@@ -166,7 +181,9 @@ class MemberServiceTest {
             @Test
             void byLoginId() {
                 //given
-                Member member = Member.builder().loginId(loginId).build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .build();
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
 
@@ -180,7 +197,9 @@ class MemberServiceTest {
             @Test
             void forLogin() {
                 //given
-                Member member = Member.builder().loginId(loginId).build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .build();
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
 
@@ -203,7 +222,7 @@ class MemberServiceTest {
                 //when
                 assertThatThrownBy(() -> memberService.findMemberByLoginId(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다.");
+                        .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
                 then(memberRepository).should().findByLoginId(anyString());
@@ -217,7 +236,7 @@ class MemberServiceTest {
                 //when
                 assertThatThrownBy(() -> memberService.findMemberForLogin(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("아이디 또는 비밀번호가 틀렸습니다.");
+                        .hasMessage("아이디 또는 비밀번호가 틀렸습니다");
 
                 //then
                 then(memberRepository).should().findByLoginId(anyString());
@@ -234,7 +253,10 @@ class MemberServiceTest {
             @Test
             void basic() {
                 //given
-                Member member = Member.builder().loginId(loginId).password(encodedPassword).build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .password(encodedPassword)
+                        .build();
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
                 given(passwordEncoder.encode(anyString())).willReturn(newEncodedPassword);
@@ -264,7 +286,7 @@ class MemberServiceTest {
                 //when
                 assertThatThrownBy(() -> memberService.changePassword(loginId, "11111111"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다.");
+                        .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
                 assertAll(
@@ -285,7 +307,12 @@ class MemberServiceTest {
             @Test
             void basic() {
                 //given
-                Member member = Member.builder().loginId(loginId).city("Seoul").street("Gangnam").street("01234").build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .city("Seoul")
+                        .street("Gangnam")
+                        .street("01234")
+                        .build();
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
 
@@ -312,7 +339,9 @@ class MemberServiceTest {
             @Test
             void basic() {
                 //given
-                Member member = Member.builder().loginId(loginId).build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .build();
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
 
@@ -338,7 +367,7 @@ class MemberServiceTest {
                 //when
                 assertThatThrownBy(() -> memberService.deleteMember(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다.");
+                        .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
                 assertAll(
@@ -350,7 +379,9 @@ class MemberServiceTest {
             @Test
             void alreadyDeleted() {
                 //given
-                Member member = Member.builder().loginId(loginId).build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .build();
 
                 given(memberRepository.findByLoginId(anyString()))
                         .willReturn(Optional.of(member))
@@ -368,7 +399,7 @@ class MemberServiceTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> memberService.deleteMember(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다.");
+                        .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
                 assertAll(
@@ -388,7 +419,9 @@ class MemberServiceTest {
             @Test
             void basic() {
                 //given
-                Member member = Member.builder().loginId(loginId).build();
+                Member member = Member.builder()
+                        .loginId(loginId)
+                        .build();
 
                 //when
                 MemberResponse memberDto = memberService.getMemberDto(member);

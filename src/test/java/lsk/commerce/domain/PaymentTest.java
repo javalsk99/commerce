@@ -33,12 +33,28 @@ class PaymentTest {
 
     @BeforeEach
     void beforeEach() {
-        member = Member.builder().city("Seoul").street("Gangnam").zipcode("01234").build();
+        member = Member.builder()
+                .city("Seoul")
+                .street("Gangnam")
+                .zipcode("01234")
+                .build();
         delivery = new Delivery(member);
 
-        album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
-        book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).build();
-        movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(5).build();
+        album = Album.builder()
+                .name("BANG BANG")
+                .price(15000)
+                .stockQuantity(10)
+                .build();
+        book = Book.builder()
+                .name("자바 ORM 표준 JPA 프로그래밍")
+                .price(15000)
+                .stockQuantity(7)
+                .build();
+        movie = Movie.builder()
+                .name("범죄도시")
+                .price(15000)
+                .stockQuantity(5)
+                .build();
 
         orderProduct1 = OrderProduct.createOrderProduct(album, 5);
         orderProduct2 = OrderProduct.createOrderProduct(book, 3);
@@ -73,7 +89,7 @@ class PaymentTest {
                 //when
                 assertThatThrownBy(() -> Payment.requestPayment(null))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주문 정보가 없습니다.");
+                        .hasMessage("주문 정보가 없습니다");
             }
 
             @Test
@@ -140,7 +156,7 @@ class PaymentTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> Payment.requestPayment(order))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("이미 결제 정보가 있습니다.");
+                        .hasMessage("이미 결제 정보가 있습니다");
             }
         }
     }
@@ -200,7 +216,7 @@ class PaymentTest {
                 //when
                 assertThatThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("취소된 주문은 결제할 수 없습니다.");
+                        .hasMessage("취소된 주문은 결제할 수 없습니다");
             }
 
             @Test
@@ -277,7 +293,7 @@ class PaymentTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> order.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("이미 결제 완료된 주문입니다.");
+                        .hasMessage("이미 결제 완료된 주문입니다");
             }
         }
     }

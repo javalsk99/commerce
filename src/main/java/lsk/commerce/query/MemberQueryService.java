@@ -22,7 +22,7 @@ public class MemberQueryService {
 
     public MemberQueryDto findMember(String loginId) {
         MemberQueryDto member = memberQueryRepository.findMember(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다"));
 
         Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginId(loginId);
 

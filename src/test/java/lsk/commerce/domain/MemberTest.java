@@ -28,7 +28,7 @@ class MemberTest {
             @Test
             void user() {
                 //when
-                Member member = Member.builder().build();
+                Member member = new Member();
 
                 //then
                 assertThat(member.getGrade()).isEqualTo(Grade.USER);
@@ -37,7 +37,7 @@ class MemberTest {
             @Test
             void admin() {
                 //given
-                Member member = Member.builder().build();
+                Member member = new Member();
 
                 //when
                 member.setAdmin();
@@ -79,7 +79,7 @@ class MemberTest {
                 //when
                 assertThatThrownBy(() -> member.changePassword(password, passwordEncoder))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("비밀번호가 비어있습니다.");
+                        .hasMessage("비밀번호가 비어있습니다");
             }
 
             @Test
@@ -90,7 +90,7 @@ class MemberTest {
                 //when
                 assertThatThrownBy(() -> member.changePassword("00000000", passwordEncoder))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("비밀번호가 기존과 달라야 합니다.");
+                        .hasMessage("비밀번호가 기존과 달라야 합니다");
             }
 
             static Stream<Arguments> passwordProvider() {
@@ -162,7 +162,7 @@ class MemberTest {
                 //when
                 assertThatThrownBy(() -> member.changeAddress(member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode()))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주소가 기존과 달라야 합니다.");
+                        .hasMessage("주소가 기존과 달라야 합니다");
             }
         }
     }

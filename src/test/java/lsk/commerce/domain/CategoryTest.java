@@ -117,10 +117,10 @@ class CategoryTest {
                 assertAll(
                         () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(parentCategory))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다."),
+                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다"),
                         () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(childCategory))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다.")
+                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다")
                 );
             }
         }

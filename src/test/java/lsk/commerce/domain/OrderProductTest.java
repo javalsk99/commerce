@@ -18,7 +18,10 @@ class OrderProductTest {
             @Test
             void basic() {
                 //given
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
 
                 //when
                 OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
@@ -36,23 +39,29 @@ class OrderProductTest {
             @Test
             void countNull() {
                 //given
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, null))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("수량이 없습니다.");
+                        .hasMessage("수량이 없습니다");
             }
 
             @Test
             void exceed() {
                 //given
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
 
                 //when
                 assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, 11))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다.");
+                        .hasMessage("재고가 부족합니다");
 
                 //then
                 assertThat(album.getStockQuantity()).isEqualTo(10);
@@ -68,7 +77,11 @@ class OrderProductTest {
 
             @Test
             void basic() {
-                Album album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
                 OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
 
                 //when
@@ -89,18 +102,21 @@ class OrderProductTest {
                 //when
                 assertThatThrownBy(() -> orderProduct.getProductName())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("상품이 없습니다.");
+                        .hasMessage("상품이 없습니다");
             }
 
             @Test
             void productNameIsNull() {
-                Album album = Album.builder().price(15000).stockQuantity(10).build();
+                Album album = Album.builder()
+                        .price(15000)
+                        .stockQuantity(10)
+                        .build();
                 OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
 
                 //when
                 assertThatThrownBy(() -> orderProduct.getProductName())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("상품 이름이 없습니다.");
+                        .hasMessage("상품 이름이 없습니다");
             }
         }
     }

@@ -30,7 +30,7 @@ public class OrderController {
     @PostMapping("/orders")
     public String create(String memberLoginId, @RequestBody Map<String, Integer> productMap) {
         if (productMap.isEmpty()) {
-            throw new IllegalArgumentException("주문 상품이 없습니다.");
+            throw new IllegalArgumentException("주문 상품이 없습니다");
         }
 
         String orderNumber = orderService.order(memberLoginId, productMap);
@@ -51,7 +51,7 @@ public class OrderController {
     @PostMapping("/orders/{orderNumber}")
     public OrderResponse changeOrder(@PathVariable("orderNumber") String orderNumber, @RequestBody Map<String, Integer> newProductMap) {
         if (newProductMap.isEmpty()) {
-            throw new IllegalArgumentException("주문을 수정할 주문 상품이 없습니다.");
+            throw new IllegalArgumentException("주문을 수정할 주문 상품이 없습니다");
         }
 
         orderService.updateOrder(orderNumber, newProductMap);

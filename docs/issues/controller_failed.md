@@ -111,7 +111,7 @@
               }
           }
 
-          throw new IllegalArgumentException("해당 상품의 카테고리가 아닙니다.");
+          throw new IllegalArgumentException("해당 상품의 카테고리가 아닙니다");
       }
 
   this: lsk.commerce.domain.product.Book, getProduct: lsk.commerce.domain.Product$HibernateProxy 프록시로 나와서 return으로 못 빠지는 문제

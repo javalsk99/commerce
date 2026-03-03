@@ -36,7 +36,7 @@ public class CategoryProductService {
         Category category = categoryService.findCategoryByName(categoryName);
         List<CategoryProduct> categoryProducts = new ArrayList<>(findCategoryProductsWithProductByCategory(category));
         if (categoryProducts.isEmpty()) {
-            throw new IllegalArgumentException("카테고리에 상품이 없습니다.");
+            throw new IllegalArgumentException("카테고리에 상품이 없습니다");
         }
 
         for (CategoryProduct categoryProduct : categoryProducts) {
@@ -52,7 +52,7 @@ public class CategoryProductService {
         Category category = categoryService.findCategoryByName(categoryName);
 
         if (product.getCategoryProducts().stream().anyMatch(c -> category.equals(c.getCategory()))) {
-            throw new IllegalArgumentException("이미 상품이 해당 카테고리에 연결되어 있습니다.");
+            throw new IllegalArgumentException("이미 상품이 해당 카테고리에 연결되어 있습니다");
         }
 
         product.connectCategory(category);

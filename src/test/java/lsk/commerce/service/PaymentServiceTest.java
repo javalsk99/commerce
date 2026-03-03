@@ -87,12 +87,28 @@ class PaymentServiceTest {
 
     @BeforeEach
     void beforeEach() {
-        member = Member.builder().city("Seoul").street("Gangnam").zipcode("01234").build();
+        member = Member.builder()
+                .city("Seoul")
+                .street("Gangnam")
+                .zipcode("01234")
+                .build();
         delivery = new Delivery(member);
 
-        album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
-        book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).build();
-        movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(5).build();
+        album = Album.builder()
+                .name("BANG BANG")
+                .price(15000)
+                .stockQuantity(10)
+                .build();
+        book = Book.builder()
+                .name("자바 ORM 표준 JPA 프로그래밍")
+                .price(15000)
+                .stockQuantity(7)
+                .build();
+        movie = Movie.builder()
+                .name("범죄도시")
+                .price(15000)
+                .stockQuantity(5)
+                .build();
 
         orderProduct1 = OrderProduct.createOrderProduct(album, 5);
         orderProduct2 = OrderProduct.createOrderProduct(book, 3);
@@ -138,12 +154,12 @@ class PaymentServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다."));
+                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
                 //when
                 assertThatThrownBy(() -> paymentService.request(wrongOrderNumber))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다.");
+                        .hasMessage("존재하지 않는 주문입니다");
 
                 //then
                 assertAll(
@@ -174,7 +190,7 @@ class PaymentServiceTest {
                 //when 두 번째 호출
                 assertThatThrownBy(() -> paymentService.request(newOrder.getOrderNumber()))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("이미 결제 정보가 있습니다.");
+                        .hasMessage("이미 결제 정보가 있습니다");
 
                 //then
                 assertAll(
@@ -218,7 +234,7 @@ class PaymentServiceTest {
                 //when
                 assertThatThrownBy(() -> paymentService.findPaymentByPaymentId(wrongPaymentId))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 결제 번호입니다.");
+                        .hasMessage("존재하지 않는 결제 번호입니다");
             }
         }
     }
@@ -312,12 +328,12 @@ class PaymentServiceTest {
                 //given
                 givenCustomData(multipleOrder.getOrderNumber());
 
-                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다."));
+                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
                 //when
                 assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다.");
+                        .hasMessage("존재하지 않는 주문입니다");
 
                 //then
                 assertAll(
@@ -344,7 +360,7 @@ class PaymentServiceTest {
                 //when
                 assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주문 상품이 비어 있습니다.");
+                        .hasMessage("주문 상품이 비어 있습니다");
 
                 //then
                 assertAll(
@@ -374,7 +390,7 @@ class PaymentServiceTest {
                 //when
                 assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("잘못된 상품이 있습니다.");
+                        .hasMessage("잘못된 상품이 있습니다");
 
                 //then
                 assertAll(
@@ -501,7 +517,7 @@ class PaymentServiceTest {
                 //when
                 assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 결제 번호입니다.");
+                        .hasMessage("존재하지 않는 결제 번호입니다");
 
                 //then
                 assertAll(
@@ -618,7 +634,7 @@ class PaymentServiceTest {
                 //when
                 assertThatThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 결제 번호입니다.");
+                        .hasMessage("존재하지 않는 결제 번호입니다");
 
                 //then
                 then(paymentRepository).should().findByPaymentId(anyString());

@@ -106,7 +106,7 @@
       CategoryService
       protected void validateCategories(List<Category> categories) {
           if (categories == null || categories.isEmpty()) {
-              throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
+              throw new IllegalArgumentException("카테고리가 존재하지 않습니다");
           }
 
           Set<Long> categoriesIds = categories.stream()
@@ -115,7 +115,7 @@
 
           Long findCategoryCount = categoryRepository.countCategories(categoriesIds);
           if (categoriesIds.size() != findCategoryCount) {
-              throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다.");
+              throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다");
           }
       }
 

@@ -85,9 +85,9 @@ public class CategoryService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
 
         if (!category.getChild().isEmpty()) {
-            throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다.");
+            throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다");
         } else if (!category.getCategoryProducts().isEmpty()) {
-            throw new IllegalStateException("카테고리에 상품이 있어서 삭제할 수 없습니다.");
+            throw new IllegalStateException("카테고리에 상품이 있어서 삭제할 수 없습니다");
         }
 
         if (category.getParent() != null) {
@@ -124,14 +124,14 @@ public class CategoryService {
 
     protected List<Category> validateAndGetCategories(List<String> categoryNames) {
         if (categoryNames == null || categoryNames.isEmpty()) {
-            throw new IllegalArgumentException("카테고리가 존재하지 않습니다.");
+            throw new IllegalArgumentException("카테고리가 존재하지 않습니다");
         }
 
         Set<String> categoryNameSet = new HashSet<>(categoryNames);
 
         List<Category> categories = categoryRepository.findByNameSet(categoryNameSet);
         if (categoryNameSet.size() != categories.size()) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다.");
+            throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다");
         }
 
         return categories;

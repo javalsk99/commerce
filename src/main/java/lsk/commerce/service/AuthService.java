@@ -19,7 +19,7 @@ public class AuthService {
     public String login(String loginId, String password) {
         Member loginMember = memberService.findMemberForLogin(loginId);
         if (!passwordEncoder.matches(password, loginMember.getPassword())) {
-            throw new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다.");
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다");
         }
 
         return jwtProvider.createToken(loginMember);

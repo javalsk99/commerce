@@ -119,9 +119,9 @@
       CategoryService
       public void deleteCategory(Category category) {
           if (!category.getChild().isEmpty()) {
-              throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다.");
+              throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다");
           } else if (!category.getCategoryProducts().isEmpty()) {
-              throw new IllegalStateException("카테고리에 상품이 있어서 삭제할 수 없습니다.");
+              throw new IllegalStateException("카테고리에 상품이 있어서 삭제할 수 없습니다");
           }
 
           if (category.getParent() != null) {
@@ -192,7 +192,7 @@
       public CategoryProduct removeCategoryProduct(Category category) {
           for (CategoryProduct categoryProduct : category.getCategoryProducts()) {
               if (categoryProduct.getProduct() == null) {
-                  throw new IllegalArgumentException("카테고리에 상품이 없습니다.");
+                  throw new IllegalArgumentException("카테고리에 상품이 없습니다");
               }
 
               if (this.getId().equals(categoryProduct.getProduct().getId())) {
@@ -202,7 +202,7 @@
               }
           }
 
-          throw new IllegalArgumentException("해당 상품의 카테고리가 아닙니다.");
+          throw new IllegalArgumentException("해당 상품의 카테고리가 아닙니다");
       }
 
   해결: 상품은 많아도 들어가는 카테고리 수가 적으므로 상품에서 카테고리 상품을 for each문으로 반복한다.
@@ -211,7 +211,7 @@
       public CategoryProduct removeCategoryProduct(Category category) {
           for (CategoryProduct categoryProduct : categoryProducts) {
               if (categoryProduct.getCategory() == null) {
-                  throw new IllegalArgumentException("상품에 카테고리가 제대로 들어가지 않았습니다.");
+                  throw new IllegalArgumentException("상품에 카테고리가 제대로 들어가지 않았습니다");
               }
 
               if (category.getId().equals(categoryProduct.getCategory().getId())) {
@@ -221,5 +221,5 @@
               }
           }
 
-          throw new IllegalArgumentException("카테고리에 상품이 없습니다.");
+          throw new IllegalArgumentException("카테고리에 상품이 없습니다");
       }

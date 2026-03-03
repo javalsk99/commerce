@@ -36,12 +36,28 @@ class OrderTest {
 
     @BeforeEach
     void beforeEach() {
-        member = Member.builder().city("Seoul").street("Gangnam").zipcode("01234").build();
+        member = Member.builder()
+                .city("Seoul")
+                .street("Gangnam")
+                .zipcode("01234")
+                .build();
         delivery = new Delivery(member);
 
-        album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).build();
-        book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).build();
-        movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(5).build();
+        album = Album.builder()
+                .name("BANG BANG")
+                .price(15000)
+                .stockQuantity(10)
+                .build();
+        book = Book.builder()
+                .name("자바 ORM 표준 JPA 프로그래밍")
+                .price(15000)
+                .stockQuantity(7)
+                .build();
+        movie = Movie.builder()
+                .name("범죄도시")
+                .price(15000)
+                .stockQuantity(5)
+                .build();
 
         orderProduct1 = OrderProduct.createOrderProduct(album, 5);
         orderProduct2 = OrderProduct.createOrderProduct(book, 3);
@@ -89,10 +105,10 @@ class OrderTest {
                 assertAll(
                         () -> assertThatThrownBy(() -> Order.createOrder(nullAddressMember, delivery, List.of(orderProduct1, orderProduct2)))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("배송될 주소가 없습니다."),
+                                .hasMessage("배송될 주소가 없습니다"),
                         () -> assertThatThrownBy(() -> Order.createOrder(member, nullAddressDelivery, List.of(orderProduct1, orderProduct2)))
                                 .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("배송될 주소가 없습니다.")
+                                .hasMessage("배송될 주소가 없습니다")
                 );
             }
         }
@@ -373,7 +389,7 @@ class OrderTest {
                 //when
                 assertThatThrownBy(() -> order.cancel())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("결제 완료돼서 취소할 수 없습니다.");
+                        .hasMessage("결제 완료돼서 취소할 수 없습니다");
             }
 
             @ParameterizedTest
@@ -576,7 +592,7 @@ class OrderTest {
                 //when
                 assertThatThrownBy(() -> createdOrder.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("주문을 취소해야 삭제할 수 있습니다.");
+                        .hasMessage("주문을 취소해야 삭제할 수 있습니다");
             }
 
             @Test
@@ -590,7 +606,7 @@ class OrderTest {
                 //when
                 assertThatThrownBy(() -> paidOrder.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("배송이 완료돼야 삭제할 수 있습니다.");
+                        .hasMessage("배송이 완료돼야 삭제할 수 있습니다");
             }
 
             @Test

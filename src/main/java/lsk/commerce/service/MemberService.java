@@ -36,12 +36,12 @@ public class MemberService {
 
     public Member findMemberByLoginId(String loginId) {
         return memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다"));
     }
 
     public Member findMemberForLogin(String loginId) {
         return memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다"));
     }
 
     @Transactional
@@ -70,12 +70,12 @@ public class MemberService {
 
     private Member getMember(MemberRequest request) {
         if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
+            throw new IllegalArgumentException("비밀번호가 비어있습니다");
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         if (!encodedPassword.startsWith("$2a$")) {
-            throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다.");
+            throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다");
         }
 
         return new Member(request.getName(), request.getLoginId(), encodedPassword, request.getCity(), request.getStreet(), request.getZipcode());
@@ -83,7 +83,7 @@ public class MemberService {
 
     private void validateMember(Member member) {
         if (memberRepository.existsByLoginId(member.getLoginId())) {
-            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다");
         }
     }
 }

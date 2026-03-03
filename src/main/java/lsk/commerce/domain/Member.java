@@ -78,9 +78,9 @@ public class Member {
 
     public void changePassword(String newPassword, PasswordEncoder passwordEncoder) {
         if (newPassword == null || newPassword.isBlank()) {
-            throw new IllegalArgumentException("비밀번호가 비어있습니다.");
+            throw new IllegalArgumentException("비밀번호가 비어있습니다");
         } else if (passwordEncoder.matches(newPassword, this.password)) {
-            throw new IllegalArgumentException("비밀번호가 기존과 달라야 합니다.");
+            throw new IllegalArgumentException("비밀번호가 기존과 달라야 합니다");
         }
 
         this.password = passwordEncoder.encode(newPassword);
@@ -88,7 +88,7 @@ public class Member {
 
     public void changeAddress(String newCity, String newStreet, String newZipcode) {
         if (this.address.getCity().equals(newCity) && this.address.getStreet().equals(newStreet) && this.address.getZipcode().equals(newZipcode)) {
-            throw new IllegalArgumentException("주소가 기존과 달라야 합니다.");
+            throw new IllegalArgumentException("주소가 기존과 달라야 합니다");
         }
 
         this.address = new Address(newCity, newStreet, newZipcode);
