@@ -118,10 +118,13 @@ class OrderServiceTest {
                 .actor("마동석")
                 .director("강윤성")
                 .build();
+
     }
 
     @Nested
     class create {
+
+        Map<String, Integer> productMap = Map.of("BANG BANG", 3, "자바 ORM 표준 JPA 프로그래밍", 2, "범죄도시", 4);
 
         @Nested
         class SuccessCase {
@@ -129,8 +132,6 @@ class OrderServiceTest {
             @Test
             void basic() {
                 //given
-                Map<String, Integer> productMap = Map.of("BANG BANG", 3, "자바 ORM 표준 JPA 프로그래밍", 2, "범죄도시", 4);
-
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
@@ -203,8 +204,6 @@ class OrderServiceTest {
             @Test
             void memberNotFound() {
                 //given
-                Map<String, Integer> productMap = Map.of("BANG BANG", 3, "자바 ORM 표준 JPA 프로그래밍", 2, "범죄도시", 4);
-
                 given(memberService.findMemberByLoginId(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 아이디입니다"));
 
                 //when
@@ -270,8 +269,6 @@ class OrderServiceTest {
             @Test
             void failedSaveAll() {
                 //given
-                Map<String, Integer> productMap = Map.of("BANG BANG", 3, "자바 ORM 표준 JPA 프로그래밍", 2, "범죄도시", 4);
-
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
                 willThrow(new RuntimeException("JDBC Batch INSERT Failed")).given(orderProductJdbcRepository).saveAll(anyList());
@@ -292,8 +289,27 @@ class OrderServiceTest {
         }
     }
 
+    abstract class Setup {
+
+        OrderProduct orderProduct1;
+        OrderProduct orderProduct2;
+        OrderProduct orderProduct3;
+        Order order;
+
+        @BeforeEach
+        void beforeEach() {
+            orderProduct1 = OrderProduct.createOrderProduct(album, 3);
+            orderProduct2 = OrderProduct.createOrderProduct(book, 2);
+            orderProduct3 = OrderProduct.createOrderProduct(movie, 4);
+
+            order = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2, orderProduct3));
+
+            ReflectionTestUtils.setField(order, "id", 1L);
+        }
+    }
+
     @Nested
-    class Find {
+    class Find extends Setup {
 
         @Nested
         class SuccessCase {
@@ -301,8 +317,6 @@ class OrderServiceTest {
             @Test
             void basic() {
                 //given
-                Order order = createOrder();
-
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
 
                 //when
@@ -336,7 +350,7 @@ class OrderServiceTest {
     }
 
     @Nested
-    class Update {
+    class Update extends Setup {
 
         @Nested
         class SuccessCase {
@@ -344,8 +358,6 @@ class OrderServiceTest {
             @Test
             void basic() {
                 //given
-                Order order = createOrder();
-
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -391,8 +403,6 @@ class OrderServiceTest {
             @Test
             void idempotency() {
                 //given
-                Order order = createOrder();
-
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -450,8 +460,6 @@ class OrderServiceTest {
             @Test
             void productMapIsEmpty() {
                 //given
-                Order order = createOrder();
-
                 Map<String, Integer> emptyProductMap = new HashMap<>();
 
                 //when
@@ -518,8 +526,6 @@ class OrderServiceTest {
             @Test
             void failedDeleteOrderProducts() {
                 //given
-                Order order = createOrder();
-
                 Map<String, Integer> newProductMap = Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
@@ -544,8 +550,6 @@ class OrderServiceTest {
             @MethodSource("lsk.commerce.service.OrderServiceTest#keyValueProvider")
             void productMapContainsNullEntry(String key, Integer value, String message) {
                 //given
-                Order order = createOrder();
-
                 Map<String, Integer> newProductMap = new HashMap<>();
                 newProductMap.put(key, value);
 
@@ -571,8 +575,6 @@ class OrderServiceTest {
             @Test
             void productNotFound() {
                 //given
-                Order order = createOrder();
-
                 Map<String, Integer> newProductMap = Map.of("타임 캡슐", 3);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
@@ -597,8 +599,6 @@ class OrderServiceTest {
             @Test
             void failedSaveAll() {
                 //given
-                Order order = createOrder();
-
                 Map<String, Integer> newProductMap = Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
@@ -626,7 +626,7 @@ class OrderServiceTest {
 
                 OrderProduct orderProduct1 = OrderProduct.createOrderProduct(album, 3);
                 OrderProduct orderProduct2 = OrderProduct.createOrderProduct(book, 2);
-                OrderProduct orderProduct3 = OrderProduct.createOrderProduct(movie, 4);
+                OrderProduct orderProduct3 = OrderProduct.createOrderProduct(movie, 1);
 
                 return Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2, orderProduct3));
             }
@@ -634,7 +634,7 @@ class OrderServiceTest {
     }
 
     @Nested
-    class Cancel {
+    class Cancel extends Setup {
 
         @Nested
         class SuccessCase {
@@ -642,8 +642,6 @@ class OrderServiceTest {
             @Test
             void withoutPayment() {
                 //given
-                Order order = createOrder();
-
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
                 //when
@@ -675,7 +673,6 @@ class OrderServiceTest {
             @Test
             void withPayment() {
                 //given
-                Order order = createOrder();
                 Payment.requestPayment(order);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
@@ -709,7 +706,6 @@ class OrderServiceTest {
             @Test
             void idempotency() {
                 //given
-                Order order = createOrder();
                 Payment.requestPayment(order);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
@@ -776,7 +772,7 @@ class OrderServiceTest {
     }
 
     @Nested
-    class Delete {
+    class Delete extends Setup {
 
         @Nested
         class SuccessCase {
@@ -784,7 +780,6 @@ class OrderServiceTest {
             @Test
             void withoutPayment() {
                 //given
-                Order order = createOrder();
                 order.cancel();
 
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
@@ -805,7 +800,6 @@ class OrderServiceTest {
             @Test
             void withPayment() {
                 //given
-                Order order = createOrder();
                 Payment.requestPayment(order);
                 order.cancel();
 
@@ -850,7 +844,6 @@ class OrderServiceTest {
             @Test
             void failedSoftDeleteOrderProducts() {
                 //given
-                Order order = createOrder();
                 order.cancel();
 
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
@@ -873,7 +866,6 @@ class OrderServiceTest {
             @Test
             void failedDeleteOrder() {
                 //given
-                Order order = createOrder();
                 order.cancel();
 
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
@@ -897,7 +889,6 @@ class OrderServiceTest {
             @Test
             void alreadyDeleted() {
                 //given
-                Order order = createOrder();
                 Payment.requestPayment(order);
                 order.cancel();
 
@@ -934,14 +925,13 @@ class OrderServiceTest {
     }
 
     @Nested
-    class ChangeDto {
+    class ChangeDto extends Setup {
 
         @Nested
         class SuccessCase {
 
             @Test
             void basic() {
-                Order order = createOrder();
                 Payment.requestPayment(order);
 
                 //when
@@ -968,19 +958,5 @@ class OrderServiceTest {
                 argumentSet("값 null", "BANG BANG", null, "수량이 없습니다"),
                 argumentSet("키, 값 모두 null", null, null, "존재하지 않는 상품입니다. name: " + "null")
         );
-    }
-
-    private Order createOrder() {
-        Delivery delivery = new Delivery(member);
-
-        OrderProduct orderProduct1 = OrderProduct.createOrderProduct(album, 3);
-        OrderProduct orderProduct2 = OrderProduct.createOrderProduct(book, 2);
-        OrderProduct orderProduct3 = OrderProduct.createOrderProduct(movie, 4);
-
-        Order order = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2, orderProduct3));
-
-        ReflectionTestUtils.setField(order, "id", 1L);
-
-        return order;
     }
 }

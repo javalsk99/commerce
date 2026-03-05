@@ -3,6 +3,7 @@ package lsk.commerce.domain;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -320,8 +321,25 @@ class ProductTest {
         }
     }
 
+    abstract class CategorySetup {
+
+        Category category1;
+        Category category2;
+        Category category3;
+
+        @BeforeEach
+        void beforeEach() {
+            category1 = Category.createCategory(null, "가요");
+            category2 = Category.createCategory(category1, "댄스");
+            category3 = Category.createCategory(category1, "발라드");
+
+            ReflectionTestUtils.setField(category1, "id", 1L);
+            ReflectionTestUtils.setField(category2, "id", 2L);
+        }
+    }
+
     @Nested
-    class ConnectCategory {
+    class ConnectCategory extends CategorySetup {
 
         @Nested
         class SuccessCase {
@@ -329,20 +347,17 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Category category = Category.createCategory(null, "가요");
                 Album album = Album.builder()
                         .name("BANG BANG")
                         .build();
 
-                ReflectionTestUtils.setField(category, "id", 1L);
-
                 //when
-                album.connectCategory(category);
+                album.connectCategory(category1);
 
                 //then
                 assertThat(album.getCategoryProducts())
                         .isNotEmpty()
-                        .isEqualTo(category.getCategoryProducts())
+                        .isEqualTo(category1.getCategoryProducts())
                         .extracting("category.name", "product.name")
                         .containsExactly(tuple("가요", "BANG BANG"));
             }
@@ -354,11 +369,10 @@ class ProductTest {
             @Test
             void categoryIdIsNull() {
                 //given
-                Category category = Category.createCategory(null, "가요");
                 Album album = new Album();
 
                 //when
-                assertThatThrownBy(() -> album.connectCategory(category))
+                assertThatThrownBy(() -> album.connectCategory(category3))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("식별자가 없는 잘못된 카테고리입니다");
 
@@ -369,7 +383,7 @@ class ProductTest {
     }
 
     @Nested
-    class ConnectCategories {
+    class ConnectCategories extends CategorySetup {
 
         @Nested
         class SuccessCase {
@@ -377,14 +391,9 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Category category1 = Category.createCategory(null, "가요");
-                Category category2 = Category.createCategory(category1, "댄스");
                 Album album = Album.builder()
                         .name("BANG BANG")
                         .build();
-
-                ReflectionTestUtils.setField(category1, "id", 1L);
-                ReflectionTestUtils.setField(category2, "id", 2L);
 
                 //when
                 album.connectCategories(List.of(category2));
@@ -410,14 +419,9 @@ class ProductTest {
             @Test
             void ignoreDuplicateParent() {
                 //given
-                Category category1 = Category.createCategory(null, "가요");
-                Category category2 = Category.createCategory(category1, "댄스");
                 Album album = Album.builder()
                         .name("BANG BANG")
                         .build();
-
-                ReflectionTestUtils.setField(category1, "id", 1L);
-                ReflectionTestUtils.setField(category2, "id", 2L);
 
                 //when
                 album.connectCategories(List.of(category1, category2));
@@ -443,7 +447,7 @@ class ProductTest {
     }
 
     @Nested
-    class RemoveCategoryProductsFormCategory {
+    class RemoveCategoryProductsFormCategory extends CategorySetup {
 
         @Nested
         class SuccessCase {
@@ -451,12 +455,7 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Category category1 = Category.createCategory(null, "가요");
-                Category category2 = Category.createCategory(category1, "댄스");
                 Album album = new Album();
-
-                ReflectionTestUtils.setField(category1, "id", 1L);
-                ReflectionTestUtils.setField(category2, "id", 2L);
 
                 album.connectCategories(List.of(category2));
 
@@ -474,12 +473,7 @@ class ProductTest {
             @Test
             void idempotency() {
                 //given
-                Category category1 = Category.createCategory(null, "가요");
-                Category category2 = Category.createCategory(category1, "댄스");
                 Album album = new Album();
-
-                ReflectionTestUtils.setField(category1, "id", 1L);
-                ReflectionTestUtils.setField(category2, "id", 2L);
 
                 album.connectCategories(List.of(category2));
 
@@ -507,7 +501,7 @@ class ProductTest {
     }
 
     @Nested
-    class RemoveCategoryProduct {
+    class RemoveCategoryProduct extends CategorySetup {
 
         @Nested
         class SuccessCase {
@@ -515,35 +509,31 @@ class ProductTest {
             @Test
             void basic() {
                 //given
-                Category category = Category.createCategory(null, "가요");
                 Album album = new Album();
 
-                ReflectionTestUtils.setField(category, "id", 1L);
-
-                album.connectCategory(category);
+                album.connectCategory(category1);
 
                 //when
-                album.removeCategoryProduct(category);
+                album.removeCategoryProduct(category1);
 
                 //then
                 assertAll(
                         () -> assertThat(album.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(category.getCategoryProducts()).isEmpty()
+                        () -> assertThat(category1.getCategoryProducts()).isEmpty()
                 );
             }
         }
 
         @Nested
-        class FailureCase {
+        class FailureCase extends CategorySetup {
 
             @Test
             void categoryProductsIsEmpty() {
                 //given
-                Category category = Category.createCategory(null, "가요");
                 Album album = new Album();
 
                 //when
-                assertThatThrownBy(() -> album.removeCategoryProduct(category))
+                assertThatThrownBy(() -> album.removeCategoryProduct(category1))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("상품과 연결된 카테고리가 없습니다");
             }
@@ -551,12 +541,7 @@ class ProductTest {
             @Test
             void notLinked() {
                 //given
-                Category category1 = Category.createCategory(null, "가요");
-                Category category2 = Category.createCategory(category1, "댄스");
                 Album album = new Album();
-
-                ReflectionTestUtils.setField(category1, "id", 1L);
-                ReflectionTestUtils.setField(category2, "id", 2L);
 
                 album.connectCategory(category1);
 

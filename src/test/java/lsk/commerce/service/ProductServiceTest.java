@@ -265,7 +265,7 @@ class ProductServiceTest {
         class FailureCase {
 
             @Test
-            void byName_productNotFound() {
+            void byName_ProductNotFound() {
                 //given
                 given(productRepository.findByName(anyString())).willReturn(Optional.empty());
 

@@ -12,18 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class CategoryTest {
 
-    Category parentCategory;
-    Category childCategory;
-
-    @BeforeEach
-    void beforeEach() {
-        parentCategory = Category.createCategory(null, "가요");
-        childCategory = Category.createCategory(parentCategory, "댄스");
-
-        ReflectionTestUtils.setField(parentCategory, "id", 1L);
-        ReflectionTestUtils.setField(childCategory, "id", 2L);
-    }
-
     @Nested
     class Create {
 
@@ -46,8 +34,23 @@ class CategoryTest {
         }
     }
 
+    abstract class Setup {
+
+        Category parentCategory;
+        Category childCategory;
+
+        @BeforeEach
+        void beforeEach() {
+            parentCategory = Category.createCategory(null, "가요");
+            childCategory = Category.createCategory(parentCategory, "댄스");
+
+            ReflectionTestUtils.setField(parentCategory, "id", 1L);
+            ReflectionTestUtils.setField(childCategory, "id", 2L);
+        }
+    }
+
     @Nested
-    class UnConnect {
+    class UnConnect extends Setup {
 
         @Nested
         class SuccessCase {
@@ -85,7 +88,7 @@ class CategoryTest {
     }
 
     @Nested
-    class ChangeParent {
+    class ChangeParent extends Setup {
 
         @Nested
         class SuccessCase {

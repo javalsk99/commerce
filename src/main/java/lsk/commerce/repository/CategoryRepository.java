@@ -19,11 +19,6 @@ public class CategoryRepository {
         em.persist(category);
     }
 
-    public List<Category> findAll() {
-        return em.createQuery("select c from Category c", Category.class)
-                .getResultList();
-    }
-
     public Optional<Category> findWithChild(String categoryName) {
         return em.createQuery(
                         "select c from Category c" +
@@ -34,11 +29,16 @@ public class CategoryRepository {
                 .findFirst();
     }
 
+    public List<Category> findAll() {
+        return em.createQuery("select c from Category c", Category.class)
+                .getResultList();
+    }
+
     public void delete(Category category) {
         em.remove(category);
     }
 
-    public List<Category> existsByCategoryName(String categoryName, String parentCategoryName) {
+    public List<Category> existsByCategoryNames(String categoryName, String parentCategoryName) {
         return em.createQuery(
                 "select c from Category c" +
                         " where c.name = :name" +

@@ -22,13 +22,6 @@ import static org.junit.jupiter.params.provider.Arguments.*;
 class DeliveryTest {
 
     Member member;
-    Delivery delivery;
-    Album album;
-    Book book;
-    Movie movie;
-    OrderProduct orderProduct1;
-    OrderProduct orderProduct2;
-    Order order;
 
     @BeforeEach
     void beforeEach() {
@@ -37,33 +30,6 @@ class DeliveryTest {
                 .street("Gangnam")
                 .zipcode("01234")
                 .build();
-        delivery = new Delivery(member);
-
-        album = Album.builder()
-                .name("BANG BANG")
-                .price(15000)
-                .stockQuantity(10)
-                .build();
-        book = Book.builder()
-                .name("자바 ORM 표준 JPA 프로그래밍")
-                .price(15000)
-                .stockQuantity(7)
-                .build();
-        movie = Movie.builder()
-                .name("범죄도시")
-                .price(15000)
-                .stockQuantity(5)
-                .build();
-
-        orderProduct1 = OrderProduct.createOrderProduct(album, 5);
-        orderProduct2 = OrderProduct.createOrderProduct(book, 3);
-
-        order = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
-
-        Payment.requestPayment(order);
-
-        order.getPayment().complete(LocalDateTime.now());
-        order.completePaid();
     }
 
     @Nested
@@ -127,8 +93,50 @@ class DeliveryTest {
         }
     }
 
+    abstract class Setup {
+
+        Delivery delivery;
+        Album album;
+        Book book;
+        Movie movie;
+        OrderProduct orderProduct1;
+        OrderProduct orderProduct2;
+        Order order;
+
+        @BeforeEach
+        void beforeEach() {
+            delivery = new Delivery(member);
+
+            album = Album.builder()
+                    .name("BANG BANG")
+                    .price(15000)
+                    .stockQuantity(10)
+                    .build();
+            book = Book.builder()
+                    .name("자바 ORM 표준 JPA 프로그래밍")
+                    .price(15000)
+                    .stockQuantity(7)
+                    .build();
+            movie = Movie.builder()
+                    .name("범죄도시")
+                    .price(15000)
+                    .stockQuantity(5)
+                    .build();
+
+            orderProduct1 = OrderProduct.createOrderProduct(album, 5);
+            orderProduct2 = OrderProduct.createOrderProduct(book, 3);
+
+            order = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+
+            Payment.requestPayment(order);
+
+            order.getPayment().complete(LocalDateTime.now());
+            order.completePaid();
+        }
+    }
+
     @Nested
-    class StartDelivery {
+    class StartDelivery extends Setup {
 
         @Nested
         class SuccessCase {
@@ -200,7 +208,7 @@ class DeliveryTest {
     }
 
     @Nested
-    class CompleteDelivery {
+    class CompleteDelivery extends Setup {
 
         @Nested
         class SuccessCase {

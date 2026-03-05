@@ -32,7 +32,6 @@ class OrderTest {
     Movie movie;
     OrderProduct orderProduct1;
     OrderProduct orderProduct2;
-    Order order;
 
     @BeforeEach
     void beforeEach() {
@@ -61,8 +60,6 @@ class OrderTest {
 
         orderProduct1 = OrderProduct.createOrderProduct(album, 5);
         orderProduct2 = OrderProduct.createOrderProduct(book, 3);
-
-        order = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
     }
 
     @Nested
@@ -114,8 +111,17 @@ class OrderTest {
         }
     }
 
+    abstract class Setup {
+        Order order;
+
+        @BeforeEach
+        void beforeEach() {
+            order = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+        }
+    }
+
     @Nested
-    class Clear {
+    class Clear extends Setup {
 
         @Nested
         class SuccessCase {
@@ -235,7 +241,7 @@ class OrderTest {
     }
 
     @Nested
-    class GetOrderProductAsMap {
+    class GetOrderProductAsMap extends Setup {
 
         @Nested
         class SuccessCase {
@@ -254,7 +260,7 @@ class OrderTest {
     }
 
     @Nested
-    class Update {
+    class Update extends Setup {
 
         @Nested
         class SuccessCase {
@@ -287,7 +293,7 @@ class OrderTest {
     }
 
     @Nested
-    class Cancel {
+    class Cancel extends Setup {
 
         @Nested
         class SuccessCase {
@@ -422,7 +428,7 @@ class OrderTest {
     }
 
     @Nested
-    class CompletePaid {
+    class CompletePaid extends Setup {
 
         @Nested
         class SuccessCase {
@@ -550,7 +556,7 @@ class OrderTest {
     }
 
     @Nested
-    class ValidateDeletable {
+    class ValidateDeletable extends Setup {
 
         @Nested
         class SuccessCase {

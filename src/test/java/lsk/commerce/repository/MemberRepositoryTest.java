@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolationException;
 import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,7 +47,7 @@ class MemberRepositoryTest {
 
                 //when
                 memberRepository.save(member);
-                em.persist(member);
+                em.flush();
                 Long memberId = member.getId();
                 em.clear();
 
@@ -115,20 +116,29 @@ class MemberRepositoryTest {
         }
     }
 
+    abstract class Setup {
+
+        Long memberId;
+        String loginId;
+
+        @BeforeEach
+        void beforeEach() {
+            Member member = createMember1();
+            em.persistAndFlush(member);
+            memberId = member.getId();
+            loginId = member.getLoginId();
+            em.clear();
+        }
+    }
+
     @Nested
-    class Find {
+    class Find extends Setup {
 
         @Nested
         class SuccessCase {
 
             @Test
             void basic() {
-                //given
-                Member member = createMember1();
-                em.persistAndFlush(member);
-                String loginId = member.getLoginId();
-                em.clear();
-
                 //when
                 Optional<Member> findMember = memberRepository.findByLoginId(loginId);
 
@@ -154,6 +164,73 @@ class MemberRepositoryTest {
         }
     }
 
+    @Nested
+    class Delete extends Setup {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Member member = em.find(Member.class, memberId);
+
+                //when
+                memberRepository.delete(member);
+                em.flush();
+                em.clear();
+
+                //then
+                Member findMember = em.find(Member.class, memberId);
+                assertThat(findMember).isNull();
+            }
+        }
+
+        @Nested
+        class FailureCase {
+
+            @Test
+            void memberNull() {
+                //when
+                assertThatThrownBy(() -> memberRepository.delete(null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("null entity");
+            }
+        }
+    }
+
+    @Nested
+    class ExistsByLoginId extends Setup {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void shouldReturnTrue_WhenLoginIdExists() {
+                //given
+                Member member = createMember2();
+
+                //when
+                boolean result = memberRepository.existsByLoginId(member.getLoginId());
+
+                //then
+                assertThat(result).isTrue();
+            }
+
+            @Test
+            void shouldReturnFalse_WhenLoginIdDoesNotExists() {
+                //given
+                Member member = createMember3();
+
+                //when
+                boolean result = memberRepository.existsByLoginId(member.getLoginId());
+
+                //then
+                assertThat(result).isFalse();
+            }
+        }
+    }
+
     private Member createMember1() {
         return Member.builder()
                 .name("유저A")
@@ -173,6 +250,17 @@ class MemberRepositoryTest {
                 .city("Gyeonggi-do")
                 .street("Gangbuk")
                 .zipcode("01235")
+                .build();
+    }
+
+    private Member createMember3() {
+        return Member.builder()
+                .name("유저C")
+                .loginId("id_C")
+                .password("22222222")
+                .city("Seoul")
+                .street("Gangdong")
+                .zipcode("01236")
                 .build();
     }
 }

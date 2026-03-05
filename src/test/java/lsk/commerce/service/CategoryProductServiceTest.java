@@ -256,7 +256,7 @@ class CategoryProductServiceTest {
             }
 
             @Test
-            void categoryProductsIsEmpty_byProduct() {
+            void categoryProductsIsEmpty_ByProduct() {
                 //given
                 given(categoryService.findCategoryByName(anyString())).willReturn(category4);
                 given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(Collections.emptyList());

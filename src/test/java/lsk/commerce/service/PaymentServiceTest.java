@@ -116,9 +116,6 @@ class PaymentServiceTest {
 
         singleOrder = Order.createOrder(member, delivery, List.of(orderProduct3));
         multipleOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
-
-        Payment.requestPayment(singleOrder);
-        Payment.requestPayment(multipleOrder);
     }
 
     @Nested
@@ -130,21 +127,19 @@ class PaymentServiceTest {
             @Test
             void basic() {
                 //given
-                Order newOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
-
-                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(newOrder);
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
 
                 //when
-                paymentService.request(newOrder.getOrderNumber());
+                paymentService.request(multipleOrder.getOrderNumber());
 
                 //then
                 assertAll(
                         () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(paymentRepository).should().save(newOrder.getPayment())
+                        () -> then(paymentRepository).should().save(multipleOrder.getPayment())
                 );
-                assertThat(newOrder.getPayment())
+                assertThat(multipleOrder.getPayment())
                         .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
-                        .containsExactly(newOrder, newOrder.getTotalAmount(), null, PaymentStatus.PENDING);
+                        .containsExactly(multipleOrder, multipleOrder.getTotalAmount(), null, PaymentStatus.PENDING);
             }
         }
 
@@ -171,24 +166,22 @@ class PaymentServiceTest {
             @Test
             void duplicateRequest() {
                 //given
-                Order newOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
-
-                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(newOrder);
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
 
                 //when 첫 번째 호출
-                paymentService.request(newOrder.getOrderNumber());
+                paymentService.request(multipleOrder.getOrderNumber());
 
                 //then
                 assertAll(
                         () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(paymentRepository).should().save(newOrder.getPayment())
+                        () -> then(paymentRepository).should().save(multipleOrder.getPayment())
                 );
-                assertThat(newOrder.getPayment())
+                assertThat(multipleOrder.getPayment())
                         .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
-                        .containsExactly(newOrder, newOrder.getTotalAmount(), null, PaymentStatus.PENDING);
+                        .containsExactly(multipleOrder, multipleOrder.getTotalAmount(), null, PaymentStatus.PENDING);
 
                 //when 두 번째 호출
-                assertThatThrownBy(() -> paymentService.request(newOrder.getOrderNumber()))
+                assertThatThrownBy(() -> paymentService.request(multipleOrder.getOrderNumber()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 정보가 있습니다");
 
@@ -201,8 +194,17 @@ class PaymentServiceTest {
         }
     }
 
+    abstract class Setup {
+
+        @BeforeEach
+        void beforeEach() {
+            Payment.requestPayment(singleOrder);
+            Payment.requestPayment(multipleOrder);
+        }
+    }
+
     @Nested
-    class Find {
+    class Find extends Setup {
 
         @Nested
         class SuccessCase {
@@ -240,7 +242,7 @@ class PaymentServiceTest {
     }
 
     @Nested
-    class VerityAndComplete {
+    class VerityAndComplete extends Setup {
 
         @Nested
         class SuccessCase {
@@ -464,7 +466,7 @@ class PaymentServiceTest {
             }
 
             @Test
-            void orderNameMismatch_multipleOrderProducts_withSingleFormat() {
+            void orderNameMismatch_MultipleOrderProducts_WithSingleFormat() {
                 //given
                 OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
                 OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
@@ -602,7 +604,7 @@ class PaymentServiceTest {
     }
 
     @Nested
-    class FailedPayment {
+    class FailedPayment extends Setup {
 
         @Nested
         class SuccessCase {

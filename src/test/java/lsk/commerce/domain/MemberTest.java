@@ -96,8 +96,8 @@ class MemberTest {
             static Stream<Arguments> passwordProvider() {
                 return Stream.of(
                         argumentSet("비밀번호 null", (Object) null),
-                        argumentSet("비밀번호 공백", ""),
-                        argumentSet("비밀번호 빈 문자열", " ")
+                        argumentSet("비밀번호 빈 문자열", ""),
+                        argumentSet("비밀번호 공백", " ")
                 );
             }
         }

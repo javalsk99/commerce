@@ -78,14 +78,14 @@ class CategoryServiceTest {
             @Test
             void parentCategory() {
                 //given
-                given(categoryRepository.existsByCategoryName(anyString(), any())).willReturn(Collections.emptyList());
+                given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(Collections.emptyList());
 
                 //when
                 categoryService.create("컴퓨터/IT", null);
 
                 //then
                 assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), any()),
+                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), any()),
                         () -> then(categoryRepository).should().save(argThat(c ->
                                 c.getName().equals("컴퓨터/IT") && c.getParent() == null))
                 );
@@ -94,14 +94,14 @@ class CategoryServiceTest {
             @Test
             void childCategory() {
                 //given
-                given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(categories1);
+                given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(categories1);
 
                 //when
                 categoryService.create("프로그래밍 언어", "컴퓨터/IT");
 
                 //then
                 assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), anyString()),
+                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()),
                         () -> then(categoryRepository).should().save(argThat(c ->
                                 c.getName().equals("프로그래밍 언어") && c.getParent().getName().equals("컴퓨터/IT")))
                 );
@@ -114,7 +114,7 @@ class CategoryServiceTest {
             @Test
             void existsName() {
                 //given
-                given(categoryRepository.existsByCategoryName(anyString(), any())).willReturn(categories1);
+                given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(categories1);
 
                 //when
                 assertThatThrownBy(() -> categoryService.create("컴퓨터/IT", null))
@@ -123,15 +123,15 @@ class CategoryServiceTest {
 
                 //then
                 assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), any()),
+                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), any()),
                         () -> then(categoryRepository).should(never()).save(any())
                 );
             }
 
             @Test
-            void childCategory_parentNotFound() {
+            void childCategory_ParentNotFound() {
                 //given
-                given(categoryRepository.existsByCategoryName(anyString(), anyString())).willReturn(Collections.emptyList());
+                given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(Collections.emptyList());
 
                 //when
                 assertThatThrownBy(() -> categoryService.create("프로그래밍 언어", "컴퓨터/IT"))
@@ -140,7 +140,7 @@ class CategoryServiceTest {
 
                 //then
                 assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryName(anyString(), anyString()),
+                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()),
                         () -> then(categoryRepository).should(never()).save(any())
                 );
             }
@@ -183,7 +183,7 @@ class CategoryServiceTest {
             }
 
             @Test
-            void byNames_ignoreDuplicateNames() {
+            void byNames_IgnoreDuplicateNames() {
                 //given
                 given(categoryRepository.findAll()).willReturn(categories1);
 
@@ -219,7 +219,7 @@ class CategoryServiceTest {
         class FailureCase {
 
             @Test
-            void byName_categoryNotFound() {
+            void byName_CategoryNotFound() {
                 //given
                 given(categoryRepository.findAll()).willReturn(categories1);
 
@@ -233,7 +233,7 @@ class CategoryServiceTest {
             }
 
             @Test
-            void byNames_categoryNotFound() {
+            void byNames_CategoryNotFound() {
                 //given
                 given(categoryRepository.findAll()).willReturn(categories1);
 

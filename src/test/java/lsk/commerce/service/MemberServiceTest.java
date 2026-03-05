@@ -215,7 +215,7 @@ class MemberServiceTest {
         class FailureCase {
 
             @Test
-            void byLoginId_memberNotFound() {
+            void byLoginId_MemberNotFound() {
                 //given
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
@@ -229,7 +229,7 @@ class MemberServiceTest {
             }
 
             @Test
-            void forLogin_memberNotFound() {
+            void forLogin_MemberNotFound() {
                 //given
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
