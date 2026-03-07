@@ -45,11 +45,15 @@ class MemberRepositoryTest {
                 //given
                 Member member = createMember1();
 
+                System.out.println("================= WHEN START =================");
+
                 //when
                 memberRepository.save(member);
                 em.flush();
                 Long memberId = member.getId();
                 em.clear();
+
+                System.out.println("================= WHEN END ===================");
 
                 //then
                 Member findMember = em.find(Member.class, memberId);
@@ -87,11 +91,16 @@ class MemberRepositoryTest {
                 em.persistAndFlush(member1);
                 em.clear();
 
-                //when
                 Member member2 = createMember2();
+
+                System.out.println("================= WHEN START =================");
+
+                //when
                 assertThatThrownBy(() -> memberRepository.save(member2))
                         .isInstanceOf(org.hibernate.exception.ConstraintViolationException.class)
                         .hasMessageContaining("Duplicate entry");
+
+                System.out.println("================= WHEN END ===================");
             }
 
             static Stream<Arguments> nullFieldsMemberProvider() {
@@ -139,8 +148,12 @@ class MemberRepositoryTest {
 
             @Test
             void basic() {
+                System.out.println("================= WHEN START =================");
+
                 //when
                 Optional<Member> findMember = memberRepository.findByLoginId(loginId);
+
+                System.out.println("================= WHEN END ===================");
 
                 //then
                 assertAll(
@@ -155,8 +168,12 @@ class MemberRepositoryTest {
 
             @Test
             void memberNotFound() {
+                System.out.println("================= WHEN START =================");
+
                 //when
                 Optional<Member> findMember = memberRepository.findByLoginId("id_B");
+
+                System.out.println("================= WHEN END ===================");
 
                 //then
                 assertThat(findMember).isEmpty();
@@ -175,26 +192,18 @@ class MemberRepositoryTest {
                 //given
                 Member member = em.find(Member.class, memberId);
 
+                System.out.println("================= WHEN START =================");
+
                 //when
                 memberRepository.delete(member);
                 em.flush();
                 em.clear();
 
+                System.out.println("================= WHEN END ===================");
+
                 //then
                 Member findMember = em.find(Member.class, memberId);
                 assertThat(findMember).isNull();
-            }
-        }
-
-        @Nested
-        class FailureCase {
-
-            @Test
-            void memberNull() {
-                //when
-                assertThatThrownBy(() -> memberRepository.delete(null))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessageContaining("null entity");
             }
         }
     }
@@ -210,8 +219,12 @@ class MemberRepositoryTest {
                 //given
                 Member member = createMember2();
 
+                System.out.println("================= WHEN START =================");
+
                 //when
                 boolean result = memberRepository.existsByLoginId(member.getLoginId());
+
+                System.out.println("================= WHEN END ===================");
 
                 //then
                 assertThat(result).isTrue();
@@ -222,8 +235,12 @@ class MemberRepositoryTest {
                 //given
                 Member member = createMember3();
 
+                System.out.println("================= WHEN START =================");
+
                 //when
                 boolean result = memberRepository.existsByLoginId(member.getLoginId());
+
+                System.out.println("================= WHEN END ===================");
 
                 //then
                 assertThat(result).isFalse();

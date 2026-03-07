@@ -73,9 +73,9 @@ public class InitDb {
             String bookName2 = productService.register(new Book("면접을 위한 CS 전공지식 노트", 15000, 100, "주홍철", "9791165219529"), List.of(bookCategoryName5));
             productService.register(new Book("Do it! 점프 투 파이썬", 15000, 100, "박응용", "9791163034735"), List.of(bookCategoryName4));
             String movieName1 = productService.register(new Movie("범죄도시", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
-            String movieName2 = productService.register(new Movie("범죄도시2", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
-            productService.register(new Movie("범죄도시3", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
-            productService.register(new Movie("범죄도시4", 15000, 100, "마동석", "강윤성"), List.of(movieCategoryName2, movieCategoryName3));
+            String movieName2 = productService.register(new Movie("범죄도시2", 15000, 100, "마동석", "이상용"), List.of(movieCategoryName2, movieCategoryName3));
+            productService.register(new Movie("범죄도시3", 15000, 100, "마동석", "이상용"), List.of(movieCategoryName2, movieCategoryName3));
+            productService.register(new Movie("범죄도시4", 15000, 100, "마동석", "허명행"), List.of(movieCategoryName2, movieCategoryName3));
 
             orderService.order(userAId, Map.of(albumName1, 3, albumName4, 2, albumName6, 5));
             orderService.order(userAId, Map.of(albumName1, 2, bookName1, 4, movieName2, 3));

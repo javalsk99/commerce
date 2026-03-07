@@ -352,14 +352,13 @@ class ProductTest {
                         .build();
 
                 //when
-                album.connectCategory(category1);
+                album.connectCategory(category2);
 
                 //then
                 assertThat(album.getCategoryProducts())
-                        .isNotEmpty()
-                        .isEqualTo(category1.getCategoryProducts())
+                        .hasSize(2)
                         .extracting("category.name", "product.name")
-                        .containsExactly(tuple("가요", "BANG BANG"));
+                        .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("댄스", "BANG BANG"));
             }
         }
 

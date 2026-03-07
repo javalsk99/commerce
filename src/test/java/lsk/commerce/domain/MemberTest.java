@@ -28,7 +28,7 @@ class MemberTest {
             @Test
             void user() {
                 //when
-                Member member = new Member();
+                Member member = Member.builder().build();
 
                 //then
                 assertThat(member.getGrade()).isEqualTo(Grade.USER);

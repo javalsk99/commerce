@@ -25,6 +25,7 @@ import java.util.List;
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
+import static lombok.AccessLevel.PROTECTED;
 import static lombok.AccessLevel.PUBLIC;
 
 @Entity
@@ -36,7 +37,7 @@ import static lombok.AccessLevel.PUBLIC;
         @UniqueConstraint(name = "UniqueMovie", columnNames = {"name", "actor", "director"})
 })
 @Getter
-@NoArgsConstructor(access = PUBLIC)
+@NoArgsConstructor(access = PROTECTED)
 public abstract class Product {
 
     @Id @GeneratedValue(strategy = IDENTITY)
@@ -121,24 +122,25 @@ public abstract class Product {
             throw new IllegalArgumentException("식별자가 없는 잘못된 카테고리입니다");
         }
 
-        CategoryProduct categoryProduct = new CategoryProduct();
-        categoryProduct.setProduct(this);
-        categoryProduct.setCategory(category);
-        this.categoryProducts.add(categoryProduct);
-        category.getCategoryProducts().add(categoryProduct);
+        while (category != null) {
+            Category finalCategory = category;
+            if (categoryProducts.stream().anyMatch(categoryProduct -> categoryProduct.getCategory() == finalCategory)) {
+                break;
+            }
+
+            CategoryProduct categoryProduct = new CategoryProduct();
+            categoryProduct.setProduct(this);
+            categoryProduct.setCategory(category);
+            this.categoryProducts.add(categoryProduct);
+            category.getCategoryProducts().add(categoryProduct);
+
+            category = category.getParent();
+        }
     }
 
     public void connectCategories(List<Category> categories) {
         for (Category category : categories) {
-            while (category != null) {
-                Category finalCategory = category;
-                if (categoryProducts.stream().anyMatch(categoryProduct -> categoryProduct.getCategory() == finalCategory)) {
-                    break;
-                }
-
-                connectCategory(category);
-                category = category.getParent();
-            }
+            connectCategory(category);
         }
     }
 
