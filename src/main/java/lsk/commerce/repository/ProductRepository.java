@@ -18,11 +18,6 @@ public class ProductRepository {
         em.persist(product);
     }
 
-    public List<Product> findAll() {
-        return em.createQuery("select p from Product p", Product.class)
-                .getResultList();
-    }
-
     public Optional<Product> findByName(String productName) {
         return em.createQuery("select p from Product p where p.name = :name", Product.class)
                 .setParameter("name", productName)
@@ -49,6 +44,11 @@ public class ProductRepository {
                 .setParameter("name", productName)
                 .getResultStream()
                 .findFirst();
+    }
+
+    public List<Product> findAll() {
+        return em.createQuery("select p from Product p", Product.class)
+                .getResultList();
     }
 
     public void delete(Product product) {

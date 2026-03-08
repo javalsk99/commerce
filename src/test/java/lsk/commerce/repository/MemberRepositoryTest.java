@@ -3,7 +3,7 @@ package lsk.commerce.repository;
 import jakarta.validation.ConstraintViolationException;
 import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
-import org.junit.jupiter.api.Assertions;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,9 +19,10 @@ import org.springframework.context.annotation.Import;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.Arguments.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -125,7 +126,7 @@ class MemberRepositoryTest {
         }
     }
 
-    abstract class Setup {
+    private abstract class Setup {
 
         Long memberId;
         String loginId;
@@ -158,16 +159,13 @@ class MemberRepositoryTest {
                 //then
                 assertAll(
                         () -> assertThat(findMember).isPresent(),
+                        () -> assertThat(Hibernate.isInitialized(findMember.get().getOrders())).isFalse(),
                         () -> assertThat(findMember.get().getLoginId()).isEqualTo(loginId)
                 );
             }
-        }
-
-        @Nested
-        class FailureCase {
 
             @Test
-            void memberNotFound() {
+            void ShouldReturnEmpty_WhenMemberNotFound() {
                 System.out.println("================= WHEN START =================");
 
                 //when
@@ -190,20 +188,20 @@ class MemberRepositoryTest {
             @Test
             void basic() {
                 //given
-                Member member = em.find(Member.class, memberId);
+                Member findMember = em.find(Member.class, memberId);
 
                 System.out.println("================= WHEN START =================");
 
                 //when
-                memberRepository.delete(member);
+                memberRepository.delete(findMember);
                 em.flush();
                 em.clear();
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                Member findMember = em.find(Member.class, memberId);
-                assertThat(findMember).isNull();
+                Member deletedMember = em.find(Member.class, memberId);
+                assertThat(deletedMember).isNull();
             }
         }
     }

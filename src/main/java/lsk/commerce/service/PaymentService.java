@@ -49,7 +49,7 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public Payment findPaymentByPaymentId(String paymentId) {
-        return paymentRepository.findByPaymentId(paymentId)
+        return paymentRepository.findWithOrder(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제 번호입니다"));
     }
 

@@ -212,14 +212,14 @@ class PaymentServiceTest {
             @Test
             void basic() {
                 //given
-                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
+                given(paymentRepository.findWithOrder(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
 
                 //when
                 Payment payment = paymentService.findPaymentByPaymentId(multipleOrder.getPayment().getPaymentId());
 
                 //then
                 assertAll(
-                        () -> then(paymentRepository).should().findByPaymentId(anyString()),
+                        () -> then(paymentRepository).should().findWithOrder(anyString()),
                         () -> assertThat(payment).isEqualTo(multipleOrder.getPayment())
                 );
             }
@@ -231,7 +231,7 @@ class PaymentServiceTest {
             @Test
             void paymentNotFound() {
                 //given
-                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.empty());
+                given(paymentRepository.findWithOrder(anyString())).willReturn(Optional.empty());
 
                 //when
                 assertThatThrownBy(() -> paymentService.findPaymentByPaymentId(wrongPaymentId))
@@ -612,14 +612,14 @@ class PaymentServiceTest {
             @Test
             void basic() {
                 //given
-                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
+                given(paymentRepository.findWithOrder(anyString())).willReturn(Optional.of(multipleOrder.getPayment()));
 
                 //when
                 paymentService.failedPayment(multipleOrder.getPayment().getPaymentId());
 
                 //then
                 assertAll(
-                        () -> then(paymentRepository).should().findByPaymentId(anyString()),
+                        () -> then(paymentRepository).should().findWithOrder(anyString()),
                         () -> assertThat(multipleOrder.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.FAILED)
                 );
             }
@@ -631,7 +631,7 @@ class PaymentServiceTest {
             @Test
             void paymentNotFound() {
                 //given
-                given(paymentRepository.findByPaymentId(anyString())).willReturn(Optional.empty());
+                given(paymentRepository.findWithOrder(anyString())).willReturn(Optional.empty());
 
                 //when
                 assertThatThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
@@ -639,7 +639,7 @@ class PaymentServiceTest {
                         .hasMessage("존재하지 않는 결제 번호입니다");
 
                 //then
-                then(paymentRepository).should().findByPaymentId(anyString());
+                then(paymentRepository).should().findWithOrder(anyString());
             }
         }
     }

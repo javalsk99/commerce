@@ -3,8 +3,8 @@ package lsk.commerce.repository;
 import jakarta.validation.ConstraintViolationException;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.CategoryProduct;
-import lsk.commerce.domain.Member;
 import lsk.commerce.domain.product.Album;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,9 +22,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.Arguments.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -115,7 +116,7 @@ class CategoryRepositoryTest {
         }
     }
 
-    abstract class Setup {
+    private abstract class Setup {
 
         Long categoryId1;
         Long categoryId2;
@@ -131,12 +132,9 @@ class CategoryRepositoryTest {
             Category parentCategory = Category.createCategory(null, "가요");
             Category childCategory1 = Category.createCategory(parentCategory, "댄스");
             Category childCategory2 = Category.createCategory(parentCategory, "발라드");
-            em.persist(parentCategory);
-            em.persist(childCategory1);
-            em.persist(childCategory2);
-            categoryId1 = parentCategory.getId();
-            categoryId2 = childCategory1.getId();
-            categoryId3 = childCategory2.getId();
+            categoryId1 = em.persistAndGetId(parentCategory, Long.class);
+            categoryId2 = em.persistAndGetId(childCategory1, Long.class);
+            categoryId3 = em.persistAndGetId(childCategory2, Long.class);
             name1 = parentCategory.getName();
             name2 = childCategory1.getName();
             name3 = childCategory2.getName();
@@ -171,6 +169,8 @@ class CategoryRepositoryTest {
                 //then
                 assertAll(
                         () -> assertThat(findCategory).isPresent(),
+                        () -> assertThat(Hibernate.isInitialized(findCategory.get().getChild())).isTrue(),
+                        () -> assertThat(Hibernate.isInitialized(findCategory.get().getCategoryProducts())).isFalse(),
                         () -> assertThat(findCategory.get().getChild())
                                 .extracting("name")
                                 .containsExactlyInAnyOrder("댄스", "발라드"),
@@ -191,10 +191,14 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(categories)
-                        .hasSize(3)
-                        .extracting("name")
-                        .containsExactlyInAnyOrder("가요", "댄스", "발라드");
+                assertAll(
+                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse(),
+                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse(),
+                        () -> assertThat(categories)
+                                .hasSize(3)
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("가요", "댄스", "발라드")
+                );
             }
 
             @Test
@@ -210,10 +214,14 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(categories)
-                        .hasSize(2)
-                        .extracting("name")
-                        .containsExactlyInAnyOrder("가요", "댄스");
+                assertAll(
+                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse(),
+                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse(),
+                        () -> assertThat(categories)
+                                .hasSize(2)
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("가요", "댄스")
+                );
             }
 
             @Test
@@ -229,27 +237,14 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(categories)
-                        .hasSize(1)
-                        .extracting("name")
-                        .containsExactlyInAnyOrder("가요");
-            }
-        }
-
-        @Nested
-        class FailureCase {
-
-            @Test
-            void withChild_categoryNotFound() {
-                System.out.println("================= WHEN START =================");
-
-                //when
-                Optional<Category> category = categoryRepository.findWithChild("록");
-
-                System.out.println("================= WHEN END ===================");
-
-                //then
-                assertThat(category).isEmpty();
+                assertAll(
+                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse(),
+                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse(),
+                        () -> assertThat(categories)
+                                .hasSize(1)
+                                .extracting("name")
+                                .containsExactlyInAnyOrder("가요")
+                );
             }
         }
     }
@@ -263,21 +258,21 @@ class CategoryRepositoryTest {
             @Test
             void basic() {
                 //given
-                Category category = em.find(Category.class, categoryId3);
-                deleteCategoryProducts(category);
+                Category findCategory = em.find(Category.class, categoryId3);
+                deleteCategoryProducts(findCategory);
 
                 System.out.println("================= WHEN START =================");
 
                 //when
-                categoryRepository.delete(category);
+                categoryRepository.delete(findCategory);
                 em.flush();
                 em.clear();
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                Category findCategory = em.find(Category.class, categoryId3);
-                assertThat(findCategory).isNull();
+                Category deletedCategory = em.find(Category.class, categoryId3);
+                assertThat(deletedCategory).isNull();
             }
 
             private void deleteCategoryProducts(Category category) {

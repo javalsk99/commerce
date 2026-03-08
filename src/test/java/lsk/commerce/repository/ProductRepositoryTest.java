@@ -1,16 +1,19 @@
 package lsk.commerce.repository;
 
 import jakarta.validation.ConstraintViolationException;
-import lsk.commerce.domain.Member;
+import lsk.commerce.domain.Category;
+import lsk.commerce.domain.CategoryProduct;
 import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -18,10 +21,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
@@ -41,23 +46,9 @@ class ProductRepositoryTest {
 
     @BeforeEach
     void beforeEach() {
-/*
-        Category category1 = Category.createCategory(null, "가요");
-        Category category2 = Category.createCategory(category1, "댄스");
-        Category category3 = Category.createCategory(category1, "발라드");
-        em.persist(category1);
-        em.persist(category2);
-        em.persist(category3);
-*/
-
         album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
         book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
         movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(5).actor("마동석").director("강윤성").build();
-
-/*
-        em.flush();
-        em.clear();
-*/
     }
 
     @Nested
@@ -137,7 +128,7 @@ class ProductRepositoryTest {
 
             @ParameterizedTest
             @MethodSource("albumProvider")
-            void album_NotExistingUniqueKeys(Product notDuplicateAlbum) {
+            void album_UniqueKeysNotExist(Product notDuplicateAlbum) {
                 em.persistAndFlush(album);
                 Long albumId1 = album.getId();
                 em.clear();
@@ -158,7 +149,7 @@ class ProductRepositoryTest {
 
             @ParameterizedTest
             @MethodSource("bookProvider")
-            void book_NotExistingUniqueKeys(Product notDuplicateBook) {
+            void book_UniqueKeysNotExist(Product notDuplicateBook) {
                 em.persistAndFlush(book);
                 Long bookId1 = book.getId();
                 em.clear();
@@ -179,7 +170,7 @@ class ProductRepositoryTest {
 
             @ParameterizedTest
             @MethodSource("movieProvider")
-            void movie_NotExistingUniqueKeys(Product notDuplicateMovie) {
+            void movie_UniqueKeysNotExist(Product notDuplicateMovie) {
                 em.persistAndFlush(movie);
                 Long movieId1 = movie.getId();
                 em.clear();
@@ -200,25 +191,25 @@ class ProductRepositoryTest {
 
             static Stream<Arguments> albumProvider() {
                 return Stream.of(
-                        argumentSet("이름만 다른 앨범", Album.builder().name("BLACKHOLE").price(12000).stockQuantity(20).artist("IVE").studio("STARSHIP").build()),
-                        argumentSet("가수만 다른 앨범", Album.builder().name("BANG BANG").price(12000).stockQuantity(20).artist("aespa").studio("STARSHIP").build()),
-                        argumentSet("기획사만 다른 앨범", Album.builder().name("BANG BANG").price(12000).stockQuantity(20).artist("IVE").studio("SM").build())
+                        argumentSet("이름만 다른 앨범", Album.builder().name("BLACKHOLE").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build()),
+                        argumentSet("가수만 다른 앨범", Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("aespa").studio("STARSHIP").build()),
+                        argumentSet("기획사만 다른 앨범", Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("SM").build())
                 );
             }
 
             static Stream<Arguments> bookProvider() {
                 return Stream.of(
-                        argumentSet("이름만 다른 책", Book.builder().name("면접을 위한 CS 전공지식 노트").price(12000).stockQuantity(20).author("김영한").isbn("9788960777330").build()),
-                        argumentSet("작가만 다른 앨범", Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(12000).stockQuantity(20).author("주홍철").isbn("9788960777330").build()),
-                        argumentSet("isbn만 다른 앨범", Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(12000).stockQuantity(20).author("김영한").isbn("9791165219529").build())
+                        argumentSet("이름만 다른 책", Book.builder().name("면접을 위한 CS 전공지식 노트").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build()),
+                        argumentSet("작가만 다른 앨범", Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("주홍철").isbn("9788960777330").build()),
+                        argumentSet("isbn만 다른 앨범", Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9791165219529").build())
                 );
             }
 
             static Stream<Arguments> movieProvider() {
                 return Stream.of(
-                        argumentSet("이름만 다른 영화", Movie.builder().name("범죄도시2").price(12000).stockQuantity(20).actor("마동석").director("강윤성").build()),
-                        argumentSet("배우만 다른 영화", Movie.builder().name("범죄도시").price(12000).stockQuantity(20).actor("박지환").director("강윤성").build()),
-                        argumentSet("감독만 다른 영화", Movie.builder().name("범죄도시").price(12000).stockQuantity(20).actor("마동석").director("이상용").build())
+                        argumentSet("이름만 다른 영화", Movie.builder().name("범죄도시2").price(15000).stockQuantity(5).actor("마동석").director("강윤성").build()),
+                        argumentSet("배우만 다른 영화", Movie.builder().name("범죄도시").price(15000).stockQuantity(5).actor("박지환").director("강윤성").build()),
+                        argumentSet("감독만 다른 영화", Movie.builder().name("범죄도시").price(15000).stockQuantity(5).actor("마동석").director("이상용").build())
                 );
             }
         }
@@ -245,7 +236,7 @@ class ProductRepositoryTest {
             }
 
             @Test
-            void album_ExistingUniqueKeys() {
+            void album_UniqueKeysAlreadyExist() {
                 em.persistAndFlush(album);
                 em.clear();
 
@@ -263,7 +254,7 @@ class ProductRepositoryTest {
             }
 
             @Test
-            void book_ExistingUniqueKeys() {
+            void book_UniqueKeysAlreadyExist() {
                 em.persistAndFlush(book);
                 em.clear();
 
@@ -281,7 +272,7 @@ class ProductRepositoryTest {
             }
 
             @Test
-            void movie_ExistingUniqueKeys() {
+            void movie_UniqueKeysAlreadyExist() {
                 em.persistAndFlush(movie);
                 em.clear();
 
@@ -314,6 +305,253 @@ class ProductRepositoryTest {
                         argumentSet("가격 0원", Album.builder().name("BANG BANG").price(0).stockQuantity(10).artist("IVE").studio("STARSHIP").build(), ""),
                         argumentSet("가격 100원 미만", Album.builder().name("BANG BANG").price(99).stockQuantity(10).artist("IVE").studio("STARSHIP").build(), "")
                 );
+            }
+        }
+    }
+
+    private abstract class Setup {
+
+        Long categoryId;
+        Long albumId;
+
+        @BeforeEach
+        void beforeEach() {
+            Category category1 = Category.createCategory(null, "가요");
+            Category category2 = Category.createCategory(category1, "댄스");
+            Category category3 = Category.createCategory(category1, "발라드");
+            em.persist(category1);
+            categoryId = em.persistAndGetId(category2, Long.class);
+            em.persist(category3);
+
+            albumId = em.persistAndGetId(album, Long.class);
+            em.persist(book);
+            em.persist(movie);
+            album.connectCategory(category2);
+
+            em.flush();
+            em.clear();
+        }
+    }
+
+    @Nested
+    class Find extends Setup {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void byName() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                Optional<Product> findProduct = productRepository.findByName("BANG BANG");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertAll(
+                        () -> assertThat(findProduct).isPresent(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isFalse(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isFalse(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue(),
+                        () -> assertThat(findProduct.get().getCategoryProducts())
+                                .extracting("category.name")
+                                .containsExactlyInAnyOrder("가요", "댄스")
+                );
+            }
+
+            @Test
+            void withCategoryProduct() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                Optional<Product> findProduct = productRepository.findWithCategoryProduct("BANG BANG");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertAll(
+                        () -> assertThat(findProduct).isPresent(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isFalse(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue(),
+                        () -> assertThat(findProduct.get().getCategoryProducts())
+                                .extracting("category.name")
+                                .containsExactlyInAnyOrder("가요", "댄스")
+                );
+            }
+
+            @Test
+            void withCategoryProductCategory() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                Optional<Product> findProduct = productRepository.findWithCategoryProductCategory("BANG BANG");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertAll(
+                        () -> assertThat(findProduct).isPresent(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isTrue(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue(),
+                        () -> assertThat(findProduct.get().getCategoryProducts())
+                                .extracting("category.name")
+                                .containsExactlyInAnyOrder("가요", "댄스")
+                );
+            }
+
+            @Test
+            void withCategoryProduct_ShouldReturnProduct_WhenCategoryProductsIsEmpty() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                Optional<Product> findProduct = productRepository.findWithCategoryProduct("자바 ORM 표준 JPA 프로그래밍");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertAll(
+                        () -> assertThat(findProduct).isPresent(),
+                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue(),
+                        () -> assertThat(findProduct.get().getCategoryProducts()).isEmpty()
+                );
+            }
+        }
+    }
+
+    @Nested
+    class Delete extends Setup {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                Product findAlbum = em.find(Product.class, albumId);
+                Long categoryProductId = findAlbum.getCategoryProducts().getFirst().getId();
+
+                System.out.println("================= WHEN START =================");
+
+                //when
+                productRepository.delete(findAlbum);
+                em.flush();
+                em.clear();
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                Product deletedAlbum = em.find(Product.class, albumId);
+                CategoryProduct deletedCategoryProduct = em.find(CategoryProduct.class, categoryProductId);
+                Category deletedCategory = em.find(Category.class, categoryId);
+                assertAll(
+                        () -> assertThat(deletedAlbum).isNull(),
+                        () -> assertThat(deletedCategoryProduct).isNull(),
+                        () -> assertThat(deletedCategory.getCategoryProducts()).isEmpty()
+                );
+            }
+        }
+    }
+
+    @Nested
+    class Exists extends Setup {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void album_ShouldReturnTrue_WhenAllUniqueKeysMatch() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                boolean result = productRepository.existsAlbum("BANG BANG", "IVE", "STARSHIP");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertThat(result).isTrue();
+            }
+
+            @Test
+            void book_ShouldReturnTrue_WhenAllUniqueKeysMatch() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                boolean result = productRepository.existsBook("자바 ORM 표준 JPA 프로그래밍", "김영한", "9788960777330");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertThat(result).isTrue();
+            }
+
+            @Test
+            void movie_ShouldReturnTrue_WhenAllUniqueKeysMatch() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                boolean result = productRepository.existsMovie("범죄도시", "마동석", "강윤성");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertThat(result).isTrue();
+            }
+
+            @ParameterizedTest
+            @CsvSource({
+                    "BLACKHOLE, IVE, STARSHIP",
+                    "BANG BANG, aespa, STARSHIP",
+                    "BANG BANG, IVE, SM"
+            })
+            void album_ShouldReturnFalse_WhenUniqueKeysMismatch(String name, String artist, String studio) {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                boolean result = productRepository.existsAlbum(name, artist, studio);
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertThat(result).isFalse();
+            }
+
+            @ParameterizedTest
+            @CsvSource({
+                    "면접을 위한 CS 전공지식 노트, 김영한, 9788960777330",
+                    "자바 ORM 표준 JPA 프로그래밍, 주홍철, 9788960777330",
+                    "자바 ORM 표준 JPA 프로그래밍, 김영한, 9791165219529"
+            })
+
+            void book_ShouldReturnFalse_WhenUniqueKeysMismatch(String name, String author, String isbn) {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                boolean result = productRepository.existsBook(name, author, isbn);
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertThat(result).isFalse();
+            }
+
+            @ParameterizedTest
+            @CsvSource({
+                    "범죄도시2, 마동석, 강윤성",
+                    "범죄도시, 박지환, 강윤성",
+                    "범죄도시, 마동석, 이상용"
+            })
+            void movie_ShouldReturnFalse_WhenUniqueKeysMismatch(String name, String actor, String director) {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                boolean result = productRepository.existsMovie(name, actor, director);
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                assertThat(result).isFalse();
             }
         }
     }
