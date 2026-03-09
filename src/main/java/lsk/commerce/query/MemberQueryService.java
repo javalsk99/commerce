@@ -10,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
-import static lsk.commerce.query.MemberQueryRepository.toMemberLoginIds;
-
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -33,7 +31,7 @@ public class MemberQueryService {
 
     public List<MemberQueryDto> searchMembers(MemberSearchCond cond) {
         List<MemberQueryDto> members = memberQueryRepository.search(cond);
-        List<String> loginIds = toMemberLoginIds(members);
+        List<String> loginIds = memberQueryRepository.extractLoginIds(members);
 
         Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginIds(loginIds);
 

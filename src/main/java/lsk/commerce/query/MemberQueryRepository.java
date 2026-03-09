@@ -26,7 +26,7 @@ public class MemberQueryRepository {
         this.query = new JPAQueryFactory(em);
     }
 
-    protected static List<String> toMemberLoginIds(List<MemberQueryDto> result) {
+    protected List<String> extractLoginIds(List<MemberQueryDto> result) {
         return result.stream()
                 .map(m -> m.getLoginId())
                 .collect(toList());
@@ -59,7 +59,7 @@ public class MemberQueryRepository {
             return null;
         }
 
-        if (name.matches("^[ㄱ-ㅎ]+$")) {
+        if (name.matches(".*[ㄱ-ㅎ].*")) {
             return member.initial.contains(name);
         }
 
