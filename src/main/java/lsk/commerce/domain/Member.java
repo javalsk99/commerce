@@ -94,8 +94,7 @@ public class Member {
         this.address = new Address(newCity, newStreet, newZipcode);
     }
 
-    @PrePersist
-    @PreUpdate
+    @PrePersist @PreUpdate
     private void preHandler() {
         this.initial = InitialExtractor.extract(this.name);
     }

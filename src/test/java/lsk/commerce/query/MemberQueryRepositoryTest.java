@@ -145,12 +145,10 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(memberQueryDtoList)
+                assertThat(memberQueryDtoList)
                                 .hasSize(3)
                                 .extracting("loginId")
-                                .containsExactlyInAnyOrder("id_A", "id_B", "id_C")
-                );
+                                .containsExactlyInAnyOrder("id_A", "id_B", "id_C");
             }
 
             @ParameterizedTest
@@ -207,12 +205,12 @@ class MemberQueryRepositoryTest {
             static Stream<Arguments> nameCondProvider() {
                 return Stream.of(
                         argumentSet("이름을 유저로 검색", new MemberSearchCond("유저", null), 3, List.of("id_A", "id_B", "id_C")),
-                        argumentSet("이름을 ㅇㅈ로 검색", new MemberSearchCond("ㅇㅈ", null), 3, List.of("id_A", "id_B", "id_C")),
+                        argumentSet("이름을 ㅇㅈ으로 검색", new MemberSearchCond("ㅇㅈ", null), 3, List.of("id_A", "id_B", "id_C")),
                         argumentSet("이름을 유저A로 검색", new MemberSearchCond("유저A", null), 1, List.of("id_A")),
                         argumentSet("이름을 유저a로 검색", new MemberSearchCond("유저a", null), 1, List.of("id_A")),
                         argumentSet("이름을 ㅇㅈA로 검색", new MemberSearchCond("ㅇㅈA", null), 1, List.of("id_A")),
                         argumentSet("이름을 ㅇㅈa로 검색", new MemberSearchCond("ㅇㅈa", null), 1, List.of("id_A")),
-                        argumentSet("이름을 ㄱㄴㄷ로 검색", new MemberSearchCond("ㄱㄴㄷ", null), 0, Collections.emptyList()),
+                        argumentSet("이름을 ㄱㄴㄷ으로 검색", new MemberSearchCond("ㄱㄴㄷ", null), 0, Collections.emptyList()),
                         argumentSet("이름을 ㅇa로 검색", new MemberSearchCond("ㅇa", null), 0, Collections.emptyList())
                 );
             }
@@ -249,7 +247,7 @@ class MemberQueryRepositoryTest {
 
             @ParameterizedTest
             @MethodSource("memberQueryDtoListProvider")
-            void basic(List<MemberQueryDto> memberQueryDtoList, int size) {
+            void basic(List<MemberQueryDto> memberQueryDtoList, int size, List<String> expectLoginIds) {
                 System.out.println("================= WHEN START =================");
 
                 //when
@@ -258,15 +256,17 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(loginIds).hasSize(size);
+                assertThat(loginIds)
+                        .hasSize(size)
+                        .isEqualTo(expectLoginIds);
             }
 
             static Stream<Arguments> memberQueryDtoListProvider() {
                 return Stream.of(
-                        argumentSet("MemberQueryDto 3개", List.of(new MemberQueryDto("id_A", Grade.USER), new MemberQueryDto("id_B", Grade.USER), new MemberQueryDto("id_C", Grade.USER)), 3),
-                        argumentSet("MemberQueryDto 2개", List.of(new MemberQueryDto("id_A", Grade.USER), new MemberQueryDto("id_B", Grade.USER)), 2),
-                        argumentSet("MemberQueryDto 1개", List.of(new MemberQueryDto("id_A", Grade.USER)), 1),
-                        argumentSet("MemberQueryDto 0개", Collections.emptyList(), 0)
+                        argumentSet("MemberQueryDto 3개", List.of(new MemberQueryDto("id_A", Grade.USER), new MemberQueryDto("id_B", Grade.USER), new MemberQueryDto("id_C", Grade.USER)), 3, List.of("id_A", "id_B", "id_C")),
+                        argumentSet("MemberQueryDto 2개", List.of(new MemberQueryDto("id_A", Grade.USER), new MemberQueryDto("id_B", Grade.USER)), 2, List.of("id_A", "id_B")),
+                        argumentSet("MemberQueryDto 1개", List.of(new MemberQueryDto("id_A", Grade.USER)), 1, List.of("id_A")),
+                        argumentSet("MemberQueryDto 0개", Collections.emptyList(), 0, Collections.emptyList())
                 );
             }
         }

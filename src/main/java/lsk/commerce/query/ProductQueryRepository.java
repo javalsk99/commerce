@@ -81,8 +81,8 @@ public class ProductQueryRepository {
             return null;
         }
 
-        if (productName.matches("^[ㄱ-ㅎ]+$")) {
-            return product.nameInitial.contains(productName);
+        if (productName.matches(".*[ㄱ-ㅎ].*")) {
+            return product.nameInitial.containsIgnoreCase(productName);
         }
 
         return product.name.containsIgnoreCase(productName);
@@ -109,8 +109,8 @@ public class ProductQueryRepository {
             return null;
         }
 
-        if (artist.matches("^[ㄱ-ㅎ]+$")) {
-            return album.artistInitial.contains(artist);
+        if (artist.matches(".*[ㄱ-ㅎ].*")) {
+            return album.artistInitial.containsIgnoreCase(artist);
         }
 
         return album.artist.containsIgnoreCase(artist);
@@ -121,8 +121,8 @@ public class ProductQueryRepository {
             return null;
         }
 
-        if (studio.matches("^[ㄱ-ㅎ]+$")) {
-            return album.studioInitial.contains(studio);
+        if (studio.matches(".*[ㄱ-ㅎ].*")) {
+            return album.studioInitial.containsIgnoreCase(studio);
         }
 
         return album.studio.containsIgnoreCase(studio);
@@ -133,8 +133,8 @@ public class ProductQueryRepository {
             return null;
         }
 
-        if (author.matches("^[ㄱ-ㅎ]+$")) {
-            return book.authorInitial.contains(author);
+        if (author.matches(".*[ㄱ-ㅎ].*")) {
+            return book.authorInitial.containsIgnoreCase(author);
         }
 
         return book.author.containsIgnoreCase(author);
@@ -153,8 +153,8 @@ public class ProductQueryRepository {
             return null;
         }
 
-        if (actor.matches("^[ㄱ-ㅎ]+$")) {
-            return movie.actorInitial.contains(actor);
+        if (actor.matches(".*[ㄱ-ㅎ].*")) {
+            return movie.actorInitial.containsIgnoreCase(actor);
         }
 
         return movie.actor.containsIgnoreCase(actor);
@@ -165,8 +165,8 @@ public class ProductQueryRepository {
             return null;
         }
 
-        if (director.matches("^[ㄱ-ㅎ]+$")) {
-            return movie.directorInitial.contains(director);
+        if (director.matches(".*[ㄱ-ㅎ].*")) {
+            return movie.directorInitial.containsIgnoreCase(director);
         }
 
         return movie.director.containsIgnoreCase(director);
