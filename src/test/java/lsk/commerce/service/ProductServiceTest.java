@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,16 +21,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyList;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 
 @ExtendWith(MockitoExtension.class)
@@ -83,15 +83,15 @@ class ProductServiceTest {
                 productService.register(album, List.of("가요"));
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
-                        () -> then(categoryService).should().validateAndGetCategories(List.of("가요")),
-                        () -> then(productRepository).should().save(argThat(p -> p.getName().equals("BANG BANG"))),
-                        () -> assertThat(album.getCategoryProducts())
-                                .isNotEmpty()
-                                .extracting("category.name")
-                                .containsExactly("가요")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().validateAndGetCategories(List.of("가요")));
+                    softly.check(() -> BDDMockito.then(productRepository).should().save(argThat(p -> p.getName().equals("BANG BANG"))));
+                    softly.then(album.getCategoryProducts())
+                            .isNotEmpty()
+                            .extracting("category.name")
+                            .containsExactly("가요");
+                });
             }
 
             @Test
@@ -112,15 +112,15 @@ class ProductServiceTest {
                 productService.register(book, List.of("컴퓨터/IT"));
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().existsBook(anyString(), anyString(), anyString()),
-                        () -> then(categoryService).should().validateAndGetCategories(List.of("컴퓨터/IT")),
-                        () -> then(productRepository).should().save(argThat(p -> p.getName().equals("자바 ORM 표준 JPA 프로그래밍"))),
-                        () -> assertThat(book.getCategoryProducts())
-                                .isNotEmpty()
-                                .extracting("category.name")
-                                .containsExactly("컴퓨터/IT")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().existsBook(anyString(), anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().validateAndGetCategories(List.of("컴퓨터/IT")));
+                    softly.check(() -> BDDMockito.then(productRepository).should().save(argThat(p -> p.getName().equals("자바 ORM 표준 JPA 프로그래밍"))));
+                    softly.then(book.getCategoryProducts())
+                            .isNotEmpty()
+                            .extracting("category.name")
+                            .containsExactly("컴퓨터/IT");
+                });
             }
 
             @Test
@@ -141,15 +141,15 @@ class ProductServiceTest {
                 productService.register(movie, List.of("국내 영화"));
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().existsMovie(anyString(), anyString(), anyString()),
-                        () -> then(categoryService).should().validateAndGetCategories(List.of("국내 영화")),
-                        () -> then(productRepository).should().save(argThat(p -> p.getName().equals("범죄도시"))),
-                        () -> assertThat(movie.getCategoryProducts())
-                                .isNotEmpty()
-                                .extracting("category.name")
-                                .containsExactly("국내 영화")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().existsMovie(anyString(), anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().validateAndGetCategories(List.of("국내 영화")));
+                    softly.check(() -> BDDMockito.then(productRepository).should().save(argThat(p -> p.getName().equals("범죄도시"))));
+                    softly.then(movie.getCategoryProducts())
+                            .isNotEmpty()
+                            .extracting("category.name")
+                            .containsExactly("국내 영화");
+                });
             }
         }
 
@@ -169,17 +169,17 @@ class ProductServiceTest {
 
                 given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(true);
 
-                //when
-                assertThatThrownBy(() -> productService.register(album, List.of("가요")))
+                //when & then
+                thenThrownBy(() -> productService.register(album, List.of("가요")))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("이미 존재하는 상품입니다");
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
-                        () -> then(categoryService).should(never()).validateAndGetCategories(any()),
-                        () -> then(productRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should(never()).validateAndGetCategories(any()));
+                    softly.check(() -> BDDMockito.then(productRepository).should(never()).save(any()));
+                });
             }
 
             @Test
@@ -196,16 +196,16 @@ class ProductServiceTest {
                 given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(false);
                 given(categoryService.validateAndGetCategories(anyList())).willThrow(new IllegalArgumentException());
 
-                //when
-                assertThatThrownBy(() -> productService.register(album, List.of("가요")))
+                //when & then
+                thenThrownBy(() -> productService.register(album, List.of("가요")))
                         .isInstanceOf(IllegalArgumentException.class);
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()),
-                        () -> then(categoryService).should().validateAndGetCategories(anyList()),
-                        () -> then(productRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().validateAndGetCategories(anyList()));
+                    softly.check(() -> BDDMockito.then(productRepository).should(never()).save(any()));
+                });
             }
         }
     }
@@ -229,10 +229,10 @@ class ProductServiceTest {
                 Product findProduct = productService.findProductByName("BANG BANG");
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().findByName(anyString()),
-                        () -> assertThat(findProduct.getName()).isEqualTo("BANG BANG")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().findByName(anyString()));
+                    softly.then(findProduct.getName()).isEqualTo("BANG BANG");
+                });
             }
 
             @Test
@@ -254,7 +254,7 @@ class ProductServiceTest {
                 List<Product> products = productService.findProducts();
 
                 //then
-                assertThat(products)
+                then(products)
                         .hasSize(3)
                         .extracting("name")
                         .containsExactlyInAnyOrder("BANG BANG", "자바 ORM 표준 JPA 프로그래밍", "범죄도시");
@@ -269,13 +269,13 @@ class ProductServiceTest {
                 //given
                 given(productRepository.findByName(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> productService.findProductByName("하얀 그리움"))
+                //when & then
+                thenThrownBy(() -> productService.findProductByName("하얀 그리움"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
 
                 //then
-                then(productRepository).should().findByName(anyString());
+                BDDMockito.then(productRepository).should().findByName(anyString());
             }
         }
     }
@@ -299,7 +299,7 @@ class ProductServiceTest {
                 productService.updateProduct("BANG BANG", 12000, 20);
 
                 //then
-                assertThat(album)
+                then(album)
                         .extracting("price", "stockQuantity")
                         .containsExactly(12000, 20);
             }
@@ -325,10 +325,10 @@ class ProductServiceTest {
                 productService.deleteProduct("BANG BANG");
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
-                        () -> then(productRepository).should().delete(album)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().findWithCategoryProductCategory(anyString()));
+                    softly.check(() -> BDDMockito.then(productRepository).should().delete(album));
+                });
             }
         }
 
@@ -340,16 +340,16 @@ class ProductServiceTest {
                 //given
                 given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> productService.deleteProduct("하얀 그리움"))
+                //when & then
+                thenThrownBy(() -> productService.deleteProduct("하얀 그리움"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
-                        () -> then(productRepository).should(never()).delete(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().findWithCategoryProductCategory(anyString()));
+                    softly.check(() -> BDDMockito.then(productRepository).should(never()).delete(any()));
+                });
             }
 
             @Test
@@ -367,21 +367,21 @@ class ProductServiceTest {
                 productService.deleteProduct("BANG BANG");
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should().findWithCategoryProductCategory(anyString()),
-                        () -> then(productRepository).should().delete(album)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should().findWithCategoryProductCategory(anyString()));
+                    softly.check(() -> BDDMockito.then(productRepository).should().delete(album));
+                });
 
-                //when 두 번째 호출
-                assertThatThrownBy(() -> productService.deleteProduct("BANG BANG"))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> productService.deleteProduct("BANG BANG"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 상품입니다. name: " + "BANG BANG");
 
                 //then
-                assertAll(
-                        () -> then(productRepository).should(times(2)).findWithCategoryProductCategory(anyString()),
-                        () -> then(productRepository).should().delete(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productRepository).should(times(2)).findWithCategoryProductCategory(anyString()));
+                    softly.check(() -> BDDMockito.then(productRepository).should().delete(any()));
+                });
             }
         }
     }
@@ -407,7 +407,7 @@ class ProductServiceTest {
                 ProductResponse productDto = productService.getProductDto(album);
 
                 //then
-                assertThat(productDto)
+                then(productDto)
                         .extracting("name", "price", "stockQuantity", "artist", "studio")
                         .containsExactly("BANG BANG", 15000, 10, "IVE", "STARSHIP");
             }
@@ -425,7 +425,7 @@ class ProductServiceTest {
                 ProductWithCategoryResponse productWithCategoryDto = productService.getProductWithCategoryDto(book);
 
                 //then
-                assertThat(productWithCategoryDto.getCategoryNames())
+                then(productWithCategoryDto.getCategoryNames())
                         .isNotEmpty()
                         .extracting("categoryName")
                         .containsExactly("컴퓨터/IT");

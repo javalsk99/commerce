@@ -22,8 +22,8 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -107,14 +107,14 @@ class OrderRepositoryTest {
 
                 //then
                 Order findOrder = em.find(Order.class, orderId);
-                assertAll(
-                        () -> assertThat(findOrder)
-                                .extracting("member.id", "delivery.deliveryStatus", "payment", "totalAmount", "orderStatus")
-                                .containsExactly(member.getId(), DeliveryStatus.WAITING, null, 135000, OrderStatus.CREATED),
-                        () -> assertThat(findOrder.getOrderProducts())
-                                .extracting("product.name")
-                                .containsExactlyInAnyOrder("BANG BANG", "타임 캡슐")
-                );
+                thenSoftly(softly -> {
+                    softly.then(findOrder)
+                            .extracting("member.id", "delivery.deliveryStatus", "payment", "totalAmount", "orderStatus")
+                            .containsExactly(member.getId(), DeliveryStatus.WAITING, null, 135000, OrderStatus.CREATED);
+                    softly.then(findOrder.getOrderProducts())
+                            .extracting("product.name")
+                            .containsExactlyInAnyOrder("BANG BANG", "타임 캡슐");
+                });
             }
         }
     }
@@ -156,13 +156,13 @@ class OrderRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findOrder).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getMember())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getDelivery())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getPayment())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isFalse()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findOrder).isPresent();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getMember())).isFalse();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getDelivery())).isFalse();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getPayment())).isFalse();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isFalse();
+                });
             }
 
             @Test
@@ -175,13 +175,13 @@ class OrderRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findOrder).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getMember())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getPayment())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isFalse()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findOrder).isPresent();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getMember())).isFalse();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getPayment())).isFalse();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isFalse();
+                });
             }
 
             @Test
@@ -194,13 +194,13 @@ class OrderRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findOrder).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getMember())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getPayment())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isFalse()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findOrder).isPresent();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getMember())).isFalse();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getPayment())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isFalse();
+                });
             }
 
             @Test
@@ -213,13 +213,13 @@ class OrderRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findOrder).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getMember())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getPayment())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isTrue()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findOrder).isPresent();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getMember())).isFalse();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getPayment())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isTrue();
+                });
             }
 
             @Test
@@ -232,13 +232,13 @@ class OrderRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findOrder).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getMember())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getPayment())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isTrue()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findOrder).isPresent();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getMember())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getDelivery())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getPayment())).isTrue();
+                    softly.then(Hibernate.isInitialized(findOrder.get().getOrderProducts())).isTrue();
+                });
             }
         }
     }
@@ -264,7 +264,7 @@ class OrderRepositoryTest {
 
                 //then
                 Order deletedOrder = em.find(Order.class, orderId);
-                assertThat(deletedOrder).isNull();
+                then(deletedOrder).isNull();
             }
         }
     }

@@ -1,6 +1,5 @@
 package lsk.commerce.domain;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,8 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 class MemberTest {
@@ -31,7 +31,7 @@ class MemberTest {
                 Member member = Member.builder().build();
 
                 //then
-                assertThat(member.getGrade()).isEqualTo(Grade.USER);
+                then(member.getGrade()).isEqualTo(Grade.USER);
             }
 
             @Test
@@ -43,7 +43,7 @@ class MemberTest {
                 member.setAdmin();
 
                 //then
-                assertThat(member.getGrade()).isEqualTo(Grade.ADMIN);
+                then(member.getGrade()).isEqualTo(Grade.ADMIN);
             }
         }
     }
@@ -63,7 +63,7 @@ class MemberTest {
                 member.changePassword("11111111", passwordEncoder);
 
                 //then
-                assertThat(passwordEncoder.matches("11111111", member.getPassword())).isTrue();
+                then(passwordEncoder.matches("11111111", member.getPassword())).isTrue();
             }
         }
 
@@ -76,8 +76,8 @@ class MemberTest {
                 //given
                 Member member = getMember();
 
-                //when
-                assertThatThrownBy(() -> member.changePassword(password, passwordEncoder))
+                //when & then
+                thenThrownBy(() -> member.changePassword(password, passwordEncoder))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("비밀번호가 비어있습니다");
             }
@@ -87,8 +87,8 @@ class MemberTest {
                 //given
                 Member member = getMember();
 
-                //when
-                assertThatThrownBy(() -> member.changePassword("00000000", passwordEncoder))
+                //when & then
+                thenThrownBy(() -> member.changePassword("00000000", passwordEncoder))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("비밀번호가 기존과 달라야 합니다");
             }
@@ -130,11 +130,11 @@ class MemberTest {
                 member.changeAddress(city, street, zipcode);
 
                 //then
-                Assertions.assertAll(
-                        () -> assertThat(member.getAddress().getCity()).isEqualTo(city),
-                        () -> assertThat(member.getAddress().getStreet()).isEqualTo(street),
-                        () -> assertThat(member.getAddress().getZipcode()).isEqualTo(zipcode)
-                );
+                thenSoftly(softly -> {
+                    softly.then(member.getAddress().getCity()).isEqualTo(city);
+                    softly.then(member.getAddress().getStreet()).isEqualTo(street);
+                    softly.then(member.getAddress().getZipcode()).isEqualTo(zipcode);
+                });
             }
 
             static Stream<Arguments> addressProvider() {
@@ -159,8 +159,8 @@ class MemberTest {
                         .zipcode("01234")
                         .build();
 
-                //when
-                assertThatThrownBy(() -> member.changeAddress(member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode()))
+                //when & then
+                thenThrownBy(() -> member.changeAddress(member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode()))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("주소가 기존과 달라야 합니다");
             }

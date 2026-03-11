@@ -3,7 +3,7 @@ package lsk.commerce.util;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 class InitialExtractorTest {
 
@@ -22,6 +22,6 @@ class InitialExtractorTest {
         String result = InitialExtractor.extract(input);
 
         //then
-        assertThat(result).isEqualTo(expected);
+        then(result).isEqualTo(expected);
     }
 }

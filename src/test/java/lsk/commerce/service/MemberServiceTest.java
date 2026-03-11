@@ -8,6 +8,7 @@ import lsk.commerce.repository.MemberRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,16 +16,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
+import static org.mockito.BDDMockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class MemberServiceTest {
@@ -64,12 +63,12 @@ class MemberServiceTest {
                 memberService.join(request);
 
                 //then
-                assertAll(
-                        () -> then(passwordEncoder).should().encode(anyString()),
-                        () -> then(memberRepository).should().existsByLoginId(anyString()),
-                        () -> then(memberRepository).should().save(argThat(m ->
-                                m.getPassword().equals(encodedPassword) && m.getGrade() == Grade.USER))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should().existsByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should().save(argThat(m ->
+                            m.getPassword().equals(encodedPassword) && m.getGrade() == Grade.USER)));
+                });
             }
 
             @Test
@@ -87,11 +86,11 @@ class MemberServiceTest {
                 memberService.adminJoin(request);
 
                 //then
-                assertAll(
-                        () -> then(passwordEncoder).should().encode(anyString()),
-                        () -> then(memberRepository).should().existsByLoginId(anyString()),
-                        () -> then(memberRepository).should().save(argThat(m -> m.getGrade() == Grade.ADMIN))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should().existsByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should().save(argThat(m -> m.getGrade() == Grade.ADMIN)));
+                });
             }
         }
 
@@ -109,17 +108,17 @@ class MemberServiceTest {
                 given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
                 given(memberRepository.existsByLoginId(anyString())).willReturn(true);
 
-                //when
-                assertThatThrownBy(() -> memberService.join(request))
+                //when & then
+                thenThrownBy(() -> memberService.join(request))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("이미 사용 중인 아이디입니다");
 
                 //then
-                assertAll(
-                        () -> then(passwordEncoder).should().encode(anyString()),
-                        () -> then(memberRepository).should().existsByLoginId(anyString()),
-                        () -> then(memberRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should().existsByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should(never()).save(any()));
+                });
             }
 
             @Test
@@ -132,21 +131,21 @@ class MemberServiceTest {
                         .password(" ")
                         .build();
 
-                //when
-                assertAll(
-                        () -> assertThatThrownBy(() -> memberService.join(request1))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("비밀번호가 비어있습니다"),
-                        () -> assertThatThrownBy(() -> memberService.join(request2))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("비밀번호가 비어있습니다")
-                );
+                //when & then
+                thenSoftly(softly -> {
+                    softly.thenThrownBy(() -> memberService.join(request1))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("비밀번호가 비어있습니다");
+                    softly.thenThrownBy(() -> memberService.join(request2))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("비밀번호가 비어있습니다");
+                });
 
                 //then
-                assertAll(
-                        () -> then(passwordEncoder).should(never()).encode(any()),
-                        () -> then(memberRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should(never()).encode(any()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should(never()).save(any()));
+                });
             }
 
             @Test
@@ -158,16 +157,16 @@ class MemberServiceTest {
 
                 given(passwordEncoder.encode(anyString())).willReturn(rawPassword);
 
-                //when
-                assertThatThrownBy(() -> memberService.join(request))
+                //when & then
+                thenThrownBy(() -> memberService.join(request))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("암호화되지 않은 비밀번호입니다");
 
                 //then
-                assertAll(
-                        () -> then(passwordEncoder).should().encode(anyString()),
-                        () -> then(memberRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should(never()).save(any()));
+                });
             }
         }
     }
@@ -191,7 +190,7 @@ class MemberServiceTest {
                 memberService.findMemberByLoginId(loginId);
 
                 //then
-                then(memberRepository).should().findByLoginId(anyString());
+                BDDMockito.then(memberRepository).should().findByLoginId(anyString());
             }
 
             @Test
@@ -207,7 +206,7 @@ class MemberServiceTest {
                 memberService.findMemberForLogin(loginId);
 
                 //then
-                then(memberRepository).should().findByLoginId(anyString());
+                BDDMockito.then(memberRepository).should().findByLoginId(anyString());
             }
         }
 
@@ -219,13 +218,13 @@ class MemberServiceTest {
                 //given
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> memberService.findMemberByLoginId(loginId))
+                //when & then
+                thenThrownBy(() -> memberService.findMemberByLoginId(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
-                then(memberRepository).should().findByLoginId(anyString());
+                BDDMockito.then(memberRepository).should().findByLoginId(anyString());
             }
 
             @Test
@@ -233,13 +232,13 @@ class MemberServiceTest {
                 //given
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> memberService.findMemberForLogin(loginId))
+                //when & then
+                thenThrownBy(() -> memberService.findMemberForLogin(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("아이디 또는 비밀번호가 틀렸습니다");
 
                 //then
-                then(memberRepository).should().findByLoginId(anyString());
+                BDDMockito.then(memberRepository).should().findByLoginId(anyString());
             }
         }
     }
@@ -266,12 +265,12 @@ class MemberServiceTest {
                 memberService.changePassword(loginId, "11111111");
 
                 //then
-                assertAll(
-                        () -> then(memberRepository).should().findByLoginId(anyString()),
-                        () -> then(passwordEncoder).should().encode(anyString()),
-                        () -> then(passwordEncoder).should().matches(anyString(), anyString()),
-                        () -> assertThat(member.getPassword()).isEqualTo(newEncodedPassword)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberRepository).should().findByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().matches(anyString(), anyString()));
+                    softly.then(member.getPassword()).isEqualTo(newEncodedPassword);
+                });
             }
         }
 
@@ -283,17 +282,17 @@ class MemberServiceTest {
                 //given
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> memberService.changePassword(loginId, "11111111"))
+                //when & then
+                thenThrownBy(() -> memberService.changePassword(loginId, "11111111"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
-                assertAll(
-                        () -> then(memberRepository).should().findByLoginId(anyString()),
-                        () -> then(passwordEncoder).should(never()).encode(any()),
-                        () -> then(passwordEncoder).should(never()).matches(any(), any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberRepository).should().findByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should(never()).encode(any()));
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should(never()).matches(any(), any()));
+                });
             }
         }
     }
@@ -320,12 +319,12 @@ class MemberServiceTest {
                 memberService.changeAddress(loginId, "Gyeonggi-do", "Gangbuk", "01235");
 
                 //then
-                assertAll(
-                        () -> then(memberRepository).should().findByLoginId(anyString()),
-                        () -> assertThat(member.getAddress())
-                                .extracting("city", "street", "zipcode")
-                                .contains("Gyeonggi-do", "Gangbuk", "01235")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberRepository).should().findByLoginId(anyString()));
+                    softly.then(member.getAddress())
+                            .extracting("city", "street", "zipcode")
+                            .contains("Gyeonggi-do", "Gangbuk", "01235");
+                });
             }
         }
     }
@@ -349,10 +348,10 @@ class MemberServiceTest {
                 memberService.deleteMember(loginId);
 
                 //then
-                assertAll(
-                        () -> then(memberRepository).should().findByLoginId(anyString()),
-                        () -> then(memberRepository).should().delete(member)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberRepository).should().findByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should().delete(member));
+                });
             }
         }
 
@@ -364,16 +363,16 @@ class MemberServiceTest {
                 //given
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> memberService.deleteMember(loginId))
+                //when & then
+                thenThrownBy(() -> memberService.deleteMember(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
-                assertAll(
-                        () -> then(memberRepository).should().findByLoginId(anyString()),
-                        () -> then(memberRepository).should(never()).delete(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberRepository).should().findByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should(never()).delete(any()));
+                });
             }
 
             @Test
@@ -391,21 +390,21 @@ class MemberServiceTest {
                 memberService.deleteMember(loginId);
 
                 //then
-                assertAll(
-                        () -> then(memberRepository).should(times(1)).findByLoginId(anyString()),
-                        () -> then(memberRepository).should(times(1)).delete(member)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberRepository).should(times(1)).findByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should(times(1)).delete(member));
+                });
 
-                //when 두 번째 호출
-                assertThatThrownBy(() -> memberService.deleteMember(loginId))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> memberService.deleteMember(loginId))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
-                assertAll(
-                        () -> then(memberRepository).should(times(2)).findByLoginId(anyString()),
-                        () -> then(memberRepository).should(times(1)).delete(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberRepository).should(times(2)).findByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(memberRepository).should(times(1)).delete(any()));
+                });
             }
         }
     }
@@ -427,10 +426,10 @@ class MemberServiceTest {
                 MemberResponse memberDto = memberService.getMemberDto(member);
 
                 //then
-                assertAll(
-                        () -> assertThat(memberDto.getLoginId()).isEqualTo(loginId),
-                        () -> assertThat(memberDto.getGrade()).isEqualTo(Grade.USER)
-                );
+                thenSoftly(softly -> {
+                    softly.then(memberDto.getLoginId()).isEqualTo(loginId);
+                    softly.then(memberDto.getGrade()).isEqualTo(Grade.USER);
+                });
             }
         }
     }

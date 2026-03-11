@@ -39,21 +39,22 @@ public class OrderQueryRepository {
         this.query = new JPAQueryFactory(em);
     }
 
-    protected static List<String> toOrderNumbers(List<OrderQueryDto> result) {
+    protected List<String> extractOrderNumbers(List<OrderQueryDto> result) {
         return result.stream()
                 .map(o -> o.getOrderNumber())
                 .collect(toList());
     }
 
-    protected List<OrderQueryDto> findOrdersByLoginIds(List<String> loginIds) {
+    protected Optional<OrderQueryDto> findOrderByOrderNumber(String orderNumber) {
         return em.createQuery(
-                        "select new lsk.commerce.query.dto.OrderQueryDto(o.member.loginId, o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
+                        "select new lsk.commerce.query.dto.OrderQueryDto(o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
                                 " from Order o" +
                                 " left join o.payment pay" +
                                 " join o.delivery d" +
-                                " where o.member.loginId in :loginIds", OrderQueryDto.class)
-                .setParameter("loginIds", loginIds)
-                .getResultList();
+                                " where o.orderNumber = :orderNumber", OrderQueryDto.class)
+                .setParameter("orderNumber", orderNumber)
+                .getResultStream()
+                .findFirst();
     }
 
     protected List<OrderQueryDto> findOrdersByLoginId(String loginId) {
@@ -67,16 +68,15 @@ public class OrderQueryRepository {
                 .getResultList();
     }
 
-    protected Optional<OrderQueryDto> findOrderByOrderNumber(String orderNumber) {
+    protected List<OrderQueryDto> findOrdersByLoginIds(List<String> loginIds) {
         return em.createQuery(
-                        "select new lsk.commerce.query.dto.OrderQueryDto(o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
+                        "select new lsk.commerce.query.dto.OrderQueryDto(o.member.loginId, o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
                                 " from Order o" +
                                 " left join o.payment pay" +
                                 " join o.delivery d" +
-                                " where o.orderNumber = :orderNumber", OrderQueryDto.class)
-                .setParameter("orderNumber", orderNumber)
-                .getResultStream()
-                .findFirst();
+                                " where o.member.loginId in :loginIds", OrderQueryDto.class)
+                .setParameter("loginIds", loginIds)
+                .getResultList();
     }
 
     protected List<OrderQueryDto> search(OrderSearchCond cond) {
@@ -127,8 +127,8 @@ public class OrderQueryRepository {
     }
 
     private static BooleanExpression containsProductNameAndInitial(String productName, QOrderProduct subOrderProduct) {
-        if (productName.matches("^[ㄱ-ㅎ]+$")) {
-            return subOrderProduct.product.nameInitial.contains(productName);
+        if (productName.matches(".*[ㄱ-ㅎ].*")) {
+            return subOrderProduct.product.nameInitial.containsIgnoreCase(productName);
         }
 
         return subOrderProduct.product.name.containsIgnoreCase(productName);

@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.params.provider.Arguments.*;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 class PaymentTest {
 
@@ -74,7 +74,7 @@ class PaymentTest {
                 Payment.requestPayment(order);
 
                 //then
-                assertThat(order.getPayment())
+                then(order.getPayment())
                         .isNotNull()
                         .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
                         .containsExactly(order, order.getTotalAmount(), null, PaymentStatus.PENDING);
@@ -86,8 +86,8 @@ class PaymentTest {
 
             @Test
             void orderNull() {
-                //when
-                assertThatThrownBy(() -> Payment.requestPayment(null))
+                //when & then
+                thenThrownBy(() -> Payment.requestPayment(null))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("주문 정보가 없습니다");
             }
@@ -99,8 +99,8 @@ class PaymentTest {
 
                 ReflectionTestUtils.setField(canceldOrder, "orderStatus", OrderStatus.CANCELED);
 
-                //when
-                assertThatThrownBy(() -> Payment.requestPayment(canceldOrder))
+                //when & then
+                thenThrownBy(() -> Payment.requestPayment(canceldOrder))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("취소된 주문은 결제할 수 없습니다. OrderStatus: " + canceldOrder.getOrderStatus());
             }
@@ -111,8 +111,8 @@ class PaymentTest {
                 //given
                 ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
 
-                //when
-                assertThatThrownBy(() -> Payment.requestPayment(order))
+                //when & then
+                thenThrownBy(() -> Payment.requestPayment(order))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 완료된 주문입니다. OrderStatus: " + orderStatus);
             }
@@ -124,8 +124,8 @@ class PaymentTest {
 
                 ReflectionTestUtils.setField(canceledOrder.getDelivery(), "deliveryStatus", DeliveryStatus.CANCELED);
 
-                //when
-                assertThatThrownBy(() -> Payment.requestPayment(canceledOrder))
+                //when & then
+                thenThrownBy(() -> Payment.requestPayment(canceledOrder))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("취소된 주문은 결제할 수 없습니다. DeliveryStatus: " + canceledOrder.getDelivery().getDeliveryStatus());
             }
@@ -136,8 +136,8 @@ class PaymentTest {
                 //given
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
 
-                //when
-                assertThatThrownBy(() -> Payment.requestPayment(order))
+                //when & then
+                thenThrownBy(() -> Payment.requestPayment(order))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 완료된 주문입니다. DeliveryStatus: " + deliveryStatus);
             }
@@ -148,13 +148,13 @@ class PaymentTest {
                 Payment.requestPayment(order);
 
                 //then
-                assertThat(order.getPayment())
+                then(order.getPayment())
                         .isNotNull()
                         .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
                         .containsExactly(order, order.getTotalAmount(), null, PaymentStatus.PENDING);
 
-                //when 두 번째 호출
-                assertThatThrownBy(() -> Payment.requestPayment(order))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> Payment.requestPayment(order))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 정보가 있습니다");
             }
@@ -176,11 +176,11 @@ class PaymentTest {
                 order.getPayment().complete(LocalDateTime.now());
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED);
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
+                });
             }
 
             @Test
@@ -194,11 +194,11 @@ class PaymentTest {
                 order.getPayment().complete(LocalDateTime.now());
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED);
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
+                });
             }
         }
 
@@ -213,8 +213,8 @@ class PaymentTest {
 
                 ReflectionTestUtils.setField(canceledOrder.getPayment(), "paymentStatus", PaymentStatus.CANCELED);
 
-                //when
-                assertThatThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
+                //when & then
+                thenThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("취소된 주문은 결제할 수 없습니다");
             }
@@ -227,8 +227,8 @@ class PaymentTest {
 
                 ReflectionTestUtils.setField(canceledOrder, "orderStatus", OrderStatus.CANCELED);
 
-                //when
-                assertThatThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
+                //when & then
+                thenThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("취소된 주문은 결제할 수 없습니다. OrderStatus: " + canceledOrder.getOrderStatus());
             }
@@ -241,8 +241,8 @@ class PaymentTest {
 
                 ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
 
-                //when
-                assertThatThrownBy(() -> order.getPayment().complete(LocalDateTime.now()))
+                //when & then
+                thenThrownBy(() -> order.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 완료된 주문입니다. OrderStatus: " + orderStatus);
             }
@@ -255,8 +255,8 @@ class PaymentTest {
 
                 ReflectionTestUtils.setField(canceledOrder.getDelivery(), "deliveryStatus", DeliveryStatus.CANCELED);
 
-                //when
-                assertThatThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
+                //when & then
+                thenThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("취소된 주문은 결제할 수 없습니다. DeliveryStatus: " + canceledOrder.getDelivery().getDeliveryStatus());
             }
@@ -269,8 +269,8 @@ class PaymentTest {
 
                 ReflectionTestUtils.setField(order.getDelivery(), "deliveryStatus", deliveryStatus);
 
-                //when
-                assertThatThrownBy(() -> order.getPayment().complete(LocalDateTime.now()))
+                //when & then
+                thenThrownBy(() -> order.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 완료된 주문입니다. DeliveryStatus: " + deliveryStatus);
             }
@@ -284,14 +284,14 @@ class PaymentTest {
                 order.getPayment().complete(LocalDateTime.now());
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED);
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
+                });
 
-                //when 두 번째 호출
-                assertThatThrownBy(() -> order.getPayment().complete(LocalDateTime.now()))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> order.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 완료된 주문입니다");
             }

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,10 +23,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDAssertions.tuple;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anySet;
@@ -33,7 +33,6 @@ import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 
 @ExtendWith(MockitoExtension.class)
@@ -84,11 +83,11 @@ class CategoryServiceTest {
                 categoryService.create("컴퓨터/IT", null);
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), any()),
-                        () -> then(categoryRepository).should().save(argThat(c ->
-                                c.getName().equals("컴퓨터/IT") && c.getParent() == null))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), any()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().save(argThat(c ->
+                            c.getName().equals("컴퓨터/IT") && c.getParent() == null)));
+                });
             }
 
             @Test
@@ -100,11 +99,11 @@ class CategoryServiceTest {
                 categoryService.create("프로그래밍 언어", "컴퓨터/IT");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()),
-                        () -> then(categoryRepository).should().save(argThat(c ->
-                                c.getName().equals("프로그래밍 언어") && c.getParent().getName().equals("컴퓨터/IT")))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().save(argThat(c ->
+                            c.getName().equals("프로그래밍 언어") && c.getParent().getName().equals("컴퓨터/IT"))));
+                });
             }
         }
 
@@ -116,16 +115,16 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(categories1);
 
-                //when
-                assertThatThrownBy(() -> categoryService.create("컴퓨터/IT", null))
+                //when & then
+                thenThrownBy(() -> categoryService.create("컴퓨터/IT", null))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("이미 존재하는 카테고리입니다. name: " + "컴퓨터/IT");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), any()),
-                        () -> then(categoryRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), any()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(never()).save(any()));
+                });
             }
 
             @Test
@@ -133,16 +132,16 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(Collections.emptyList());
 
-                //when
-                assertThatThrownBy(() -> categoryService.create("프로그래밍 언어", "컴퓨터/IT"))
+                //when & then
+                thenThrownBy(() -> categoryService.create("프로그래밍 언어", "컴퓨터/IT"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "컴퓨터/IT");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()),
-                        () -> then(categoryRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(never()).save(any()));
+                });
             }
         }
     }
@@ -162,7 +161,7 @@ class CategoryServiceTest {
                 categoryService.findCategoryByName("컴퓨터/IT");
 
                 //then
-                then(categoryRepository).should().findAll();
+                BDDMockito.then(categoryRepository).should().findAll();
             }
 
             @Test
@@ -174,12 +173,12 @@ class CategoryServiceTest {
                 List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findAll(),
-                        () -> assertThat(categories)
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("컴퓨터/IT", "프로그래밍 언어")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
+                    softly.then(categories)
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("컴퓨터/IT", "프로그래밍 언어");
+                });
             }
 
             @Test
@@ -191,10 +190,10 @@ class CategoryServiceTest {
                 List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "컴퓨터/IT");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findAll(),
-                        () -> assertThat(categories.size()).isEqualTo(1)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
+                    softly.then(categories.size()).isEqualTo(1);
+                });
             }
 
             @Test
@@ -206,12 +205,12 @@ class CategoryServiceTest {
                 List<Category> categories = categoryService.findCategories();
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findAll(),
-                        () -> assertThat(categories)
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("컴퓨터/IT")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
+                    softly.then(categories)
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("컴퓨터/IT");
+                });
             }
         }
 
@@ -223,13 +222,13 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.findAll()).willReturn(categories1);
 
-                //when
-                assertThatThrownBy(() -> categoryService.findCategoryByName("프로그래밍 언어"))
+                //when & then
+                thenThrownBy(() -> categoryService.findCategoryByName("프로그래밍 언어"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
 
                 //then
-                then(categoryRepository).should().findAll();
+                BDDMockito.then(categoryRepository).should().findAll();
             }
 
             @Test
@@ -237,13 +236,13 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.findAll()).willReturn(categories1);
 
-                //when
-                assertThatThrownBy(() -> categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어"))
+                //when & then
+                thenThrownBy(() -> categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
 
                 //then
-                then(categoryRepository).should().findAll();
+                BDDMockito.then(categoryRepository).should().findAll();
             }
         }
     }
@@ -263,11 +262,11 @@ class CategoryServiceTest {
                 categoryService.changeParentCategory("Python", "프로그래밍 언어");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findAll(),
-                        () -> assertThat(category2.getChild().getFirst()).isEqualTo(category3),
-                        () -> assertThat(category3.getParent()).isEqualTo(category2)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
+                    softly.then(category2.getChild().getFirst()).isEqualTo(category3);
+                    softly.then(category3.getParent()).isEqualTo(category2);
+                });
             }
 
             @Test
@@ -279,14 +278,14 @@ class CategoryServiceTest {
                 categoryService.changeParentCategory("프로그래밍 언어", "Python");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findAll(),
-                        () -> assertThat(category2.getParent()).isEqualTo(category4),
-                        () -> assertThat(category2.getParent().getParent()).isEqualTo(category1),
-                        () -> assertThat(category2.getChild())
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("Java")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
+                    softly.then(category2.getParent()).isEqualTo(category4);
+                    softly.then(category2.getParent().getParent()).isEqualTo(category1);
+                    softly.then(category2.getChild())
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("Java");
+                });
             }
         }
 
@@ -299,18 +298,18 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
 
-                //when
-                assertAll(
-                        () -> assertThatThrownBy(() -> categoryService.changeParentCategory(name, "프로그래밍 언어"))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("존재하지 않는 카테고리입니다. name: " + name),
-                        () -> assertThatThrownBy(() -> categoryService.changeParentCategory("Java", name))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("존재하지 않는 카테고리입니다. name: " + name)
-                );
+                //when & then
+                thenSoftly(softly -> {
+                    softly.thenThrownBy(() -> categoryService.changeParentCategory(name, "프로그래밍 언어"))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("존재하지 않는 카테고리입니다. name: " + name);
+                    softly.thenThrownBy(() -> categoryService.changeParentCategory("Java", name))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("존재하지 않는 카테고리입니다. name: " + name);
+                });
 
                 //then
-                then(categoryRepository).should(times(2)).findAll();
+                BDDMockito.then(categoryRepository).should(times(2)).findAll();
             }
 
             static Stream<Arguments> nameProvider() {
@@ -339,10 +338,10 @@ class CategoryServiceTest {
                 categoryService.deleteCategory("Python");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findWithChild(anyString()),
-                        () -> then(categoryRepository).should().delete(category4)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithChild(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().delete(category4));
+                });
             }
         }
 
@@ -354,16 +353,16 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.findWithChild(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> categoryService.deleteCategory("C++"))
+                //when & then
+                thenThrownBy(() -> categoryService.deleteCategory("C++"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "C++");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findWithChild(anyString()),
-                        () -> then(categoryRepository).should(never()).delete(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithChild(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(never()).delete(any()));
+                });
             }
 
             @Test
@@ -371,16 +370,16 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category2));
 
-                //when
-                assertThatThrownBy(() -> categoryService.deleteCategory("프로그래밍 언어"))
+                //when & then
+                thenThrownBy(() -> categoryService.deleteCategory("프로그래밍 언어"))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("자식 카테고리가 있어서 삭제할 수 없습니다");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findWithChild(anyString()),
-                        () -> then(categoryRepository).should(never()).delete(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithChild(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(never()).delete(any()));
+                });
             }
 
             @Test
@@ -397,19 +396,19 @@ class CategoryServiceTest {
 
                 given(categoryRepository.findWithChild(anyString())).willReturn(Optional.of(category4));
 
-                //when
-                assertThatThrownBy(() -> categoryService.deleteCategory("Python"))
+                //when & then
+                thenThrownBy(() -> categoryService.deleteCategory("Python"))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("카테고리에 상품이 있어서 삭제할 수 없습니다");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findWithChild(anyString()),
-                        () -> assertThat(category4.getCategoryProducts())
-                                .isNotEmpty()
-                                .extracting("category.name", "product.name", "product.author")
-                                .containsExactly(tuple("Python", "자바 ORM 표준 JPA 프로그래밍", "김영한"))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithChild(anyString()));
+                    softly.then(category4.getCategoryProducts())
+                            .isNotEmpty()
+                            .extracting("category.name", "product.name", "product.author")
+                            .containsExactly(tuple("Python", "자바 ORM 표준 JPA 프로그래밍", "김영한"));
+                });
             }
 
             @Test
@@ -423,21 +422,21 @@ class CategoryServiceTest {
                 categoryService.deleteCategory("Python");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should(times(1)).findWithChild(anyString()),
-                        () -> then(categoryRepository).should(times(1)).delete(category4)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithChild(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().delete(category4));
+                });
 
-                //when 두 번째 호출
-                assertThatThrownBy(() -> categoryService.deleteCategory("Python"))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> categoryService.deleteCategory("Python"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "Python");
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should(times(2)).findWithChild(anyString()),
-                        () -> then(categoryRepository).should(times(1)).delete(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(times(2)).findWithChild(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().delete(category4));
+                });
             }
         }
     }
@@ -465,19 +464,19 @@ class CategoryServiceTest {
                 CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category1);
 
                 //then
-                assertAll(
-                        () -> assertThat(categoryDto.getName()).isEqualTo(category2.getName()),
-                        () -> assertThat(categoryDto.getChild())
-                                .extracting("name")
-                                .containsExactly(category3.getName())
-                );
-                assertAll(
-                        () -> assertThat(categoryDisconnectResponse.getName()).isEqualTo(category1.getName()),
-                        () -> assertThat(categoryDisconnectResponse.getProducts())
-                                .isNotEmpty()
-                                .extracting("name", "author")
-                                .containsExactly(tuple("자바 ORM 표준 JPA 프로그래밍", "김영한"))
-                );
+                thenSoftly(softly -> {
+                    softly.then(categoryDto.getName()).isEqualTo(category2.getName());
+                    softly.then(categoryDto.getChild())
+                            .extracting("name")
+                            .containsExactly(category3.getName());
+                });
+                thenSoftly(softly -> {
+                    softly.then(categoryDisconnectResponse.getName()).isEqualTo(category1.getName());
+                    softly.then(categoryDisconnectResponse.getProducts())
+                            .isNotEmpty()
+                            .extracting("name", "author")
+                            .containsExactly(tuple("자바 ORM 표준 JPA 프로그래밍", "김영한"));
+                });
             }
         }
     }
@@ -497,12 +496,12 @@ class CategoryServiceTest {
                 List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python"));
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findByNameSet(anySet()),
-                        () -> assertThat(categories)
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("Java", "Python")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findByNameSet(anySet()));
+                    softly.then(categories)
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("Java", "Python");
+                });
             }
 
             @Test
@@ -514,12 +513,12 @@ class CategoryServiceTest {
                 List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python", "Java"));
 
                 //then
-                assertAll(
-                        () -> then(categoryRepository).should().findByNameSet(anySet()),
-                        () -> assertThat(categories)
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("Java", "Python")
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findByNameSet(anySet()));
+                    softly.then(categories)
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("Java", "Python");
+                });
             }
         }
 
@@ -528,18 +527,18 @@ class CategoryServiceTest {
 
             @Test
             void categoryNotFound() {
-                //when
-                assertAll(
-                        () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(null))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("카테고리가 존재하지 않습니다"),
-                        () -> assertThatThrownBy(() -> categoryService.validateAndGetCategories(Collections.emptyList()))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("카테고리가 존재하지 않습니다")
-                );
+                //when & then
+                thenSoftly(softly -> {
+                    softly.thenThrownBy(() -> categoryService.validateAndGetCategories(null))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("카테고리가 존재하지 않습니다");
+                    softly.thenThrownBy(() -> categoryService.validateAndGetCategories(Collections.emptyList()))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("카테고리가 존재하지 않습니다");
+                });
 
                 //then
-                then(categoryRepository).should(never()).findByNameSet(any());
+                BDDMockito.then(categoryRepository).should(never()).findByNameSet(any());
             }
 
             @Test
@@ -547,13 +546,13 @@ class CategoryServiceTest {
                 //given
                 given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category2, category3, category4));
 
-                //when
-                assertThatThrownBy(() -> categoryService.validateAndGetCategories(List.of("Java", "Python")))
+                //when & then
+                thenThrownBy(() -> categoryService.validateAndGetCategories(List.of("Java", "Python")))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리가 있습니다");
 
                 //then
-                then(categoryRepository).should().findByNameSet(anySet());
+                BDDMockito.then(categoryRepository).should().findByNameSet(anySet());
             }
         }
     }

@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
@@ -115,13 +115,13 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(memberQueryDto).isPresent(),
-                        () -> assertThat(memberQueryDto.get().getOrders()).isEmpty(),
-                        () -> assertThat(memberQueryDto.get())
-                                .extracting("grade", "loginId")
-                                .containsExactly(Grade.USER, "id_A")
-                );
+                thenSoftly(softly -> {
+                    softly.then(memberQueryDto).isPresent();
+                    softly.then(memberQueryDto.get().getOrders()).isEmpty();
+                    softly.then(memberQueryDto.get())
+                            .extracting("grade", "loginId")
+                            .containsExactly(Grade.USER, "id_A");
+                });
             }
         }
     }
@@ -145,7 +145,7 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(memberQueryDtoList)
+                then(memberQueryDtoList)
                                 .hasSize(3)
                                 .extracting("loginId")
                                 .containsExactlyInAnyOrder("id_A", "id_B", "id_C");
@@ -162,7 +162,7 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(memberQueryDtoList)
+                then(memberQueryDtoList)
                         .hasSize(size)
                         .extracting("loginId")
                         .containsExactlyInAnyOrderElementsOf(loginIds);
@@ -179,7 +179,7 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(memberQueryDtoList)
+                then(memberQueryDtoList)
                         .hasSize(size)
                         .extracting("loginId")
                         .containsExactlyInAnyOrderElementsOf(loginIds);
@@ -196,7 +196,7 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(memberQueryDtoList)
+                then(memberQueryDtoList)
                         .hasSize(size)
                         .extracting("loginId")
                         .containsExactlyInAnyOrderElementsOf(loginIds);
@@ -256,7 +256,7 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(loginIds)
+                then(loginIds)
                         .hasSize(size)
                         .isEqualTo(expectLoginIds);
             }

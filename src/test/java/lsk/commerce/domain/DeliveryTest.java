@@ -15,9 +15,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.Arguments.*;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 class DeliveryTest {
 
@@ -44,12 +44,12 @@ class DeliveryTest {
                 Delivery correctAddressDelivery = new Delivery(member);
 
                 //then
-                assertAll(
-                        () -> assertThat(correctAddressDelivery.getAddress())
-                                .extracting("city", "street", "zipcode")
-                                .containsExactly("Seoul", "Gangnam", "01234"),
-                        () -> assertThat(correctAddressDelivery.getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING)
-                );
+                thenSoftly(softly -> {
+                    softly.then(correctAddressDelivery.getAddress())
+                            .extracting("city", "street", "zipcode")
+                            .containsExactly("Seoul", "Gangnam", "01234");
+                    softly.then(correctAddressDelivery.getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
+                });
             }
         }
 
@@ -61,8 +61,8 @@ class DeliveryTest {
                 //given
                 Member nullAddressMember = new Member();
 
-                //when
-                assertThatThrownBy(() -> new Delivery(nullAddressMember))
+                //when & then
+                thenThrownBy(() -> new Delivery(nullAddressMember))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("회원의 주소 정보가 없습니다");
             }
@@ -77,8 +77,8 @@ class DeliveryTest {
                         .zipcode(zipcode)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> new Delivery(wrongAddressMember))
+                //when & then
+                thenThrownBy(() -> new Delivery(wrongAddressMember))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage(message);
             }
@@ -147,11 +147,11 @@ class DeliveryTest {
                 delivery.startDelivery();
 
                 //then
-                assertAll(
-                        () -> assertThat(delivery.getDeliveryStatus()).isEqualTo(DeliveryStatus.SHIPPED),
-                        () -> assertThat(delivery.getShippedDate()).isNotNull(),
-                        () -> assertThat(delivery.getDeliveredDate()).isNull()
-                );
+                thenSoftly(softly -> {
+                    softly.then(delivery.getDeliveryStatus()).isEqualTo(DeliveryStatus.SHIPPED);
+                    softly.then(delivery.getShippedDate()).isNotNull();
+                    softly.then(delivery.getDeliveredDate()).isNull();
+                });
             }
         }
 
@@ -166,8 +166,8 @@ class DeliveryTest {
 
                 ReflectionTestUtils.setField(notPaidOrder, "orderStatus", orderStatus);
 
-                //when
-                assertThatThrownBy(() -> delivery.startDelivery())
+                //when & then
+                thenThrownBy(() -> delivery.startDelivery())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage(message);
             }
@@ -178,8 +178,8 @@ class DeliveryTest {
                 //given
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
 
-                //when
-                assertThatThrownBy(() -> delivery.startDelivery())
+                //when & then
+                thenThrownBy(() -> delivery.startDelivery())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage(message);
             }
@@ -190,8 +190,8 @@ class DeliveryTest {
                 //given
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
 
-                //when
-                assertThatThrownBy(() -> delivery.startDelivery())
+                //when & then
+                thenThrownBy(() -> delivery.startDelivery())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage(message);
             }
@@ -222,11 +222,11 @@ class DeliveryTest {
                 delivery.completeDelivery();
 
                 //then
-                assertAll(
-                        () -> assertThat(delivery.getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED),
-                        () -> assertThat(delivery.getShippedDate()).isNotNull(),
-                        () -> assertThat(delivery.getDeliveredDate()).isNotNull()
-                );
+                thenSoftly(softly -> {
+                    softly.then(delivery.getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+                    softly.then(delivery.getShippedDate()).isNotNull();
+                    softly.then(delivery.getDeliveredDate()).isNotNull();
+                });
             }
         }
 
@@ -241,8 +241,8 @@ class DeliveryTest {
 
                 ReflectionTestUtils.setField(notPaidOrder, "orderStatus", orderStatus);
 
-                //when
-                assertThatThrownBy(() -> delivery.completeDelivery())
+                //when & then
+                thenThrownBy(() -> delivery.completeDelivery())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage(message);
             }
@@ -253,8 +253,8 @@ class DeliveryTest {
                 //given
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
 
-                //when
-                assertThatThrownBy(() -> delivery.completeDelivery())
+                //when & then
+                thenThrownBy(() -> delivery.completeDelivery())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage(message);
             }
@@ -265,8 +265,8 @@ class DeliveryTest {
                 //given
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
 
-                //when
-                assertThatThrownBy(() -> delivery.completeDelivery())
+                //when & then
+                thenThrownBy(() -> delivery.completeDelivery())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage(message);
             }

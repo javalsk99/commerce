@@ -19,9 +19,9 @@ import org.springframework.context.annotation.Import;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
@@ -58,7 +58,7 @@ class MemberRepositoryTest {
 
                 //then
                 Member findMember = em.find(Member.class, memberId);
-                assertThat(findMember)
+                then(findMember)
                         .extracting("id", "name", "initial", "loginId", "grade", "password", "address.city", "address.street", "address.zipcode")
                         .containsExactly(memberId, "유저A", "ㅇㅈA", "id_A", Grade.USER, "00000000", "Seoul", "Gangnam", "01234");
             }
@@ -70,8 +70,8 @@ class MemberRepositoryTest {
             @ParameterizedTest
             @MethodSource("nullFieldsMemberProvider")
             void nullFields(Member member) {
-                //when
-                assertThatThrownBy(() -> memberRepository.save(member))
+                //when & then
+                thenThrownBy(() -> memberRepository.save(member))
                         .isInstanceOf(ConstraintViolationException.class)
                         .hasMessageContaining("공백일 수 없습니다");
             }
@@ -79,8 +79,8 @@ class MemberRepositoryTest {
             @ParameterizedTest
             @MethodSource("wrongLoginIdMemberProvider")
             void wrongLoginId(Member member, String message) {
-                //when
-                assertThatThrownBy(() -> memberRepository.save(member))
+                //when & then
+                thenThrownBy(() -> memberRepository.save(member))
                         .isInstanceOf(ConstraintViolationException.class)
                         .hasMessageContaining(message);
             }
@@ -96,8 +96,8 @@ class MemberRepositoryTest {
 
                 System.out.println("================= WHEN START =================");
 
-                //when
-                assertThatThrownBy(() -> memberRepository.save(member2))
+                //when & then
+                thenThrownBy(() -> memberRepository.save(member2))
                         .isInstanceOf(org.hibernate.exception.ConstraintViolationException.class)
                         .hasMessageContaining("Duplicate entry");
 
@@ -157,11 +157,11 @@ class MemberRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findMember).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findMember.get().getOrders())).isFalse(),
-                        () -> assertThat(findMember.get().getLoginId()).isEqualTo(loginId)
-                );
+                thenSoftly(softly -> {
+                    softly.then(findMember).isPresent();
+                    softly.then(Hibernate.isInitialized(findMember.get().getOrders())).isFalse();
+                    softly.then(findMember.get().getLoginId()).isEqualTo(loginId);
+                });
             }
 
             @Test
@@ -174,7 +174,7 @@ class MemberRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(findMember).isEmpty();
+                then(findMember).isEmpty();
             }
         }
     }
@@ -201,7 +201,7 @@ class MemberRepositoryTest {
 
                 //then
                 Member deletedMember = em.find(Member.class, memberId);
-                assertThat(deletedMember).isNull();
+                then(deletedMember).isNull();
             }
         }
     }
@@ -225,7 +225,7 @@ class MemberRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isTrue();
+                then(result).isTrue();
             }
 
             @Test
@@ -241,7 +241,7 @@ class MemberRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isFalse();
+                then(result).isFalse();
             }
         }
     }

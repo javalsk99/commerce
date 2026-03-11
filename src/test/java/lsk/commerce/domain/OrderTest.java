@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.BDDAssertions.entry;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenNoException;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDAssertions.tuple;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 class OrderTest {
@@ -74,18 +74,18 @@ class OrderTest {
                 Order createdOrder = Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
 
                 //then
-                assertAll(
-                        () -> assertThat(createdOrder.getMember().getAddress()).isEqualTo(createdOrder.getDelivery().getAddress()),
-                        () -> assertThat(createdOrder.getOrderProducts())
-                                .isNotEmpty()
-                                .extracting("order", "product", "orderPrice", "count")
-                                .containsExactlyInAnyOrder(tuple(createdOrder, album, 75000, 5), tuple(createdOrder, book, 45000, 3)),
-                        () -> assertThat(createdOrder.getTotalAmount()).isEqualTo(120000)
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(5),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(4)
-                );
+                thenSoftly(softly -> {
+                    softly.then(createdOrder.getMember().getAddress()).isEqualTo(createdOrder.getDelivery().getAddress());
+                    softly.then(createdOrder.getOrderProducts())
+                            .isNotEmpty()
+                            .extracting("order", "product", "orderPrice", "count")
+                            .containsExactlyInAnyOrder(tuple(createdOrder, album, 75000, 5), tuple(createdOrder, book, 45000, 3));
+                    softly.then(createdOrder.getTotalAmount()).isEqualTo(120000);
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(5);
+                    softly.then(book.getStockQuantity()).isEqualTo(4);
+                });
             }
         }
 
@@ -98,15 +98,15 @@ class OrderTest {
                 Member nullAddressMember = new Member();
                 Delivery nullAddressDelivery = new Delivery();
 
-                //when
-                assertAll(
-                        () -> assertThatThrownBy(() -> Order.createOrder(nullAddressMember, delivery, List.of(orderProduct1, orderProduct2)))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("배송될 주소가 없습니다"),
-                        () -> assertThatThrownBy(() -> Order.createOrder(member, nullAddressDelivery, List.of(orderProduct1, orderProduct2)))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("배송될 주소가 없습니다")
-                );
+                //when & then
+                thenSoftly(softly -> {
+                    softly.thenThrownBy(() -> Order.createOrder(nullAddressMember, delivery, List.of(orderProduct1, orderProduct2)))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("배송될 주소가 없습니다");
+                    softly.thenThrownBy(() -> Order.createOrder(member, nullAddressDelivery, List.of(orderProduct1, orderProduct2)))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("배송될 주소가 없습니다");
+                });
             }
         }
     }
@@ -132,14 +132,14 @@ class OrderTest {
                 order.clearOrderProduct();
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderProducts()).isEmpty(),
-                        () -> assertThat(order.getTotalAmount()).isEqualTo(0)
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderProducts()).isEmpty();
+                    softly.then(order.getTotalAmount()).isEqualTo(0);
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(10);
+                    softly.then(book.getStockQuantity()).isEqualTo(7);
+                });
             }
 
             @Test
@@ -148,27 +148,27 @@ class OrderTest {
                 order.clearOrderProduct();
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderProducts()).isEmpty(),
-                        () -> assertThat(order.getTotalAmount()).isEqualTo(0)
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderProducts()).isEmpty();
+                    softly.then(order.getTotalAmount()).isEqualTo(0);
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(10);
+                    softly.then(book.getStockQuantity()).isEqualTo(7);
+                });
 
-                //when 두 번째 호출
-                order.clearOrderProduct();
+                //when & then 두 번째 호출
+                thenNoException().isThrownBy(() -> order.clearOrderProduct());
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderProducts()).isEmpty(),
-                        () -> assertThat(order.getTotalAmount()).isEqualTo(0)
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderProducts()).isEmpty();
+                    softly.then(order.getTotalAmount()).isEqualTo(0);
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(10);
+                    softly.then(book.getStockQuantity()).isEqualTo(7);
+                });
             }
         }
 
@@ -181,8 +181,8 @@ class OrderTest {
                 //given
                 ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
 
-                //when
-                assertThatThrownBy(() -> order.clearOrderProduct())
+                //when & then
+                thenThrownBy(() -> order.clearOrderProduct())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("주문 생성 상태가 아니어서 주문 상품을 비울 수 없습니다. OrderStatus: " + orderStatus);
             }
@@ -195,8 +195,8 @@ class OrderTest {
 
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
 
-                //when
-                assertThatThrownBy(() -> order.clearOrderProduct())
+                //when & then
+                thenThrownBy(() -> order.clearOrderProduct())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("결제 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. PaymentStatus: " + paymentStatus);
             }
@@ -207,8 +207,8 @@ class OrderTest {
                 //given
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
 
-                //when
-                assertThatThrownBy(() -> order.clearOrderProduct())
+                //when & then
+                thenThrownBy(() -> order.clearOrderProduct())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("배송 대기 상태가 아니어서 주문 상품을 비울 수 없습니다. DeliveryStatus: " + deliveryStatus);
             }
@@ -252,7 +252,7 @@ class OrderTest {
                 Map<String, Integer> orderProductsAsMap = order.getOrderProductsAsMap();
 
                 //then
-                assertThat(orderProductsAsMap)
+                then(orderProductsAsMap)
                         .hasSize(2)
                         .containsOnly(entry("BANG BANG", 5), entry("자바 ORM 표준 JPA 프로그래밍", 3));
             }
@@ -277,17 +277,17 @@ class OrderTest {
                 order.updateOrder(List.of(orderProduct3, orderProduct4));
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderProducts())
-                                .isNotEmpty()
-                                .extracting("product", "orderPrice", "count")
-                                .containsExactlyInAnyOrder(tuple(movie, 30000, 2), tuple(album, 30000, 2)),
-                        () -> assertThat(order.getTotalAmount()).isEqualTo(60000)
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(8),
-                        () -> assertThat(movie.getStockQuantity()).isEqualTo(3)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderProducts())
+                            .isNotEmpty()
+                            .extracting("product", "orderPrice", "count")
+                            .containsExactlyInAnyOrder(tuple(movie, 30000, 2), tuple(album, 30000, 2));
+                    softly.then(order.getTotalAmount()).isEqualTo(60000);
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(8);
+                    softly.then(movie.getStockQuantity()).isEqualTo(3);
+                });
             }
         }
     }
@@ -304,15 +304,15 @@ class OrderTest {
                 order.cancel();
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                        () -> assertThat(order.getPayment()).isNull()
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED);
+                    softly.then(order.getPayment()).isNull();
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(10);
+                    softly.then(book.getStockQuantity()).isEqualTo(7);
+                });
             }
 
             @Test
@@ -327,15 +327,15 @@ class OrderTest {
                 order.cancel();
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED)
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED);
+                    softly.then(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED);
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(10);
+                    softly.then(book.getStockQuantity()).isEqualTo(7);
+                });
             }
 
             @Test
@@ -344,29 +344,29 @@ class OrderTest {
                 order.cancel();
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                        () -> assertThat(order.getPayment()).isNull()
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED);
+                    softly.then(order.getPayment()).isNull();
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(10);
+                    softly.then(book.getStockQuantity()).isEqualTo(7);
+                });
 
-                //when 두 번째 호출
-                order.cancel();
+                //when & then 두 번째 호출
+                thenNoException().isThrownBy(() -> order.cancel());
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED),
-                        () -> assertThat(order.getPayment()).isNull()
-                );
-                assertAll(
-                        () -> assertThat(album.getStockQuantity()).isEqualTo(10),
-                        () -> assertThat(book.getStockQuantity()).isEqualTo(7)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED);
+                    softly.then(order.getPayment()).isNull();
+                });
+                thenSoftly(softly -> {
+                    softly.then(album.getStockQuantity()).isEqualTo(10);
+                    softly.then(book.getStockQuantity()).isEqualTo(7);
+                });
             }
         }
 
@@ -379,8 +379,8 @@ class OrderTest {
                 //given
                 ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
 
-                //when
-                assertThatThrownBy(() -> order.cancel())
+                //when & then
+                thenThrownBy(() -> order.cancel())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("결제 완료된 주문이어서 취소할 수 없습니다. OrderStatus: " + orderStatus);
             }
@@ -392,8 +392,8 @@ class OrderTest {
 
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
 
-                //when
-                assertThatThrownBy(() -> order.cancel())
+                //when & then
+                thenThrownBy(() -> order.cancel())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("결제 완료돼서 취소할 수 없습니다");
             }
@@ -404,8 +404,8 @@ class OrderTest {
                 //given
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
 
-                //when
-                assertThatThrownBy(() -> order.cancel())
+                //when & then
+                thenThrownBy(() -> order.cancel())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("배송 대기 상태가 아니여서 취소할 수 없습니다. DeliveryStatus: " + deliveryStatus);
             }
@@ -445,11 +445,11 @@ class OrderTest {
                 order.completePaid();
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+                    softly.then(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING);
+                });
             }
 
             @Test
@@ -464,21 +464,21 @@ class OrderTest {
                 order.completePaid();
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+                    softly.then(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING);
+                });
 
-                //when 두 번째 호출
-                order.completePaid();
+                //when & then 두 번째 호출
+                thenNoException().isThrownBy(() -> order.completePaid());
 
                 //then
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                        () -> assertThat(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING)
-                );
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+                    softly.then(order.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.COMPLETED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.PREPARING);
+                });
             }
         }
 
@@ -493,8 +493,8 @@ class OrderTest {
 
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
 
-                //when
-                assertThatThrownBy(() -> order.completePaid())
+                //when & then
+                thenThrownBy(() -> order.completePaid())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("결제가 완료되지 않았습니다. PaymentStatus: " + paymentStatus);
             }
@@ -508,8 +508,8 @@ class OrderTest {
                 ReflectionTestUtils.setField(order, "orderStatus", orderStatus);
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
 
-                //when
-                assertThatThrownBy(() -> order.completePaid())
+                //when & then
+                thenThrownBy(() -> order.completePaid())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("결제 완료할 수 없는 상태입니다. OrderStatus: " + orderStatus);
             }
@@ -523,8 +523,8 @@ class OrderTest {
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", PaymentStatus.COMPLETED);
 
-                //when
-                assertThatThrownBy(() -> order.completePaid())
+                //when & then
+                thenThrownBy(() -> order.completePaid())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("결제 완료할 수 없는 상태입니다. DeliveryStatus: " + deliveryStatus);
             }
@@ -566,8 +566,8 @@ class OrderTest {
                 //given
                 order.cancel();
 
-                //when
-                assertDoesNotThrow(() -> order.validateDeletable());
+                //when & then
+                thenNoException().isThrownBy(() -> order.validateDeletable());
             }
 
             @Test
@@ -580,8 +580,8 @@ class OrderTest {
 
                 order.cancel();
 
-                //when
-                assertDoesNotThrow(() -> order.validateDeletable());
+                //when & then
+                thenNoException().isThrownBy(() -> order.validateDeletable());
             }
         }
 
@@ -595,8 +595,8 @@ class OrderTest {
 
                 ReflectionTestUtils.setField(createdOrder, "orderStatus", OrderStatus.CREATED);
 
-                //when
-                assertThatThrownBy(() -> createdOrder.validateDeletable())
+                //when & then
+                thenThrownBy(() -> createdOrder.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("주문을 취소해야 삭제할 수 있습니다");
             }
@@ -609,8 +609,8 @@ class OrderTest {
 
                 ReflectionTestUtils.setField(paidOrder, "orderStatus", OrderStatus.PAID);
 
-                //when
-                assertThatThrownBy(() -> paidOrder.validateDeletable())
+                //when & then
+                thenThrownBy(() -> paidOrder.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("배송이 완료돼야 삭제할 수 있습니다");
             }
@@ -623,8 +623,8 @@ class OrderTest {
                 ReflectionTestUtils.setField(waitingOrder, "orderStatus", OrderStatus.CANCELED);
                 ReflectionTestUtils.setField(waitingOrder.getDelivery(), "deliveryStatus", DeliveryStatus.WAITING);
 
-                //when
-                assertThatThrownBy(() -> waitingOrder.validateDeletable())
+                //when & then
+                thenThrownBy(() -> waitingOrder.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("주문을 취소해야 삭제할 수 있습니다. DeliveryStatus: " + waitingOrder.getDelivery().getDeliveryStatus());
             }
@@ -638,8 +638,8 @@ class OrderTest {
                 ReflectionTestUtils.setField(order, "orderStatus", OrderStatus.DELIVERED);
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", deliveryStatus);
 
-                //when
-                assertThatThrownBy(() -> order.validateDeletable())
+                //when & then
+                thenThrownBy(() -> order.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("배송이 완료돼야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
             }
@@ -654,8 +654,8 @@ class OrderTest {
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", DeliveryStatus.CANCELED);
                 ReflectionTestUtils.setField(order.getPayment(), "paymentStatus", paymentStatus);
 
-                //when
-                assertThatThrownBy(() -> order.validateDeletable())
+                //when & then
+                thenThrownBy(() -> order.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("주문을 취소해야 삭제할 수 있습니다. PaymentStatus: " + paymentStatus);
             }

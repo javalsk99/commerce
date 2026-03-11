@@ -15,8 +15,8 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -74,14 +74,14 @@ class CategoryProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(Hibernate.isInitialized(findCategoryProducts.getFirst().getProduct())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findCategoryProducts.getFirst().getCategory())).isFalse(),
-                        () -> assertThat(findCategoryProducts)
-                                .hasSize(2)
-                                .extracting("product.name")
-                                .containsExactlyInAnyOrder("BANG BANG", "타임 캡슐")
-                );
+                thenSoftly(softly -> {
+                    softly.then(Hibernate.isInitialized(findCategoryProducts.getFirst().getProduct())).isTrue();
+                    softly.then(Hibernate.isInitialized(findCategoryProducts.getFirst().getCategory())).isFalse();
+                    softly.then(findCategoryProducts)
+                            .hasSize(2)
+                            .extracting("product.name")
+                            .containsExactlyInAnyOrder("BANG BANG", "타임 캡슐");
+                });
             }
 
             @Test
@@ -94,7 +94,7 @@ class CategoryProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(findCategoryProducts).isEmpty();
+                then(findCategoryProducts).isEmpty();
             }
         }
     }
@@ -120,7 +120,7 @@ class CategoryProductRepositoryTest {
 
                 //then
                 CategoryProduct deletedCategoryProduct = em.find(CategoryProduct.class, categoryProductId);
-                assertThat(deletedCategoryProduct).isNull();
+                then(deletedCategoryProduct).isNull();
             }
         }
     }

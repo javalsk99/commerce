@@ -19,7 +19,7 @@
 
           //then
           Order findOrder = orderService.findOrder(orderId);
-          assertThat(findOrder.getOrderProducts().size()).isEqualTo(3);
+          then(findOrder.getOrderProducts().size()).isEqualTo(3);
       }
 
   결과 - expected: 3 but was: 6
@@ -257,7 +257,7 @@
       paymentSyncService.syncPayment(order.getPayment().getPaymentId());
 
       //then
-      assertAll(
+      thenSoftly(softly -> {
               () -> then(paymentClient).should().getPayment(anyString()),
               () -> then(paymentService).should().verifyAndComplete(any(PaidPayment.class)),
               () -> then(paymentService).should().getPaymentRequest(any(Payment.class))
@@ -273,7 +273,7 @@
 
       StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
               .assertNext(paymentRequest ->
-                      assertThat(paymentRequest)
+                      then(paymentRequest)
                               .extracting("paymentId", "paymentStatus")
                               .containsExactly(order.getPayment().getPaymentId(), PaymentStatus.COMPLETED)
               )

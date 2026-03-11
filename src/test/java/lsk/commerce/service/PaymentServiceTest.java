@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -34,14 +35,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.willThrow;
 
@@ -133,11 +133,11 @@ class PaymentServiceTest {
                 paymentService.request(multipleOrder.getOrderNumber());
 
                 //then
-                assertAll(
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(paymentRepository).should().save(multipleOrder.getPayment())
-                );
-                assertThat(multipleOrder.getPayment())
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().save(multipleOrder.getPayment()));
+                });
+                then(multipleOrder.getPayment())
                         .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
                         .containsExactly(multipleOrder, multipleOrder.getTotalAmount(), null, PaymentStatus.PENDING);
             }
@@ -151,16 +151,16 @@ class PaymentServiceTest {
                 //given
                 given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
-                //when
-                assertThatThrownBy(() -> paymentService.request(wrongOrderNumber))
+                //when & then
+                thenThrownBy(() -> paymentService.request(wrongOrderNumber))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
-                assertAll(
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(paymentRepository).should(never()).save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).save(any()));
+                });
             }
 
             @Test
@@ -172,24 +172,24 @@ class PaymentServiceTest {
                 paymentService.request(multipleOrder.getOrderNumber());
 
                 //then
-                assertAll(
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(paymentRepository).should().save(multipleOrder.getPayment())
-                );
-                assertThat(multipleOrder.getPayment())
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().save(multipleOrder.getPayment()));
+                });
+                then(multipleOrder.getPayment())
                         .extracting("order", "paymentAmount", "paymentDate", "paymentStatus")
                         .containsExactly(multipleOrder, multipleOrder.getTotalAmount(), null, PaymentStatus.PENDING);
 
-                //when 두 번째 호출
-                assertThatThrownBy(() -> paymentService.request(multipleOrder.getOrderNumber()))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> paymentService.request(multipleOrder.getOrderNumber()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 정보가 있습니다");
 
                 //then
-                assertAll(
-                        () -> then(orderService).should(times(2)).findOrderWithAllExceptMember(anyString()),
-                        () -> then(paymentRepository).should().save(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().save(any()));
+                });
             }
         }
     }
@@ -218,10 +218,10 @@ class PaymentServiceTest {
                 Payment payment = paymentService.findPaymentByPaymentId(multipleOrder.getPayment().getPaymentId());
 
                 //then
-                assertAll(
-                        () -> then(paymentRepository).should().findWithOrder(anyString()),
-                        () -> assertThat(payment).isEqualTo(multipleOrder.getPayment())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrder(anyString()));
+                    softly.check(() -> then(payment).isEqualTo(multipleOrder.getPayment()));
+                });
             }
         }
 
@@ -233,8 +233,8 @@ class PaymentServiceTest {
                 //given
                 given(paymentRepository.findWithOrder(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> paymentService.findPaymentByPaymentId(wrongPaymentId))
+                //when & then
+                thenThrownBy(() -> paymentService.findPaymentByPaymentId(wrongPaymentId))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 결제 번호입니다");
             }
@@ -265,15 +265,15 @@ class PaymentServiceTest {
                 paymentService.verifyAndComplete(paidPayment);
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(singleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                        () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
-                );
-                assertThat(paidPayment)
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(singleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
+                });
+                then(paidPayment)
                         .extracting("customData", "amount.total", "orderName", "id", "paidAt")
                         .containsExactly("{\"orderNumber\":\"" + singleOrder.getOrderNumber() + "\"}", 30000L,
                                 orderRequest.getOrderProducts().getFirst().getName(), singleOrder.getPayment().getPaymentId(),
@@ -299,15 +299,15 @@ class PaymentServiceTest {
                 paymentService.verifyAndComplete(paidPayment);
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(multipleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                        () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
-                );
-                assertThat(paidPayment)
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
+                });
+                then(paidPayment)
                         .extracting("customData", "amount.total", "orderName", "id", "paidAt")
                         .containsExactly("{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}", 120000L,
                                 orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건",
@@ -332,20 +332,20 @@ class PaymentServiceTest {
 
                 given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should(never()).getOrderRequest(any()),
-                        () -> then(productService).should(never()).findProducts(),
-                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should(never()).getOrderRequest(any()));
+                    softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -359,20 +359,20 @@ class PaymentServiceTest {
 
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("주문 상품이 비어 있습니다");
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(multipleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -389,20 +389,20 @@ class PaymentServiceTest {
 
                 given(productService.findProducts()).willReturn(List.of(movie));
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("잘못된 상품이 있습니다");
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(multipleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -418,19 +418,19 @@ class PaymentServiceTest {
                 given(paidPayment.getAmount().getTotal()).willReturn(10000L);
                 given(orderRequest.getTotalAmount()).willReturn(120000);
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(SyncPaymentException.class);
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(multipleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -450,19 +450,19 @@ class PaymentServiceTest {
 
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(SyncPaymentException.class);
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(multipleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -482,19 +482,19 @@ class PaymentServiceTest {
 
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(SyncPaymentException.class);
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(multipleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should(never()).findWithOrderDelivery(any()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -516,20 +516,20 @@ class PaymentServiceTest {
                 given(paidPayment.getId()).willReturn(paymentId);
                 given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 결제 번호입니다");
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(notRequestOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(notRequestOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -552,20 +552,20 @@ class PaymentServiceTest {
 
                 willThrow(new RuntimeException("Event Publish Failed")).given(eventPublisher).publishEvent(any(PaymentCompletedEvent.class));
 
-                //when
-                assertThatThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("Event Publish Failed");
 
                 //then
-                assertAll(
-                        () -> then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class),
-                        () -> then(orderService).should().findOrderWithAllExceptMember(anyString()),
-                        () -> then(orderService).should().getOrderRequest(multipleOrder),
-                        () -> then(productService).should().findProducts(),
-                        () -> then(paymentRepository).should().findWithOrderDelivery(anyString()),
-                        () -> then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
+                });
             }
         }
 
@@ -618,10 +618,10 @@ class PaymentServiceTest {
                 paymentService.failedPayment(multipleOrder.getPayment().getPaymentId());
 
                 //then
-                assertAll(
-                        () -> then(paymentRepository).should().findWithOrder(anyString()),
-                        () -> assertThat(multipleOrder.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.FAILED)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrder(anyString()));
+                    softly.check(() -> then(multipleOrder.getPayment().getPaymentStatus()).isEqualTo(PaymentStatus.FAILED));
+                });
             }
         }
 
@@ -633,13 +633,13 @@ class PaymentServiceTest {
                 //given
                 given(paymentRepository.findWithOrder(anyString())).willReturn(Optional.empty());
 
-                //when
-                assertThatThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
+                //when & then
+                thenThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 결제 번호입니다");
 
                 //then
-                then(paymentRepository).should().findWithOrder(anyString());
+                BDDMockito.then(paymentRepository).should().findWithOrder(anyString());
             }
         }
     }

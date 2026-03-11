@@ -22,9 +22,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.tuple;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
@@ -64,39 +64,39 @@ class ProductQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(productResponseList)
-                                .filteredOn(p -> "A".equals(p.getDtype()))
-                                .hasSize(6)
-                                .extracting("name", "artist", "studio")
-                                .containsExactlyInAnyOrder(
-                                        tuple("BANG BANG", "IVE", "STARSHIP"),
-                                        tuple("Blue Valentine", "NMIXX", "JYP"),
-                                        tuple("404", "KiiiKiii", "STARSHIP"),
-                                        tuple("타임 캡슐", "다비치", "씨에이엠위더스"),
-                                        tuple("너의 모든 순간", "성시경", "에스케이재원"),
-                                        tuple("천상연", "이창섭", "판타지오")
-                                ),
-                        () -> assertThat(productResponseList)
-                                .filteredOn(p -> "B".equals(p.getDtype()))
-                                .hasSize(3)
-                                .extracting("name", "author", "isbn")
-                                .containsExactlyInAnyOrder(
-                                        tuple("자바 ORM 표준 JPA 프로그래밍", "김영한", "9788960777330"),
-                                        tuple("면접을 위한 CS 전공지식 노트", "주홍철", "9791165219529"),
-                                        tuple("Do it! 점프 투 파이썬", "박응용", "9791163034735")
-                                ),
-                        () -> assertThat(productResponseList)
-                                .filteredOn(p -> "M".equals(p.getDtype()))
-                                .hasSize(4)
-                                .extracting("name", "actor", "director")
-                                .containsExactlyInAnyOrder(
-                                        tuple("범죄도시", "마동석", "강윤성"),
-                                        tuple("범죄도시2", "마동석", "이상용"),
-                                        tuple("범죄도시3", "마동석", "이상용"),
-                                        tuple("범죄도시4", "마동석", "허명행")
-                                )
-                );
+                thenSoftly(softly -> {
+                    softly.then(productResponseList)
+                            .filteredOn(p -> "A".equals(p.getDtype()))
+                            .hasSize(6)
+                            .extracting("name", "artist", "studio")
+                            .containsExactlyInAnyOrder(
+                                    tuple("BANG BANG", "IVE", "STARSHIP"),
+                                    tuple("Blue Valentine", "NMIXX", "JYP"),
+                                    tuple("404", "KiiiKiii", "STARSHIP"),
+                                    tuple("타임 캡슐", "다비치", "씨에이엠위더스"),
+                                    tuple("너의 모든 순간", "성시경", "에스케이재원"),
+                                    tuple("천상연", "이창섭", "판타지오")
+                            );
+                    softly.then(productResponseList)
+                            .filteredOn(p -> "B".equals(p.getDtype()))
+                            .hasSize(3)
+                            .extracting("name", "author", "isbn")
+                            .containsExactlyInAnyOrder(
+                                    tuple("자바 ORM 표준 JPA 프로그래밍", "김영한", "9788960777330"),
+                                    tuple("면접을 위한 CS 전공지식 노트", "주홍철", "9791165219529"),
+                                    tuple("Do it! 점프 투 파이썬", "박응용", "9791163034735")
+                            );
+                    softly.then(productResponseList)
+                            .filteredOn(p -> "M".equals(p.getDtype()))
+                            .hasSize(4)
+                            .extracting("name", "actor", "director")
+                            .containsExactlyInAnyOrder(
+                                    tuple("범죄도시", "마동석", "강윤성"),
+                                    tuple("범죄도시2", "마동석", "이상용"),
+                                    tuple("범죄도시3", "마동석", "이상용"),
+                                    tuple("범죄도시4", "마동석", "허명행")
+                            );
+                });
             }
 
             @ParameterizedTest
@@ -140,7 +140,7 @@ class ProductQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(productResponseList).isEmpty();
+                then(productResponseList).isEmpty();
             }
 
             static Stream<Arguments> categoryNameCondProvider() {
@@ -210,7 +210,7 @@ class ProductQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(productResponseList)
+                then(productResponseList)
                         .extracting("name")
                         .containsExactlyInAnyOrderElementsOf(productNames);
             }
@@ -276,7 +276,7 @@ class ProductQueryRepositoryTest {
         Movie movie = Movie.builder()
                 .name(name)
                 .price(price)
-                .stockQuantity(100)
+                .stockQuantity(5)
                 .actor(actor)
                 .director(director)
                 .build();

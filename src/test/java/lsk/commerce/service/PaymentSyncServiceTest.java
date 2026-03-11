@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,13 +29,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentSyncServiceTest {
@@ -124,18 +124,18 @@ class PaymentSyncServiceTest {
                 //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
                         .assertNext(paymentRequest ->
-                                assertThat(paymentRequest)
+                                then(paymentRequest)
                                         .extracting("paymentId", "paymentStatus")
                                         .containsExactly(order.getPayment().getPaymentId(), PaymentStatus.COMPLETED)
                         )
                         .verifyComplete();
 
                 //then
-                assertAll(
-                        () -> then(paymentClient).should().getPayment(anyString()),
-                        () -> then(paymentService).should().verifyAndComplete(any(PaidPayment.class)),
-                        () -> then(paymentService).should().getPaymentRequest(any(Payment.class))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(paymentClient).should().getPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentService).should().verifyAndComplete(any(PaidPayment.class)));
+                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentRequest(any(Payment.class)));
+                });
             }
         }
 
@@ -147,10 +147,11 @@ class PaymentSyncServiceTest {
                 //given
                 given(paymentClient.getPayment(anyString())).willReturn(CompletableFuture.failedFuture(new RuntimeException("Find Failed")));
 
-                //when
+                //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()))
-                        .expectError(SyncPaymentException.class)
-                        .verify();
+                        .verifyErrorSatisfies(error -> {
+                            then(error).isInstanceOf(SyncPaymentException.class);
+                        });
             }
 
             @Test
@@ -169,18 +170,18 @@ class PaymentSyncServiceTest {
                 //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
                         .assertNext(paymentRequest ->
-                                assertThat(paymentRequest)
+                                then(paymentRequest)
                                         .extracting("paymentId", "paymentStatus")
                                         .containsExactly(order.getPayment().getPaymentId(), PaymentStatus.FAILED)
                         )
                         .verifyComplete();
 
                 //then
-                assertAll(
-                        () -> then(paymentClient).should().getPayment(anyString()),
-                        () -> then(paymentService).should().failedPayment(anyString()),
-                        () -> then(paymentService).should().getPaymentRequest(any(Payment.class))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(paymentClient).should().getPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentService).should().failedPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentRequest(any(Payment.class)));
+                });
             }
         }
     }

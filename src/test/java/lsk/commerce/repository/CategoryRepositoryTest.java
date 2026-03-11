@@ -22,9 +22,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
@@ -61,13 +61,13 @@ class CategoryRepositoryTest {
 
                 //then
                 Category findCategory = em.find(Category.class, categoryId);
-                assertAll(
-                        () -> assertThat(findCategory)
-                                .extracting("id", "name", "parent")
-                                .containsExactly(categoryId, "가요", null),
-                        () -> assertThat(findCategory.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(findCategory.getChild()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findCategory)
+                            .extracting("id", "name", "parent")
+                            .containsExactly(categoryId, "가요", null);
+                    softly.then(findCategory.getCategoryProducts()).isEmpty();
+                    softly.then(findCategory.getChild()).isEmpty();
+                });
             }
         }
 
@@ -77,8 +77,8 @@ class CategoryRepositoryTest {
             @ParameterizedTest
             @MethodSource("wrongNameCategoryProvider")
             void wrongName(Category category, String message) {
-                //when
-                assertThatThrownBy(() -> categoryRepository.save(category))
+                //when & then
+                thenThrownBy(() -> categoryRepository.save(category))
                         .isInstanceOf(ConstraintViolationException.class)
                         .hasMessageContaining(message);
             }
@@ -97,8 +97,8 @@ class CategoryRepositoryTest {
 
                 System.out.println("================= WHEN START =================");
 
-                //when
-                assertThatThrownBy(() -> categoryRepository.save(category2))
+                //when & then
+                thenThrownBy(() -> categoryRepository.save(category2))
                         .isInstanceOf(org.hibernate.exception.ConstraintViolationException.class)
                         .hasMessageContaining("Duplicate entry");
 
@@ -167,18 +167,18 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findCategory).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findCategory.get().getChild())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findCategory.get().getCategoryProducts())).isFalse(),
-                        () -> assertThat(findCategory.get().getChild())
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("댄스", "발라드"),
-                        () -> assertThat(findCategory.get().getCategoryProducts())
-                                .hasSize(2)
-                                .extracting("product.name")
-                                .containsExactlyInAnyOrder("BANG BANG", "타임 캡슐")
-                );
+                thenSoftly(softly -> {
+                    softly.then(findCategory).isPresent();
+                    softly.then(Hibernate.isInitialized(findCategory.get().getChild())).isTrue();
+                    softly.then(Hibernate.isInitialized(findCategory.get().getCategoryProducts())).isFalse();
+                    softly.then(findCategory.get().getChild())
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("댄스", "발라드");
+                    softly.then(findCategory.get().getCategoryProducts())
+                            .hasSize(2)
+                            .extracting("product.name")
+                            .containsExactlyInAnyOrder("BANG BANG", "타임 캡슐");
+                });
             }
 
             @Test
@@ -191,14 +191,14 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse(),
-                        () -> assertThat(categories)
-                                .hasSize(3)
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("가요", "댄스", "발라드")
-                );
+                thenSoftly(softly -> {
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse();
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse();
+                    softly.then(categories)
+                            .hasSize(3)
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("가요", "댄스", "발라드");
+                });
             }
 
             @Test
@@ -214,14 +214,14 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse(),
-                        () -> assertThat(categories)
-                                .hasSize(2)
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("가요", "댄스")
-                );
+                thenSoftly(softly -> {
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse();
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse();
+                    softly.then(categories)
+                            .hasSize(2)
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("가요", "댄스");
+                });
             }
 
             @Test
@@ -237,14 +237,14 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse(),
-                        () -> assertThat(categories)
-                                .hasSize(1)
-                                .extracting("name")
-                                .containsExactlyInAnyOrder("가요")
-                );
+                thenSoftly(softly -> {
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse();
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse();
+                    softly.then(categories)
+                            .hasSize(1)
+                            .extracting("name")
+                            .containsExactlyInAnyOrder("가요");
+                });
             }
         }
     }
@@ -272,7 +272,7 @@ class CategoryRepositoryTest {
 
                 //then
                 Category deletedCategory = em.find(Category.class, categoryId3);
-                assertThat(deletedCategory).isNull();
+                then(deletedCategory).isNull();
             }
 
             private void deleteCategoryProducts(Category category) {
@@ -293,8 +293,8 @@ class CategoryRepositoryTest {
 
                 System.out.println("================= WHEN START =================");
 
-                //when
-                assertThatThrownBy(() -> {
+                //when & then
+                thenThrownBy(() -> {
                     categoryRepository.delete(findCategory);
                     em.flush();
                 })
@@ -311,8 +311,8 @@ class CategoryRepositoryTest {
 
                 System.out.println("================= WHEN START =================");
 
-                //when
-                assertThatThrownBy(() -> {
+                //when & then
+                thenThrownBy(() -> {
                     categoryRepository.delete(findCategory);
                     em.flush();
                 })
@@ -341,7 +341,7 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(categories)
+                then(categories)
                         .extracting("name")
                         .containsExactly("댄스");
             }
@@ -356,7 +356,7 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(categories)
+                then(categories)
                         .hasSize(2)
                         .extracting("name")
                         .containsExactlyInAnyOrder("가요", "댄스");
@@ -372,7 +372,7 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(categories)
+                then(categories)
                         .extracting("name")
                         .containsExactly("가요");
             }

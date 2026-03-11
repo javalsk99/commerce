@@ -5,10 +5,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenNoException;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
 class CategoryTest {
 
@@ -25,11 +24,11 @@ class CategoryTest {
                 Category childCategory = Category.createCategory(parentCategory, "댄스");
 
                 //then
-                assertAll(
-                        () -> assertThat(parentCategory.getParent()).isNull(),
-                        () -> assertThat(parentCategory.getChild().getFirst()).isEqualTo(childCategory),
-                        () -> assertThat(childCategory.getParent()).isEqualTo(parentCategory)
-                );
+                thenSoftly(softly -> {
+                    softly.then(parentCategory.getParent()).isNull();
+                    softly.then(parentCategory.getChild().getFirst()).isEqualTo(childCategory);
+                    softly.then(childCategory.getParent()).isEqualTo(parentCategory);
+                });
             }
         }
     }
@@ -61,10 +60,10 @@ class CategoryTest {
                 childCategory.unConnectParent();
 
                 //then
-                assertAll(
-                        () -> assertThat(childCategory.getParent()).isNull(),
-                        () -> assertThat(parentCategory.getChild()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(childCategory.getParent()).isNull();
+                    softly.then(parentCategory.getChild()).isEmpty();
+                });
             }
 
             @Test
@@ -73,16 +72,16 @@ class CategoryTest {
                 childCategory.unConnectParent();
 
                 //then
-                assertAll(
-                        () -> assertThat(childCategory.getParent()).isNull(),
-                        () -> assertThat(parentCategory.getChild()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(childCategory.getParent()).isNull();
+                    softly.then(parentCategory.getChild()).isEmpty();
+                });
 
-                //when 두 번째 호출
-                assertDoesNotThrow(() -> childCategory.unConnectParent());
+                //when & then 두 번째 호출
+                thenNoException().isThrownBy(() -> childCategory.unConnectParent());
 
                 //then
-                assertThat(childCategory.getParent()).isNull();
+                then(childCategory.getParent()).isNull();
             }
         }
     }
@@ -104,10 +103,10 @@ class CategoryTest {
                 category.changeParentCategory(childCategory);
 
                 //then
-                assertAll(
-                        () -> assertThat(childCategory.getChild().getFirst()).isEqualTo(category),
-                        () -> assertThat(category.getParent()).isEqualTo(childCategory)
-                );
+                thenSoftly(softly -> {
+                    softly.then(childCategory.getChild().getFirst()).isEqualTo(category);
+                    softly.then(category.getParent()).isEqualTo(childCategory);
+                });
             }
         }
 
@@ -116,15 +115,15 @@ class CategoryTest {
 
             @Test
             void selfOrChild() {
-                //when
-                assertAll(
-                        () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(parentCategory))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다"),
-                        () -> assertThatThrownBy(() -> parentCategory.changeParentCategory(childCategory))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다")
-                );
+                //when & then
+                thenSoftly(softly -> {
+                    softly.thenThrownBy(() -> parentCategory.changeParentCategory(parentCategory))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다");
+                    softly.thenThrownBy(() -> parentCategory.changeParentCategory(childCategory))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다");
+                });
             }
         }
     }

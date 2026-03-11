@@ -4,8 +4,8 @@ import lsk.commerce.domain.product.Album;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
 class OrderProductTest {
 
@@ -27,7 +27,7 @@ class OrderProductTest {
                 OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
 
                 //then
-                assertThat(orderProduct)
+                then(orderProduct)
                         .extracting("order", "product", "orderPrice", "count")
                         .containsExactly(null, album, 75000, 5);
             }
@@ -44,8 +44,8 @@ class OrderProductTest {
                         .stockQuantity(10)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, null))
+                //when & then
+                thenThrownBy(() -> OrderProduct.createOrderProduct(album, null))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("수량이 없습니다");
             }
@@ -58,13 +58,13 @@ class OrderProductTest {
                         .stockQuantity(10)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> OrderProduct.createOrderProduct(album, 11))
+                //when & then
+                thenThrownBy(() -> OrderProduct.createOrderProduct(album, 11))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("재고가 부족합니다");
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(10);
+                then(album.getStockQuantity()).isEqualTo(10);
             }
         }
     }
@@ -88,7 +88,7 @@ class OrderProductTest {
                 String productName = orderProduct.getProductName();
 
                 //then
-                assertThat(productName).isEqualTo("BANG BANG");
+                then(productName).isEqualTo("BANG BANG");
             }
         }
 
@@ -99,8 +99,8 @@ class OrderProductTest {
             void productIsNull() {
                 OrderProduct orderProduct = new OrderProduct();
 
-                //when
-                assertThatThrownBy(() -> orderProduct.getProductName())
+                //when & then
+                thenThrownBy(() -> orderProduct.getProductName())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("상품이 없습니다");
             }
@@ -113,8 +113,8 @@ class OrderProductTest {
                         .build();
                 OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
 
-                //when
-                assertThatThrownBy(() -> orderProduct.getProductName())
+                //when & then
+                thenThrownBy(() -> orderProduct.getProductName())
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("상품 이름이 없습니다");
             }

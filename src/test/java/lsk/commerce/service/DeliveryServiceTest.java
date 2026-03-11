@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,14 +25,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.willThrow;
 
@@ -109,14 +108,14 @@ class DeliveryServiceTest {
                 deliveryService.startDelivery(order.getOrderNumber());
 
                 //then
-                assertAll(
-                        () -> then(orderService).should().findOrderWithDelivery(anyString()),
-                        () -> then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class))
-                );
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.SHIPPED)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class)));
+                });
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.SHIPPED);
+                });
             }
         }
 
@@ -128,16 +127,16 @@ class DeliveryServiceTest {
                 //given
                 given(orderService.findOrderWithDelivery(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
-                //when
-                assertThatThrownBy(() -> deliveryService.startDelivery(wrongOrderNumber))
+                //when & then
+                thenThrownBy(() -> deliveryService.startDelivery(wrongOrderNumber))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
-                assertAll(
-                        () -> then(orderService).should().findOrderWithDelivery(anyString()),
-                        () -> then(eventPublisher).should(never()).publishEvent(any())
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
             }
 
             @Test
@@ -146,16 +145,16 @@ class DeliveryServiceTest {
                 given(orderService.findOrderWithDelivery(anyString())).willReturn(order);
                 willThrow(new RuntimeException("Event Publish Failed")).given(eventPublisher).publishEvent(any(DeliveryStartedEvent.class));
 
-                //when
-                assertThatThrownBy(() -> deliveryService.startDelivery(order.getOrderNumber()))
+                //when & then
+                thenThrownBy(() -> deliveryService.startDelivery(order.getOrderNumber()))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("Event Publish Failed");
 
                 //then
-                assertAll(
-                        () -> then(orderService).should().findOrderWithDelivery(anyString()),
-                        () -> then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class)));
+                });
             }
 
             @Test
@@ -167,25 +166,25 @@ class DeliveryServiceTest {
                 deliveryService.startDelivery(order.getOrderNumber());
 
                 //then
-                assertAll(
-                        () -> then(orderService).should().findOrderWithDelivery(anyString()),
-                        () -> then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class))
-                );
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.SHIPPED)
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class)));
+                });
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.SHIPPED);
+                });
 
-                //when 두 번째 호출
-                assertThatThrownBy(() -> deliveryService.startDelivery(order.getOrderNumber()))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> deliveryService.startDelivery(order.getOrderNumber()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 발송된 주문입니다. DeliveryStatus: " + DeliveryStatus.SHIPPED);
 
                 //then
-                assertAll(
-                        () -> then(orderService).should(times(2)).findOrderWithDelivery(anyString()),
-                        () -> then(eventPublisher).should().publishEvent(any(Object.class))
-                );
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(Object.class)));
+                });
             }
         }
     }
@@ -207,11 +206,11 @@ class DeliveryServiceTest {
                 deliveryService.completeDelivery(order.getOrderNumber());
 
                 //then
-                then(orderService).should().findOrderWithDelivery(anyString());
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.DELIVERED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED)
-                );
+                BDDMockito.then(orderService).should().findOrderWithDelivery(anyString());
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.DELIVERED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+                });
             }
         }
 
@@ -223,13 +222,13 @@ class DeliveryServiceTest {
                 //given
                 given(orderService.findOrderWithDelivery(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
-                //when
-                assertThatThrownBy(() -> deliveryService.completeDelivery(wrongOrderNumber))
+                //when & then
+                thenThrownBy(() -> deliveryService.completeDelivery(wrongOrderNumber))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
-                then(orderService).should().findOrderWithDelivery(anyString());
+                BDDMockito.then(orderService).should().findOrderWithDelivery(anyString());
             }
 
             @Test
@@ -239,18 +238,18 @@ class DeliveryServiceTest {
 
                 given(orderService.findOrderWithDelivery(anyString())).willReturn(order);
 
-                //when
+                //when 첫 번째 호출
                 deliveryService.completeDelivery(order.getOrderNumber());
 
                 //then
-                then(orderService).should().findOrderWithDelivery(anyString());
-                assertAll(
-                        () -> assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.DELIVERED),
-                        () -> assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED)
-                );
+                BDDMockito.then(orderService).should().findOrderWithDelivery(anyString());
+                thenSoftly(softly -> {
+                    softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.DELIVERED);
+                    softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+                });
 
-                //when
-                assertThatThrownBy(() -> deliveryService.completeDelivery(order.getOrderNumber()))
+                //when & then 두 번째 호출
+                thenThrownBy(() -> deliveryService.completeDelivery(order.getOrderNumber()))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 배송 완료된 주문입니다. OrderStatus: " + OrderStatus.DELIVERED);
             }

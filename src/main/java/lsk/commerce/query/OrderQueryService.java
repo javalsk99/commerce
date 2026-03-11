@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.Collectors.groupingBy;
-import static lsk.commerce.query.OrderQueryRepository.toOrderNumbers;
 
 @Service
 @Transactional(readOnly = true)
@@ -39,7 +38,7 @@ public class OrderQueryService {
             return orders;
         }
 
-        List<String> orderNumbers = toOrderNumbers(orders);
+        List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orders);
 
         Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductList(orderNumbers);
 
@@ -60,7 +59,7 @@ public class OrderQueryService {
 
     @NotNull
     private Map<String, List<OrderQueryDto>> assembleOrders(List<OrderQueryDto> orders) {
-        List<String> orderNumbers = toOrderNumbers(orders);
+        List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orders);
 
         Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductList(orderNumbers);
 

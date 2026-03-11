@@ -5,19 +5,19 @@ import lsk.commerce.util.JwtProvider;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -61,10 +61,12 @@ class AuthServiceTest {
                 String jjwt = authService.login(loginId, rawPassword);
 
                 //then
-                then(memberService).should().findMemberForLogin(any());
-                then(passwordEncoder).should().matches(anyString(), anyString());
-                then(jwtProvider).should().createToken(eq(member));
-                assertThat(jjwt).isEqualTo(token);
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should().findMemberForLogin(any()));
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().matches(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(jwtProvider).should().createToken(eq(member)));
+                    softly.then(jjwt).isEqualTo(token);
+                });
             }
         }
 
@@ -76,15 +78,17 @@ class AuthServiceTest {
                 //given
                 given(memberService.findMemberForLogin(any())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다"));
 
-                //when
-                assertThatThrownBy(() -> authService.login("id_B", rawPassword))
+                //when & then
+                thenThrownBy(() -> authService.login("id_B", rawPassword))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("아이디 또는 비밀번호가 틀렸습니다");
 
                 //then
-                then(memberService).should().findMemberForLogin(any());
-                then(passwordEncoder).should(never()).matches(any(), any());
-                then(jwtProvider).should(never()).createToken(any());
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should().findMemberForLogin(any()));
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should(never()).matches(any(), any()));
+                    softly.check(() -> BDDMockito.then(jwtProvider).should(never()).createToken(any()));
+                });
             }
 
             @Test
@@ -98,15 +102,17 @@ class AuthServiceTest {
                 given(memberService.findMemberForLogin(any())).willReturn(member);
                 given(passwordEncoder.matches(anyString(), anyString())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다"));
 
-                //when
-                assertThatThrownBy(() -> authService.login(loginId, rawPassword))
+                //when & then
+                thenThrownBy(() -> authService.login(loginId, rawPassword))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("아이디 또는 비밀번호가 틀렸습니다");
 
                 //then
-                then(memberService).should().findMemberForLogin(any());
-                then(passwordEncoder).should().matches(anyString(), anyString());
-                then(jwtProvider).should(never()).createToken(any());
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should().findMemberForLogin(any()));
+                    softly.check(() -> BDDMockito.then(passwordEncoder).should().matches(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(jwtProvider).should(never()).createToken(any()));
+                });
             }
         }
     }

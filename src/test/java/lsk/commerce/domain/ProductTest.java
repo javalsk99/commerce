@@ -10,10 +10,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenNoException;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDAssertions.tuple;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
 class ProductTest {
 
@@ -31,17 +32,17 @@ class ProductTest {
                 Movie movie = createMovie();
 
                 //then
-                assertAll(
-                        () -> assertThat(album)
-                                .extracting("name", "artist", "studio")
-                                .contains("BANG BANG", "IVE", "STARSHIP"),
-                        () -> assertThat(book)
-                                .extracting("name", "author", "isbn")
-                                .contains("자바 ORM 표준 JPA 프로그래밍", "김영한", "9788960777330"),
-                        () -> assertThat(movie)
-                                .extracting("name", "actor", "director")
-                                .contains("범죄도시", "마동석", "강윤성")
-                );
+                thenSoftly(softly -> {
+                    softly.then(album)
+                            .extracting("name", "artist", "studio")
+                            .contains("BANG BANG", "IVE", "STARSHIP");
+                    softly.then(book)
+                            .extracting("name", "author", "isbn")
+                            .contains("자바 ORM 표준 JPA 프로그래밍", "김영한", "9788960777330");
+                    softly.then(movie)
+                            .extracting("name", "actor", "director")
+                            .contains("범죄도시", "마동석", "강윤성");
+                });
             }
 
             private Album createAlbum() {
@@ -93,7 +94,7 @@ class ProductTest {
                 album.addStock(4);
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(7);
+                then(album.getStockQuantity()).isEqualTo(7);
             }
         }
 
@@ -107,13 +108,13 @@ class ProductTest {
                         .stockQuantity(3)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> album.addStock(null))
+                //when & then
+                thenThrownBy(() -> album.addStock(null))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("재고가 추가될 수량이 없습니다");
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(3);
+                then(album.getStockQuantity()).isEqualTo(3);
             }
         }
     }
@@ -135,7 +136,7 @@ class ProductTest {
                 album.removeStock(2);
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(1);
+                then(album.getStockQuantity()).isEqualTo(1);
             }
         }
 
@@ -149,13 +150,13 @@ class ProductTest {
                         .stockQuantity(3)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> album.removeStock(null))
+                //when & then
+                thenThrownBy(() -> album.removeStock(null))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("재고가 감소될 수량이 없습니다");
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(3);
+                then(album.getStockQuantity()).isEqualTo(3);
             }
 
             @Test
@@ -165,13 +166,13 @@ class ProductTest {
                         .stockQuantity(3)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> album.removeStock(4))
+                //when & then
+                thenThrownBy(() -> album.removeStock(4))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("재고가 부족합니다");
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(3);
+                then(album.getStockQuantity()).isEqualTo(3);
             }
         }
     }
@@ -193,7 +194,7 @@ class ProductTest {
                 album.updateStock(2, 3);
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(2);
+                then(album.getStockQuantity()).isEqualTo(2);
             }
         }
 
@@ -207,18 +208,18 @@ class ProductTest {
                         .stockQuantity(3)
                         .build();
 
-                //when
-                assertAll(
-                        () -> assertThatThrownBy(() -> album.updateStock(null, 3))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("재고가 추가될 수량이 없습니다"),
-                        () -> assertThatThrownBy(() -> album.updateStock(2, null))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessage("재고가 감소될 수량이 없습니다")
-                );
+                //when & then
+                thenSoftly(softly -> {
+                    softly.thenThrownBy(() -> album.updateStock(null, 3))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("재고가 추가될 수량이 없습니다");
+                    softly.thenThrownBy(() -> album.updateStock(2, null))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("재고가 감소될 수량이 없습니다");
+                });
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(3);
+                then(album.getStockQuantity()).isEqualTo(3);
             }
 
             @Test
@@ -228,13 +229,13 @@ class ProductTest {
                         .stockQuantity(3)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> album.updateStock(1, 5))
+                //when & then
+                thenThrownBy(() -> album.updateStock(1, 5))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("재고가 부족합니다");
 
                 //then
-                assertThat(album.getStockQuantity()).isEqualTo(3);
+                then(album.getStockQuantity()).isEqualTo(3);
             }
         }
     }
@@ -257,7 +258,7 @@ class ProductTest {
                 album.updateProduct(12000, 20);
 
                 //then
-                assertThat(album)
+                then(album)
                         .extracting("price", "stockQuantity")
                         .contains(12000, 20);
             }
@@ -274,7 +275,7 @@ class ProductTest {
                 album.updateProduct(null, 20);
 
                 //then
-                assertThat(album)
+                then(album)
                         .extracting("price", "stockQuantity")
                         .contains(15000, 20);
             }
@@ -291,7 +292,7 @@ class ProductTest {
                 album.updateProduct(12000, null);
 
                 //then
-                assertThat(album)
+                then(album)
                         .extracting("price", "stockQuantity")
                         .contains(12000, 10);
             }
@@ -308,13 +309,13 @@ class ProductTest {
                         .stockQuantity(10)
                         .build();
 
-                //when
-                assertThatThrownBy(() -> album.updateProduct(null, null))
+                //when & then
+                thenThrownBy(() -> album.updateProduct(null, null))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("수정할 가격 또는 수량이 있어야 합니다");
 
                 //then
-                assertThat(album)
+                then(album)
                         .extracting("price", "stockQuantity")
                         .contains(15000, 10);
             }
@@ -355,7 +356,7 @@ class ProductTest {
                 album.connectCategory(category2);
 
                 //then
-                assertThat(album.getCategoryProducts())
+                then(album.getCategoryProducts())
                         .hasSize(2)
                         .extracting("category.name", "product.name")
                         .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("댄스", "BANG BANG"));
@@ -370,13 +371,13 @@ class ProductTest {
                 //given
                 Album album = new Album();
 
-                //when
-                assertThatThrownBy(() -> album.connectCategory(category3))
+                //when & then
+                thenThrownBy(() -> album.connectCategory(category3))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("식별자가 없는 잘못된 카테고리입니다");
 
                 //then
-                assertThat(album.getCategoryProducts()).isEmpty();
+                then(album.getCategoryProducts()).isEmpty();
             }
         }
     }
@@ -398,21 +399,21 @@ class ProductTest {
                 album.connectCategories(List.of(category2));
 
                 //then
-                assertAll(
-                        () -> assertThat(album.getCategoryProducts())
-                                .hasSize(2)
-                                .extracting("category.name")
-                                .containsExactlyInAnyOrder("가요", "댄스"),
-                        () -> assertThat(category1.getCategoryProducts())
-                                .isNotEmpty()
-                                .isNotEqualTo(category2.getCategoryProducts())
-                                .extracting("product.name")
-                                .containsExactly("BANG BANG"),
-                        () -> assertThat(category2.getCategoryProducts())
-                                .isNotEmpty()
-                                .extracting("product.name")
-                                .containsExactly("BANG BANG")
-                );
+                thenSoftly(softly -> {
+                    softly.then(album.getCategoryProducts())
+                            .hasSize(2)
+                            .extracting("category.name")
+                            .containsExactlyInAnyOrder("가요", "댄스");
+                    softly.then(category1.getCategoryProducts())
+                            .isNotEmpty()
+                            .isNotEqualTo(category2.getCategoryProducts())
+                            .extracting("product.name")
+                            .containsExactly("BANG BANG");
+                    softly.then(category2.getCategoryProducts())
+                            .isNotEmpty()
+                            .extracting("product.name")
+                            .containsExactly("BANG BANG");
+                });
             }
 
             @Test
@@ -426,21 +427,21 @@ class ProductTest {
                 album.connectCategories(List.of(category1, category2));
 
                 //then
-                assertAll(
-                        () -> assertThat(album.getCategoryProducts())
-                                .hasSize(2)
-                                .extracting("category.name")
-                                .containsExactlyInAnyOrder("가요", "댄스"),
-                        () -> assertThat(category1.getCategoryProducts())
-                                .isNotEmpty()
-                                .isNotEqualTo(category2.getCategoryProducts())
-                                .extracting("product.name")
-                                .containsExactly("BANG BANG"),
-                        () -> assertThat(category2.getCategoryProducts())
-                                .isNotEmpty()
-                                .extracting("product.name")
-                                .containsExactly("BANG BANG")
-                );
+                thenSoftly(softly -> {
+                    softly.then(album.getCategoryProducts())
+                            .hasSize(2)
+                            .extracting("category.name")
+                            .containsExactlyInAnyOrder("가요", "댄스");
+                    softly.then(category1.getCategoryProducts())
+                            .isNotEmpty()
+                            .isNotEqualTo(category2.getCategoryProducts())
+                            .extracting("product.name")
+                            .containsExactly("BANG BANG");
+                    softly.then(category2.getCategoryProducts())
+                            .isNotEmpty()
+                            .extracting("product.name")
+                            .containsExactly("BANG BANG");
+                });
             }
         }
     }
@@ -462,11 +463,11 @@ class ProductTest {
                 album.removeCategoryProductsFormCategory();
 
                 //then
-                assertAll(
-                        () -> assertThat(category1.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(category2.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(album.getCategoryProducts()).hasSize(2)
-                );
+                thenSoftly(softly -> {
+                    softly.then(category1.getCategoryProducts()).isEmpty();
+                    softly.then(category2.getCategoryProducts()).isEmpty();
+                    softly.then(album.getCategoryProducts()).hasSize(2);
+                });
             }
 
             @Test
@@ -480,21 +481,21 @@ class ProductTest {
                 album.removeCategoryProductsFormCategory();
 
                 //then
-                assertAll(
-                        () -> assertThat(category1.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(category2.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(album.getCategoryProducts()).hasSize(2)
-                );
+                thenSoftly(softly -> {
+                    softly.then(category1.getCategoryProducts()).isEmpty();
+                    softly.then(category2.getCategoryProducts()).isEmpty();
+                    softly.then(album.getCategoryProducts()).hasSize(2);
+                });
 
-                //when 두 번째 호출
-                album.removeCategoryProductsFormCategory();
+                //when & then 두 번째 호출
+                thenNoException().isThrownBy(() -> album.removeCategoryProductsFormCategory());
 
                 //then
-                assertAll(
-                        () -> assertThat(category1.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(category2.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(album.getCategoryProducts()).hasSize(2)
-                );
+                thenSoftly(softly -> {
+                    softly.then(category1.getCategoryProducts()).isEmpty();
+                    softly.then(category2.getCategoryProducts()).isEmpty();
+                    softly.then(album.getCategoryProducts()).hasSize(2);
+                });
             }
         }
     }
@@ -516,10 +517,10 @@ class ProductTest {
                 album.removeCategoryProduct(category1);
 
                 //then
-                assertAll(
-                        () -> assertThat(album.getCategoryProducts()).isEmpty(),
-                        () -> assertThat(category1.getCategoryProducts()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(album.getCategoryProducts()).isEmpty();
+                    softly.then(category1.getCategoryProducts()).isEmpty();
+                });
             }
         }
 
@@ -531,8 +532,8 @@ class ProductTest {
                 //given
                 Album album = new Album();
 
-                //when
-                assertThatThrownBy(() -> album.removeCategoryProduct(category1))
+                //when & then
+                thenThrownBy(() -> album.removeCategoryProduct(category1))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("상품과 연결된 카테고리가 없습니다");
             }
@@ -544,13 +545,13 @@ class ProductTest {
 
                 album.connectCategory(category1);
 
-                //when
-                assertThatThrownBy(() -> album.removeCategoryProduct(category2))
+                //when & then
+                thenThrownBy(() -> album.removeCategoryProduct(category2))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("상품이 해당 카테고리에 없습니다");
 
                 //then
-                assertThat(album.getCategoryProducts())
+                then(album.getCategoryProducts())
                         .isNotEmpty()
                         .extracting("category.name")
                         .containsExactly("가요");

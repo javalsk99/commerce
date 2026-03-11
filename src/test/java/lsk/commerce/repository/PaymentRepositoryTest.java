@@ -22,8 +22,8 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -112,7 +112,7 @@ class PaymentRepositoryTest {
 
                 //then
                 Payment findPayment = em.find(Payment.class, paymentId);
-                assertThat(findPayment)
+                then(findPayment)
                         .extracting("order.orderStatus", "paymentAmount", "paymentStatus")
                         .containsExactly(OrderStatus.CREATED, 135000, PaymentStatus.PENDING);
             }
@@ -153,10 +153,10 @@ class PaymentRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findPayment).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findPayment.get().getOrder())).isTrue()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findPayment).isPresent();
+                    softly.then(Hibernate.isInitialized(findPayment.get().getOrder())).isTrue();
+                });
             }
 
             @Test
@@ -169,11 +169,11 @@ class PaymentRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findPayment).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findPayment.get().getOrder())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findPayment.get().getOrder().getDelivery())).isTrue()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findPayment).isPresent();
+                    softly.then(Hibernate.isInitialized(findPayment.get().getOrder())).isTrue();
+                    softly.then(Hibernate.isInitialized(findPayment.get().getOrder().getDelivery())).isTrue();
+                });
             }
         }
     }

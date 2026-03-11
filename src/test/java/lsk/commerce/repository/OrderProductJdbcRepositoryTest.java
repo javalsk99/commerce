@@ -17,8 +17,8 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.tuple;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -96,7 +96,7 @@ class OrderProductJdbcRepositoryTest {
 
                 //then
                 Order findOrder = em.find(Order.class, orderId);
-                assertThat(findOrder.getOrderProducts())
+                then(findOrder.getOrderProducts())
                         .extracting("product.name", "orderPrice", "count")
                         .containsExactlyInAnyOrder(tuple("BANG BANG", 75000, 5), tuple("타임 캡슐", 60000, 4));
             }
@@ -121,7 +121,7 @@ class OrderProductJdbcRepositoryTest {
 
                 //then
                 Order findOrder = em.find(Order.class, orderId);
-                assertThat(findOrder.getOrderProducts()).isEmpty();
+                then(findOrder.getOrderProducts()).isEmpty();
             }
 
             @Test
@@ -136,7 +136,7 @@ class OrderProductJdbcRepositoryTest {
 
                 //then
                 Order findOrder = em.find(Order.class, orderId);
-                assertThat(findOrder.getOrderProducts()).isEmpty();
+                then(findOrder.getOrderProducts()).isEmpty();
             }
         }
     }

@@ -24,9 +24,9 @@ import org.springframework.context.annotation.Import;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
@@ -71,13 +71,13 @@ class ProductRepositoryTest {
 
                 //then
                 Product findProduct = em.find(Product.class, albumId);
-                assertAll(
-                        () -> assertThat(findProduct)
-                                .isInstanceOf(Album.class)
-                                .extracting("name", "nameInitial", "price", "stockQuantity", "artist", "artistInitial", "studio", "studioInitial")
-                                .containsExactly("BANG BANG", "BANG BANG", 15000, 10, "IVE", "IVE", "STARSHIP", "STARSHIP"),
-                        () -> assertThat(findProduct.getCategoryProducts()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findProduct)
+                            .isInstanceOf(Album.class)
+                            .extracting("name", "nameInitial", "price", "stockQuantity", "artist", "artistInitial", "studio", "studioInitial")
+                            .containsExactly("BANG BANG", "BANG BANG", 15000, 10, "IVE", "IVE", "STARSHIP", "STARSHIP");
+                    softly.then(findProduct.getCategoryProducts()).isEmpty();
+                });
             }
 
             @Test
@@ -94,13 +94,13 @@ class ProductRepositoryTest {
 
                 //then
                 Product findProduct = em.find(Product.class, bookId);
-                assertAll(
-                        () -> assertThat(findProduct)
-                                .isInstanceOf(Book.class)
-                                .extracting("name", "nameInitial", "price", "stockQuantity", "author", "authorInitial", "isbn")
-                                .containsExactly("자바 ORM 표준 JPA 프로그래밍", "ㅈㅂ ORM ㅍㅈ JPA ㅍㄹㄱㄹㅁ", 15000, 7, "김영한", "ㄱㅇㅎ", "9788960777330"),
-                        () -> assertThat(findProduct.getCategoryProducts()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findProduct)
+                            .isInstanceOf(Book.class)
+                            .extracting("name", "nameInitial", "price", "stockQuantity", "author", "authorInitial", "isbn")
+                            .containsExactly("자바 ORM 표준 JPA 프로그래밍", "ㅈㅂ ORM ㅍㅈ JPA ㅍㄹㄱㄹㅁ", 15000, 7, "김영한", "ㄱㅇㅎ", "9788960777330");
+                    softly.then(findProduct.getCategoryProducts()).isEmpty();
+                });
             }
 
             @Test
@@ -117,13 +117,13 @@ class ProductRepositoryTest {
 
                 //then
                 Product findProduct = em.find(Product.class, movieId);
-                assertAll(
-                        () -> assertThat(findProduct)
-                                .isInstanceOf(Movie.class)
-                                .extracting("name", "nameInitial", "price", "stockQuantity", "actor", "actorInitial", "director", "directorInitial")
-                                .containsExactly("범죄도시", "ㅂㅈㄷㅅ", 15000, 5, "마동석", "ㅁㄷㅅ", "강윤성", "ㄱㅇㅅ"),
-                        () -> assertThat(findProduct.getCategoryProducts()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findProduct)
+                            .isInstanceOf(Movie.class)
+                            .extracting("name", "nameInitial", "price", "stockQuantity", "actor", "actorInitial", "director", "directorInitial")
+                            .containsExactly("범죄도시", "ㅂㅈㄷㅅ", 15000, 5, "마동석", "ㅁㄷㅅ", "강윤성", "ㄱㅇㅅ");
+                    softly.then(findProduct.getCategoryProducts()).isEmpty();
+                });
             }
 
             @ParameterizedTest
@@ -144,7 +144,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(albumId1).isNotEqualTo(albumId2);
+                then(albumId1).isNotEqualTo(albumId2);
             }
 
             @ParameterizedTest
@@ -165,7 +165,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(bookId1).isNotEqualTo(bookId2);
+                then(bookId1).isNotEqualTo(bookId2);
             }
 
             @ParameterizedTest
@@ -186,7 +186,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(movieId1).isNotEqualTo(movieId2);
+                then(movieId1).isNotEqualTo(movieId2);
             }
 
             static Stream<Arguments> albumProvider() {
@@ -220,8 +220,8 @@ class ProductRepositoryTest {
             @ParameterizedTest
             @MethodSource("nullFieldsProductProvider")
             void nullFields(Product product, String message) {
-                //when
-                assertThatThrownBy(() -> productRepository.save(product))
+                //when & then
+                thenThrownBy(() -> productRepository.save(product))
                         .isInstanceOf(ConstraintViolationException.class)
                         .hasMessageContaining(message);
             }
@@ -229,8 +229,8 @@ class ProductRepositoryTest {
             @ParameterizedTest
             @MethodSource("wrongPriceProductProvider")
             void wrongPrice(Product product) {
-                //when
-                assertThatThrownBy(() -> productRepository.save(product))
+                //when & then
+                thenThrownBy(() -> productRepository.save(product))
                         .isInstanceOf(ConstraintViolationException.class)
                         .hasMessageContaining("100 이상이어야 합니다");
             }
@@ -244,8 +244,8 @@ class ProductRepositoryTest {
 
                 System.out.println("================= WHEN START =================");
 
-                //when
-                assertThatThrownBy(() -> productRepository.save(duplicateAlbum))
+                //when & then
+                thenThrownBy(() -> productRepository.save(duplicateAlbum))
                         .isInstanceOf(org.hibernate.exception.ConstraintViolationException.class)
                         .hasMessageContaining("Duplicate entry")
                         .hasMessageContaining("UniqueAlbum");
@@ -262,8 +262,8 @@ class ProductRepositoryTest {
 
                 System.out.println("================= WHEN START =================");
 
-                //when
-                assertThatThrownBy(() -> productRepository.save(duplicateBook))
+                //when & then
+                thenThrownBy(() -> productRepository.save(duplicateBook))
                         .isInstanceOf(org.hibernate.exception.ConstraintViolationException.class)
                         .hasMessageContaining("Duplicate entry")
                         .hasMessageContaining("UniqueBook");
@@ -280,8 +280,8 @@ class ProductRepositoryTest {
 
                 System.out.println("================= WHEN START =================");
 
-                //when
-                assertThatThrownBy(() -> productRepository.save(duplicateMovie))
+                //when & then
+                thenThrownBy(() -> productRepository.save(duplicateMovie))
                         .isInstanceOf(org.hibernate.exception.ConstraintViolationException.class)
                         .hasMessageContaining("Duplicate entry")
                         .hasMessageContaining("UniqueMovie");
@@ -349,15 +349,15 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findProduct).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue(),
-                        () -> assertThat(findProduct.get().getCategoryProducts())
-                                .extracting("category.name")
-                                .containsExactlyInAnyOrder("가요", "댄스")
-                );
+                thenSoftly(softly -> {
+                    softly.then(findProduct).isPresent();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isFalse();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isFalse();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue();
+                    softly.then(findProduct.get().getCategoryProducts())
+                            .extracting("category.name")
+                            .containsExactlyInAnyOrder("가요", "댄스");
+                });
             }
 
             @Test
@@ -370,15 +370,15 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findProduct).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isFalse(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue(),
-                        () -> assertThat(findProduct.get().getCategoryProducts())
-                                .extracting("category.name")
-                                .containsExactlyInAnyOrder("가요", "댄스")
-                );
+                thenSoftly(softly -> {
+                    softly.then(findProduct).isPresent();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isFalse();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue();
+                    softly.then(findProduct.get().getCategoryProducts())
+                            .extracting("category.name")
+                            .containsExactlyInAnyOrder("가요", "댄스");
+                });
             }
 
             @Test
@@ -391,15 +391,15 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findProduct).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isTrue(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue(),
-                        () -> assertThat(findProduct.get().getCategoryProducts())
-                                .extracting("category.name")
-                                .containsExactlyInAnyOrder("가요", "댄스")
-                );
+                thenSoftly(softly -> {
+                    softly.then(findProduct).isPresent();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getCategory())).isTrue();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts().getFirst().getProduct())).isTrue();
+                    softly.then(findProduct.get().getCategoryProducts())
+                            .extracting("category.name")
+                            .containsExactlyInAnyOrder("가요", "댄스");
+                });
             }
 
             @Test
@@ -412,11 +412,11 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertAll(
-                        () -> assertThat(findProduct).isPresent(),
-                        () -> assertThat(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue(),
-                        () -> assertThat(findProduct.get().getCategoryProducts()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(findProduct).isPresent();
+                    softly.then(Hibernate.isInitialized(findProduct.get().getCategoryProducts())).isTrue();
+                    softly.then(findProduct.get().getCategoryProducts()).isEmpty();
+                });
             }
         }
     }
@@ -445,11 +445,11 @@ class ProductRepositoryTest {
                 Product deletedAlbum = em.find(Product.class, albumId);
                 CategoryProduct deletedCategoryProduct = em.find(CategoryProduct.class, categoryProductId);
                 Category deletedCategory = em.find(Category.class, categoryId);
-                assertAll(
-                        () -> assertThat(deletedAlbum).isNull(),
-                        () -> assertThat(deletedCategoryProduct).isNull(),
-                        () -> assertThat(deletedCategory.getCategoryProducts()).isEmpty()
-                );
+                thenSoftly(softly -> {
+                    softly.then(deletedAlbum).isNull();
+                    softly.then(deletedCategoryProduct).isNull();
+                    softly.then(deletedCategory.getCategoryProducts()).isEmpty();
+                });
             }
         }
     }
@@ -470,7 +470,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isTrue();
+                then(result).isTrue();
             }
 
             @Test
@@ -483,7 +483,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isTrue();
+                then(result).isTrue();
             }
 
             @Test
@@ -496,7 +496,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isTrue();
+                then(result).isTrue();
             }
 
             @ParameterizedTest
@@ -514,7 +514,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isFalse();
+                then(result).isFalse();
             }
 
             @ParameterizedTest
@@ -533,7 +533,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isFalse();
+                then(result).isFalse();
             }
 
             @ParameterizedTest
@@ -551,7 +551,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                assertThat(result).isFalse();
+                then(result).isFalse();
             }
         }
     }
