@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
@@ -29,6 +30,7 @@ public class MemberQueryRepository {
     protected List<String> extractLoginIds(List<MemberQueryDto> result) {
         return result.stream()
                 .map(m -> m.getLoginId())
+                .filter(loginId -> loginId != null)
                 .collect(toList());
     }
 

@@ -42,6 +42,7 @@ public class OrderQueryRepository {
     protected List<String> extractOrderNumbers(List<OrderQueryDto> result) {
         return result.stream()
                 .map(o -> o.getOrderNumber())
+                .filter(orderNumber -> orderNumber != null)
                 .collect(toList());
     }
 

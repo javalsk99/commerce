@@ -123,6 +123,19 @@ class MemberQueryRepositoryTest {
                             .containsExactly(Grade.USER, "id_A");
                 });
             }
+
+            @Test
+            void shouldReturnEmpty_WhenLoginIdDoesNotExist() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                Optional<MemberQueryDto> memberQueryDto = memberQueryRepository.findMember("id_D");
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                then(memberQueryDto).isEmpty();
+            }
         }
     }
 
@@ -145,61 +158,33 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                then(memberQueryDtoList)
-                                .hasSize(3)
-                                .extracting("loginId")
-                                .containsExactlyInAnyOrder("id_A", "id_B", "id_C");
+                thenSoftly(softly -> {
+                    softly.then(memberQueryDtoList)
+                            .extracting("orders")
+                            .containsOnly(Collections.emptyList());
+                    softly.then(memberQueryDtoList)
+                            .hasSize(3)
+                            .extracting("loginId")
+                            .containsExactlyInAnyOrder("id_A", "id_B", "id_C");
+                });
             }
 
             @ParameterizedTest
             @MethodSource("nameCondProvider")
             void shouldFilterByName_WhenNameIsPresent(MemberSearchCond cond, int size, List<String> loginIds) {
-                System.out.println("================= WHEN START =================");
-
-                //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
-
-                System.out.println("================= WHEN END ===================");
-
-                //then
-                then(memberQueryDtoList)
-                        .hasSize(size)
-                        .extracting("loginId")
-                        .containsExactlyInAnyOrderElementsOf(loginIds);
+                assertThatContainsExactlyLoginIds(cond, size, loginIds);
             }
 
             @ParameterizedTest
             @MethodSource("loginIdCondProvider")
             void shouldFilterByLoginID_WhenLoginIdIsPresent(MemberSearchCond cond, int size, List<String> loginIds) {
-                System.out.println("================= WHEN START =================");
-
-                //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
-
-                System.out.println("================= WHEN END ===================");
-
-                //then
-                then(memberQueryDtoList)
-                        .hasSize(size)
-                        .extracting("loginId")
-                        .containsExactlyInAnyOrderElementsOf(loginIds);
+                assertThatContainsExactlyLoginIds(cond, size, loginIds);
             }
 
             @ParameterizedTest
             @MethodSource("nameAndLoginIdCondProvider")
             void shouldFilterByAll_WhenNameAndLoginIdBothPresent(MemberSearchCond cond, int size, List<String> loginIds) {
-                System.out.println("================= WHEN START =================");
-
-                //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
-
-                System.out.println("================= WHEN END ===================");
-
-                //then
-                then(memberQueryDtoList)
-                        .hasSize(size)
-                        .extracting("loginId")
-                        .containsExactlyInAnyOrderElementsOf(loginIds);
+                assertThatContainsExactlyLoginIds(cond, size, loginIds);
             }
 
             static Stream<Arguments> nameCondProvider() {
@@ -236,11 +221,26 @@ class MemberQueryRepositoryTest {
                         argumentSet("이름을 ㄱㄴㄷ, 로그인 아이디를 id로 검색", new MemberSearchCond("ㄱㄴㄷ", "id"), 0, Collections.emptyList())
                 );
             }
+
+            private void assertThatContainsExactlyLoginIds(MemberSearchCond cond, int size, List<String> loginIds) {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                then(memberQueryDtoList)
+                        .hasSize(size)
+                        .extracting("loginId")
+                        .containsExactlyInAnyOrderElementsOf(loginIds);
+            }
         }
     }
 
     @Nested
-    class extractLoginIds {
+    class ExtractLoginIds {
 
         @Nested
         class SuccessCase {
@@ -266,7 +266,8 @@ class MemberQueryRepositoryTest {
                         argumentSet("MemberQueryDto 3개", List.of(new MemberQueryDto("id_A", Grade.USER), new MemberQueryDto("id_B", Grade.USER), new MemberQueryDto("id_C", Grade.USER)), 3, List.of("id_A", "id_B", "id_C")),
                         argumentSet("MemberQueryDto 2개", List.of(new MemberQueryDto("id_A", Grade.USER), new MemberQueryDto("id_B", Grade.USER)), 2, List.of("id_A", "id_B")),
                         argumentSet("MemberQueryDto 1개", List.of(new MemberQueryDto("id_A", Grade.USER)), 1, List.of("id_A")),
-                        argumentSet("MemberQueryDto 0개", Collections.emptyList(), 0, Collections.emptyList())
+                        argumentSet("MemberQueryDto 0개", Collections.emptyList(), 0, Collections.emptyList()),
+                        argumentSet("loginId가 없는 MemberQueryDto", List.of(new MemberQueryDto(null, Grade.USER)), 0, Collections.emptyList())
                 );
             }
         }

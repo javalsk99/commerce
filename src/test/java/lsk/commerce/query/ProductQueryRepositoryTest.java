@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -113,7 +113,7 @@ class ProductQueryRepositoryTest {
 
             @ParameterizedTest
             @MethodSource("priceRangeCondProvider")
-            void shouldFilterByPriceRange_WhenMinOrMaxPriceIsPresent(ProductSearchCond cond, List<String> productNames) {
+            void shouldFilterByPriceRange_WhenPricesAreOptional(ProductSearchCond cond, List<String> productNames) {
                 assertThatContainsExactlyProductNames(cond, productNames);
             }
 

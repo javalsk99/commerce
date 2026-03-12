@@ -25,7 +25,7 @@ public class OrderQueryService {
         OrderQueryDto order = orderQueryRepository.findOrderByOrderNumber(orderNumber)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
 
-        List<OrderProductQueryDto> orderProductList = orderProductQueryRepository.findOrderProductList(orderNumber);
+        List<OrderProductQueryDto> orderProductList = orderProductQueryRepository.findOrderProductListByOrderNumber(orderNumber);
 
         order.setOrderProducts(orderProductList);
 
@@ -40,7 +40,7 @@ public class OrderQueryService {
 
         List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orders);
 
-        Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductList(orderNumbers);
+        Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductListByOrderNumbers(orderNumbers);
 
         orders.forEach(orderQueryDto -> orderQueryDto.setOrderProducts(orderProductMap.get(orderQueryDto.getOrderNumber())));
 
@@ -61,7 +61,7 @@ public class OrderQueryService {
     private Map<String, List<OrderQueryDto>> assembleOrders(List<OrderQueryDto> orders) {
         List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orders);
 
-        Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductList(orderNumbers);
+        Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductListByOrderNumbers(orderNumbers);
 
         orders.forEach(orderQueryDto -> orderQueryDto.setOrderProducts(orderProductMap.get(orderQueryDto.getOrderNumber())));
 

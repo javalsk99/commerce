@@ -1,5 +1,6 @@
 package lsk.commerce.query.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lsk.commerce.domain.DeliveryStatus;
@@ -23,6 +24,7 @@ public class OrderSearchCond {
 
     private DeliveryStatus deliveryStatus;
 
+    @Builder
     public OrderSearchCond(String memberLoginId, String productName, OrderStatus orderStatus, LocalDate startDate,
                            LocalDate endDate, PaymentStatus paymentStatus, DeliveryStatus deliveryStatus) {
         this.memberLoginId = memberLoginId;

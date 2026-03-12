@@ -25,6 +25,7 @@
 - GitHub  
   [포트원 결제 api](https://github.com/portone-io/portone-sample?tab=readme-ov-file)  
   [Java JWT](https://github.com/jwtk/jjwt?tab=readme-ov-file#reading-a-jwt)
+  [asList() deprecated -> asInstanceOf(LIST)](https://github.com/orgs/assertj/discussions/3424)
 
 
 - Stack Overflow  
