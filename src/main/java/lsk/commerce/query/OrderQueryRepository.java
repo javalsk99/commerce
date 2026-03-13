@@ -5,6 +5,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.PaymentStatus;
@@ -29,15 +30,11 @@ import static lsk.commerce.domain.QPayment.payment;
 import static lsk.commerce.domain.QProduct.product;
 
 @Repository
+@RequiredArgsConstructor
 public class OrderQueryRepository {
 
     private final EntityManager em;
     private final JPAQueryFactory query;
-
-    public OrderQueryRepository(EntityManager em) {
-        this.em = em;
-        this.query = new JPAQueryFactory(em);
-    }
 
     protected List<String> extractOrderNumbers(List<OrderQueryDto> result) {
         return result.stream()

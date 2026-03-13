@@ -4,28 +4,24 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 import static lsk.commerce.domain.QMember.member;
 
 @Repository
+@RequiredArgsConstructor
 public class MemberQueryRepository {
 
     private final EntityManager em;
     private final JPAQueryFactory query;
-
-    public MemberQueryRepository(EntityManager em) {
-        this.em = em;
-        this.query = new JPAQueryFactory(em);
-    }
 
     protected List<String> extractLoginIds(List<MemberQueryDto> result) {
         return result.stream()

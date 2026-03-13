@@ -6,6 +6,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
@@ -25,6 +26,7 @@ import static lsk.commerce.domain.QCategoryProduct.categoryProduct;
 import static lsk.commerce.domain.QProduct.product;
 
 @Repository
+@RequiredArgsConstructor
 public class ProductQueryRepository {
 
     private final JPAQueryFactory query;
@@ -32,10 +34,6 @@ public class ProductQueryRepository {
     private final QAlbum album = product.as(QAlbum.class);
     private final QBook book = product.as(QBook.class);
     private final QMovie movie = product.as(QMovie.class);
-
-    public ProductQueryRepository(EntityManager em) {
-        this.query = new JPAQueryFactory(em);
-    }
 
     protected List<ProductResponse> search(ProductSearchCond cond) {
         return query.select(new QProductResponse(product.name, product.price, product.stockQuantity,

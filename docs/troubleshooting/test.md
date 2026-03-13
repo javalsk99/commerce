@@ -289,3 +289,9 @@
           return payment;
       });
       given(paymentService.getPaymentRequest(any(Payment.class))).willAnswer(invocation -> new PaymentRequest(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));
+
+
+- AuthControllerTest의 wrongLoginIdOrPassword 테스트에서 실패하는 문제 발생  
+  원인 추측: 500번대 에러는 서버의 문제이고 400번대 에러는 클라이언트의 잘못된 요청이어서 500번대 에러는 테스트에 실패하는 것으로 추측
+
+  jakarta.servlet.ServletException: Request processing failed: java.lang.IllegalArgumentException: 아이디 또는 비밀번호가 틀렸습니다

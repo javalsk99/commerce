@@ -6,6 +6,10 @@
 - [order](order.md)
 - [payment](payment.md)
 - [delivery](delivery.md)
+- [jwt](jwt.md)
+- [controller](controller.md)
+- [test](test.md)
+- [환경 변수 문제](environment_variable.md)
 - 테스트 코드 작성 중 검색 기능이 빠진 것을 발견  
   검색 기능에 QueryDSL을 사용하는 것을 배워서 com.querydsl:querydsl-jpa:5.0.0:jakarta 의존성 추가  
   [GHSA-6q3q-6v5j-h6vg](https://osv.dev/vulnerability/GHSA-6q3q-6v5j-h6vg) 8.2 Querydsl vulnerable to HQL injection trough orderBy 보안 취약성 메시지 발견  

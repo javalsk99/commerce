@@ -1,5 +1,6 @@
 package lsk.commerce.query;
 
+import lsk.commerce.config.QuerydslConfig;
 import lsk.commerce.domain.Delivery;
 import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Member;
@@ -40,7 +41,10 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(OrderQueryRepository.class)
+@Import({
+        OrderQueryRepository.class,
+        QuerydslConfig.class
+})
 class OrderQueryRepositoryTest {
 
     @Autowired

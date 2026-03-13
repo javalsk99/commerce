@@ -1,5 +1,6 @@
 package lsk.commerce.query;
 
+import lsk.commerce.config.QuerydslConfig;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
@@ -29,7 +30,10 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(ProductQueryRepository.class)
+@Import({
+        ProductQueryRepository.class,
+        QuerydslConfig.class
+})
 class ProductQueryRepositoryTest {
 
     @Autowired
