@@ -69,16 +69,23 @@ public class MemberService {
     }
 
     private Member getMember(MemberRequest request) {
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
+        if (request.password() == null || request.password().isBlank()) {
             throw new IllegalArgumentException("비밀번호가 비어있습니다");
         }
 
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        String encodedPassword = passwordEncoder.encode(request.password());
         if (!encodedPassword.startsWith("$2a$")) {
             throw new IllegalArgumentException("암호화되지 않은 비밀번호입니다");
         }
 
-        return new Member(request.getName(), request.getLoginId(), encodedPassword, request.getCity(), request.getStreet(), request.getZipcode());
+        return Member.builder()
+                .name(request.name())
+                .loginId(request.loginId())
+                .password(encodedPassword)
+                .city(request.city())
+                .street(request.street())
+                .zipcode(request.zipcode())
+                .build();
     }
 
     private void validateMember(Member member) {

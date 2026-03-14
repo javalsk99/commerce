@@ -26,3 +26,7 @@
 - [@DataJpaTest](https://0soo.tistory.com/40)
 - [TestEntityManager](https://jaehoney.tistory.com/272)
 - [AssertJ의 assertAll](https://zzang9ha.tistory.com/418)
+- [@WebMvcTest](https://stir.tistory.com/407)
+- [MockMvc](https://shinsunyoung.tistory.com/52)
+- [Record](https://m.blog.naver.com/seek316/223341255150)
+- [ResponseEntity List를 객체에 담아서 반환](https://hyeonic.tistory.com/197)

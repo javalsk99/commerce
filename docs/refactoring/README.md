@@ -1,3 +1,6 @@
 # 리팩토링
 - Assertions 클래스를 보다가 BDDAssertions 클래스를 발견해서, BDDMockito를 사용하는 것처럼 BDD 스타일의 테스트에 어울릴 것 같아 변경했다.
 - 기존의 Junit의 검증 메서드들도 AssertJ로 변경했다.
+- [auth](auth.md)
+- [dto](dto.md)
+- [member](member.md)

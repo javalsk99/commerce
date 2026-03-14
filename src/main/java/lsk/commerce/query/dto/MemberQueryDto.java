@@ -1,5 +1,6 @@
 package lsk.commerce.query.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lsk.commerce.domain.Grade;
@@ -8,19 +9,14 @@ import lsk.commerce.domain.Member;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
-public class MemberQueryDto {
-
-    private String loginId;
-    private Grade grade;
-    private List<OrderQueryDto> orders = new ArrayList<>();
+@Builder(toBuilder = true)
+public record MemberQueryDto(
+        String loginId,
+        Grade grade,
+        List<OrderQueryDto> orderQueryDtoList
+) {
 
     public MemberQueryDto(String loginId, Grade grade) {
-        this.loginId = loginId;
-        this.grade = grade;
-    }
-
-    public static MemberQueryDto changeQueryDto(Member member) {
-        return new MemberQueryDto(member.getLoginId(), member.getGrade());
+        this(loginId, grade, new ArrayList<>());
     }
 }

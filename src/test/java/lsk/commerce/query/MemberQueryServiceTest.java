@@ -78,10 +78,10 @@ class MemberQueryServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(memberQueryDto).isNotNull();
-                    softly.then(Hibernate.isInitialized(memberQueryDto.getOrders())).isTrue();
-                    softly.then(Hibernate.isInitialized(memberQueryDto.getOrders().getFirst().getOrderProducts())).isTrue();
+                    softly.then(Hibernate.isInitialized(memberQueryDto.orderQueryDtoList())).isTrue();
+                    softly.then(Hibernate.isInitialized(memberQueryDto.orderQueryDtoList().getFirst().getOrderProducts())).isTrue();
                     softly.then(memberQueryDto)
-                            .extracting("orders")
+                            .extracting("orderQueryDtoList")
                             .asInstanceOf(list(OrderQueryDto.class))
                             .hasSize(5)
                             .flatExtracting("orderProducts")
@@ -132,11 +132,11 @@ class MemberQueryServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().getOrders())).isTrue();
-                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().getOrders().getFirst().getOrderProducts())).isTrue();
+                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().orderQueryDtoList())).isTrue();
+                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().orderQueryDtoList().getFirst().getOrderProducts())).isTrue();
                     softly.then(memberQueryDtoList)
                             .hasSize(3)
-                            .flatExtracting("orders")
+                            .flatExtracting("orderQueryDtoList")
                             .hasSize(8)
                             .flatExtracting("orderProducts")
                             .hasSize(16)
@@ -164,7 +164,7 @@ class MemberQueryServiceTest {
                 //then
                 then(memberQueryDtoList)
                         .hasSize(1)
-                        .flatExtracting("orders")
+                        .flatExtracting("orderQueryDtoList")
                         .hasSize(1)
                         .flatExtracting("orderProducts")
                         .hasSize(1)

@@ -13,7 +13,6 @@ import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.dto.request.PaymentRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -40,19 +39,10 @@ import static org.mockito.BDDMockito.mock;
 class PaymentSyncServiceTest {
 
     @Mock
-    OrderRequest orderRequest;
-
-    @Mock
     PaymentClient paymentClient;
 
     @Mock
     PaidPayment paidPayment;
-
-    @Mock
-    ProductService productService;
-
-    @Mock
-    OrderService orderService;
 
     @Mock
     PaymentService paymentService;
@@ -68,8 +58,6 @@ class PaymentSyncServiceTest {
     OrderProduct orderProduct1;
     OrderProduct orderProduct2;
     Order order;
-    String wrongOrderNumber = "lllIIllIO00O";
-    String wrongPaymentId = "dfoijxjfd342987jdfk";
 
     @BeforeEach
     void beforeEach() {
@@ -149,9 +137,7 @@ class PaymentSyncServiceTest {
 
                 //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()))
-                        .verifyErrorSatisfies(error -> {
-                            then(error).isInstanceOf(SyncPaymentException.class);
-                        });
+                        .verifyErrorSatisfies(error -> then(error).isInstanceOf(SyncPaymentException.class));
             }
 
             @Test

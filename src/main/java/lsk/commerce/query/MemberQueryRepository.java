@@ -25,7 +25,7 @@ public class MemberQueryRepository {
 
     protected List<String> extractLoginIds(List<MemberQueryDto> result) {
         return result.stream()
-                .map(m -> m.getLoginId())
+                .map(m -> m.loginId())
                 .filter(loginId -> loginId != null)
                 .collect(toList());
     }
@@ -46,8 +46,8 @@ public class MemberQueryRepository {
                         member.grade))
                 .from(member)
                 .where(
-                        containsMemberName(cond.getName()),
-                        containsMemberLoginId(cond.getLoginId())
+                        containsMemberName(cond.name()),
+                        containsMemberLoginId(cond.loginId())
                 )
                 .fetch();
     }

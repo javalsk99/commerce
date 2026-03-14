@@ -2,8 +2,6 @@ package lsk.commerce;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.domain.Category;
-import lsk.commerce.domain.Member;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
@@ -46,10 +44,10 @@ public class InitDb {
         }
 
         private void createOrders() {
-            memberService.adminJoin(new MemberRequest("test", "testId", "testPassword", "Seoul", "Gangbuk", "11111"));
-            String userAId = memberService.join(new MemberRequest("userA", "userAId", "userAPassword", "Seoul", "Gangbuk", "11111"));
-            String userBId = memberService.join(new MemberRequest("userB", "userBId", "userBPassword", "Seoul", "Gangbuk", "11111"));
-            String userCId = memberService.join(new MemberRequest("userC", "userCId", "userCPassword", "Seoul", "Gangbuk", "11111"));
+            memberService.adminJoin(createMemberRequest("test", "testId", "testPassword"));
+            String userAId = memberService.join(createMemberRequest("userA", "userAId", "userAPassword"));
+            String userBId = memberService.join(createMemberRequest("userB", "userBId", "userBPassword"));
+            String userCId = memberService.join(createMemberRequest("userC", "userCId", "userCPassword"));
 
             categoryService.create("가요", null);
             String albumCategoryName2 = categoryService.create("댄스", "가요");
@@ -82,6 +80,17 @@ public class InitDb {
             orderService.order(userAId, Map.of(albumName1, 3, albumName4, 2, albumName6, 5));
             orderService.order(userBId, Map.of(bookName1, 1, bookName2, 4, movieName1, 3, movieName2, 2));
             orderService.order(userBId, Map.of(movieName1, 5));
+        }
+
+        private static MemberRequest createMemberRequest(String name, String loginId, String password) {
+            return MemberRequest.builder()
+                    .name(name)
+                    .loginId(loginId)
+                    .password(password)
+                    .city("Seoul")
+                    .street("Gangbuk")
+                    .zipcode("11111")
+                    .build();
         }
     }
 }

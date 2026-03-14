@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -24,9 +26,9 @@ public class MemberQueryService {
 
         Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginId(loginId);
 
-        member.setOrders(orderMap.get(member.getLoginId()));
-
-        return member;
+        return member.toBuilder()
+                .orderQueryDtoList(orderMap.get(member.loginId()))
+                .build();
     }
 
     public List<MemberQueryDto> searchMembers(MemberSearchCond cond) {
@@ -35,8 +37,10 @@ public class MemberQueryService {
 
         Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginIds(loginIds);
 
-        members.forEach(m -> m.setOrders(orderMap.get(m.getLoginId())));
-
-        return members;
+        return members.stream()
+                .map(m -> m.toBuilder()
+                        .orderQueryDtoList(orderMap.get(m.loginId()))
+                        .build())
+                .collect(toList());
     }
 }

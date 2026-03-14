@@ -295,3 +295,19 @@
   원인 추측: 500번대 에러는 서버의 문제이고 400번대 에러는 클라이언트의 잘못된 요청이어서 500번대 에러는 테스트에 실패하는 것으로 추측
 
   jakarta.servlet.ServletException: Request processing failed: java.lang.IllegalArgumentException: 아이디 또는 비밀번호가 틀렸습니다
+
+  해결: 서버의 문제가 아닌 예외가 서버의 문제로 발생하는 500번대 에러로 발생하는 것을 @RestControllerAdvice를 통해 클라이언트의 잘못된 요청으로 발생하는 400번대 에러로 변경하면서 보안과 서버의 안정성을 확보했다.
+
+      @RestControllerAdvice
+      public class GlobalExceptionHandler {
+
+          @ExceptionHandler(IllegalArgumentException.class)
+          public ResponseEntity<ErrorResult> illegalArgumentExHandle(IllegalArgumentException e) {
+              return ResponseEntity.badRequest().body(new ErrorResult("BAD_ARGUMENT", e.getMessage()));
+          }
+
+      public record ErrorResult(
+              String code,
+              String message
+      ) {
+      }
