@@ -66,7 +66,7 @@ class CategoryRepositoryTest {
                             .extracting("id", "name", "parent")
                             .containsExactly(categoryId, "가요", null);
                     softly.then(findCategory.getCategoryProducts()).isEmpty();
-                    softly.then(findCategory.getChild()).isEmpty();
+                    softly.then(findCategory.getChildren()).isEmpty();
                 });
             }
         }
@@ -169,9 +169,9 @@ class CategoryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(findCategory).isPresent();
-                    softly.then(Hibernate.isInitialized(findCategory.get().getChild())).isTrue();
+                    softly.then(Hibernate.isInitialized(findCategory.get().getChildren())).isTrue();
                     softly.then(Hibernate.isInitialized(findCategory.get().getCategoryProducts())).isFalse();
-                    softly.then(findCategory.get().getChild())
+                    softly.then(findCategory.get().getChildren())
                             .extracting("name")
                             .containsExactlyInAnyOrder("댄스", "발라드");
                     softly.then(findCategory.get().getCategoryProducts())
@@ -192,7 +192,7 @@ class CategoryRepositoryTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse();
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getChildren())).isFalse();
                     softly.then(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse();
                     softly.then(categories)
                             .hasSize(3)
@@ -215,7 +215,7 @@ class CategoryRepositoryTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse();
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getChildren())).isFalse();
                     softly.then(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse();
                     softly.then(categories)
                             .hasSize(2)
@@ -238,7 +238,7 @@ class CategoryRepositoryTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(Hibernate.isInitialized(categories.getFirst().getChild())).isFalse();
+                    softly.then(Hibernate.isInitialized(categories.getFirst().getChildren())).isFalse();
                     softly.then(Hibernate.isInitialized(categories.getFirst().getCategoryProducts())).isFalse();
                     softly.then(categories)
                             .hasSize(1)

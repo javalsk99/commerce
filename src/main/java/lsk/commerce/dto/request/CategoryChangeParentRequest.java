@@ -3,8 +3,8 @@ package lsk.commerce.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record MemberChangePasswordRequest(
-        @NotBlank @Size(min = 8, max = 20)
-        String password
+public record CategoryChangeParentRequest(
+        @NotBlank @Size(max = 20)
+        String name
 ) {
 }

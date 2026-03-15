@@ -2,6 +2,8 @@ package lsk.commerce.service;
 
 import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
+import lsk.commerce.dto.request.MemberChangeAddressRequest;
+import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.repository.MemberRepository;
@@ -256,13 +258,14 @@ class MemberServiceTest {
                         .loginId(loginId)
                         .password(encodedPassword)
                         .build();
+                MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
                 given(passwordEncoder.encode(anyString())).willReturn(newEncodedPassword);
                 given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
 
                 //when
-                memberService.changePassword(loginId, "11111111");
+                memberService.changePassword(loginId, request);
 
                 //then
                 thenSoftly(softly -> {
@@ -280,10 +283,12 @@ class MemberServiceTest {
             @Test
             void memberNotFound() {
                 //given
+                MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
+
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> memberService.changePassword(loginId, "11111111"))
+                thenThrownBy(() -> memberService.changePassword(loginId, request))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
@@ -312,11 +317,12 @@ class MemberServiceTest {
                         .street("Gangnam")
                         .street("01234")
                         .build();
+                MemberChangeAddressRequest request = new MemberChangeAddressRequest("Gyeonggi-do", "Gangbuk", "01235");
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
 
                 //when
-                memberService.changeAddress(loginId, "Gyeonggi-do", "Gangbuk", "01235");
+                memberService.changeAddress(loginId, request);
 
                 //then
                 thenSoftly(softly -> {
@@ -420,6 +426,9 @@ class MemberServiceTest {
                 //given
                 Member member = Member.builder()
                         .loginId(loginId)
+                        .city("Seoul")
+                        .street("Gangnam")
+                        .zipcode("01234")
                         .build();
 
                 //when
@@ -427,8 +436,10 @@ class MemberServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(memberDto.getLoginId()).isEqualTo(loginId);
-                    softly.then(memberDto.getGrade()).isEqualTo(Grade.USER);
+                    softly.then(memberDto.loginId()).isEqualTo(loginId);
+                    softly.then(memberDto.city()).isEqualTo("Seoul");
+                    softly.then(memberDto.street()).isEqualTo("Gangnam");
+                    softly.then(memberDto.zipcode()).isEqualTo("01234");
                 });
             }
         }

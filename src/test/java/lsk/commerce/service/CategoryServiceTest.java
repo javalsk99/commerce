@@ -2,8 +2,11 @@ package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.product.Book;
+import lsk.commerce.dto.request.CategoryChangeParentRequest;
+import lsk.commerce.dto.request.CategoryRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -77,10 +80,12 @@ class CategoryServiceTest {
             @Test
             void parentCategory() {
                 //given
+                CategoryRequest request = new CategoryRequest("컴퓨터/IT", null);
+
                 given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(Collections.emptyList());
 
                 //when
-                categoryService.create("컴퓨터/IT", null);
+                categoryService.create(request);
 
                 //then
                 thenSoftly(softly -> {
@@ -93,10 +98,12 @@ class CategoryServiceTest {
             @Test
             void childCategory() {
                 //given
+                CategoryRequest request = new CategoryRequest("프로그래밍 언어", "컴퓨터/IT");
+
                 given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(categories1);
 
                 //when
-                categoryService.create("프로그래밍 언어", "컴퓨터/IT");
+                categoryService.create(request);
 
                 //then
                 thenSoftly(softly -> {
@@ -113,10 +120,12 @@ class CategoryServiceTest {
             @Test
             void existsName() {
                 //given
+                CategoryRequest request = new CategoryRequest("컴퓨터/IT", null);
+
                 given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(categories1);
 
                 //when & then
-                thenThrownBy(() -> categoryService.create("컴퓨터/IT", null))
+                thenThrownBy(() -> categoryService.create(request))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("이미 존재하는 카테고리입니다. name: " + "컴퓨터/IT");
 
@@ -130,11 +139,13 @@ class CategoryServiceTest {
             @Test
             void childCategory_ParentNotFound() {
                 //given
+                CategoryRequest request = new CategoryRequest("프로그래밍 언어", "컴퓨터/IT");
+
                 given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(Collections.emptyList());
 
                 //when & then
-                thenThrownBy(() -> categoryService.create("프로그래밍 언어", "컴퓨터/IT"))
-                        .isInstanceOf(IllegalArgumentException.class)
+                thenThrownBy(() -> categoryService.create(request))
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "컴퓨터/IT");
 
                 //then
@@ -224,7 +235,7 @@ class CategoryServiceTest {
 
                 //when & then
                 thenThrownBy(() -> categoryService.findCategoryByName("프로그래밍 언어"))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
 
                 //then
@@ -238,7 +249,7 @@ class CategoryServiceTest {
 
                 //when & then
                 thenThrownBy(() -> categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어"))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
 
                 //then
@@ -256,15 +267,17 @@ class CategoryServiceTest {
             @Test
             void basic() {
                 //given
+                CategoryChangeParentRequest request = new CategoryChangeParentRequest("프로그래밍 언어");
+
                 given(categoryRepository.findAll()).willReturn(categories2);
 
                 //when
-                categoryService.changeParentCategory("Python", "프로그래밍 언어");
+                categoryService.changeParentCategory("Python", request);
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
-                    softly.then(category2.getChild().getFirst()).isEqualTo(category3);
+                    softly.then(category2.getChildren().getFirst()).isEqualTo(category3);
                     softly.then(category3.getParent()).isEqualTo(category2);
                 });
             }
@@ -272,17 +285,19 @@ class CategoryServiceTest {
             @Test
             void hasChild() {
                 //given
+                CategoryChangeParentRequest request = new CategoryChangeParentRequest("Python");
+
                 given(categoryRepository.findAll()).willReturn(categories2);
 
                 //when
-                categoryService.changeParentCategory("프로그래밍 언어", "Python");
+                categoryService.changeParentCategory("프로그래밍 언어", request);
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
                     softly.then(category2.getParent()).isEqualTo(category4);
                     softly.then(category2.getParent().getParent()).isEqualTo(category1);
-                    softly.then(category2.getChild())
+                    softly.then(category2.getChildren())
                             .extracting("name")
                             .containsExactlyInAnyOrder("Java");
                 });
@@ -296,15 +311,18 @@ class CategoryServiceTest {
             @MethodSource("nameProvider")
             void categoryNotFound(String name) {
                 //given
+                CategoryChangeParentRequest request1 = new CategoryChangeParentRequest("프로그래밍 언어");
+                CategoryChangeParentRequest request2 = new CategoryChangeParentRequest(name);
+
                 given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
 
                 //when & then
                 thenSoftly(softly -> {
-                    softly.thenThrownBy(() -> categoryService.changeParentCategory(name, "프로그래밍 언어"))
-                            .isInstanceOf(IllegalArgumentException.class)
+                    softly.thenThrownBy(() -> categoryService.changeParentCategory(name, request1))
+                            .isInstanceOf(DataNotFoundException.class)
                             .hasMessage("존재하지 않는 카테고리입니다. name: " + name);
-                    softly.thenThrownBy(() -> categoryService.changeParentCategory("Java", name))
-                            .isInstanceOf(IllegalArgumentException.class)
+                    softly.thenThrownBy(() -> categoryService.changeParentCategory("Java", request2))
+                            .isInstanceOf(DataNotFoundException.class)
                             .hasMessage("존재하지 않는 카테고리입니다. name: " + name);
                 });
 
@@ -355,7 +373,7 @@ class CategoryServiceTest {
 
                 //when & then
                 thenThrownBy(() -> categoryService.deleteCategory("C++"))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "C++");
 
                 //then
@@ -429,7 +447,7 @@ class CategoryServiceTest {
 
                 //when & then 두 번째 호출
                 thenThrownBy(() -> categoryService.deleteCategory("Python"))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "Python");
 
                 //then
@@ -465,8 +483,8 @@ class CategoryServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(categoryDto.getName()).isEqualTo(category2.getName());
-                    softly.then(categoryDto.getChild())
+                    softly.then(categoryDto.name()).isEqualTo(category2.getName());
+                    softly.then(categoryDto.children())
                             .extracting("name")
                             .containsExactly(category3.getName());
                 });
@@ -530,10 +548,10 @@ class CategoryServiceTest {
                 //when & then
                 thenSoftly(softly -> {
                     softly.thenThrownBy(() -> categoryService.validateAndGetCategories(null))
-                            .isInstanceOf(IllegalArgumentException.class)
+                            .isInstanceOf(DataNotFoundException.class)
                             .hasMessage("카테고리가 존재하지 않습니다");
                     softly.thenThrownBy(() -> categoryService.validateAndGetCategories(Collections.emptyList()))
-                            .isInstanceOf(IllegalArgumentException.class)
+                            .isInstanceOf(DataNotFoundException.class)
                             .hasMessage("카테고리가 존재하지 않습니다");
                 });
 
@@ -548,7 +566,7 @@ class CategoryServiceTest {
 
                 //when & then
                 thenThrownBy(() -> categoryService.validateAndGetCategories(List.of("Java", "Python")))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 카테고리가 있습니다");
 
                 //then

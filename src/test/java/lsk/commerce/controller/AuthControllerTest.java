@@ -1,6 +1,7 @@
 package lsk.commerce.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lsk.commerce.config.WebConfig;
 import lsk.commerce.dto.request.MemberLoginRequest;
 import lsk.commerce.service.AuthService;
 import lsk.commerce.util.JwtProvider;
@@ -13,6 +14,8 @@ import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,7 +36,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = AuthController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
+@WebMvcTest(controllers = AuthController.class,
+        excludeAutoConfiguration = SecurityAutoConfiguration.class,
+        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebConfig.class)
+)
 class AuthControllerTest {
 
     @Autowired
@@ -44,9 +50,6 @@ class AuthControllerTest {
 
     @MockitoBean
     AuthService authService;
-
-    @MockitoBean
-    JwtProvider jwtProvider;
 
     @Nested
     class Login {
@@ -163,7 +166,7 @@ class AuthControllerTest {
 
             @Test
             void basic() throws Exception {
-                //when
+                //when & then
                 mvc.perform(post("/logout"))
                         .andExpect(status().isOk())
                         .andExpect(content().string("logout"))

@@ -2,6 +2,8 @@ package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Member;
+import lsk.commerce.dto.request.MemberChangeAddressRequest;
+import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.repository.MemberRepository;
@@ -45,16 +47,16 @@ public class MemberService {
     }
 
     @Transactional
-    public Member changePassword(String memberLoginId, String newPassword) {
+    public Member changePassword(String memberLoginId, MemberChangePasswordRequest request) {
         Member member = findMemberByLoginId(memberLoginId);
-        member.changePassword(newPassword, passwordEncoder);
+        member.changePassword(request.password(), passwordEncoder);
         return member;
     }
 
     @Transactional
-    public Member changeAddress(String memberLoginId, String newCity, String newStreet, String newZipcode) {
+    public Member changeAddress(String memberLoginId, MemberChangeAddressRequest request) {
         Member member = findMemberByLoginId(memberLoginId);
-        member.changeAddress(newCity, newStreet, newZipcode);
+        member.changeAddress(request.city(), request.street(), request.zipcode());
         return member;
     }
 
@@ -65,7 +67,7 @@ public class MemberService {
     }
 
     public MemberResponse getMemberDto(Member member) {
-        return MemberResponse.memberChangeDto(member);
+        return MemberResponse.from(member);
     }
 
     private Member getMember(MemberRequest request) {

@@ -4,3 +4,4 @@
 - [auth](auth.md)
 - [dto](dto.md)
 - [member](member.md)
+- [category](category.md)

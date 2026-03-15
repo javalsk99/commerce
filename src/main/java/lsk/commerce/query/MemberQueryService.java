@@ -1,6 +1,7 @@
 package lsk.commerce.query;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
 import lsk.commerce.query.dto.OrderQueryDto;
@@ -22,7 +23,7 @@ public class MemberQueryService {
 
     public MemberQueryDto findMember(String loginId) {
         MemberQueryDto member = memberQueryRepository.findMember(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 아이디입니다"));
 
         Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginId(loginId);
 

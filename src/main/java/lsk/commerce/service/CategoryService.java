@@ -2,8 +2,11 @@ package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
+import lsk.commerce.dto.request.CategoryChangeParentRequest;
+import lsk.commerce.dto.request.CategoryRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.stream.Collectors.toList;
-
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -24,9 +25,9 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
-    public String create(String categoryName, String parentCategoryName) {
-        Category parentCategory = validateCategory(categoryName, parentCategoryName);
-        Category category = Category.createCategory(parentCategory, categoryName);
+    public String create(CategoryRequest request) {
+        Category parentCategory = validateCategory(request.name(), request.parentName());
+        Category category = Category.createCategory(parentCategory, request.name());
         categoryRepository.save(category);
         return category.getName();
     }
@@ -37,7 +38,7 @@ public class CategoryService {
         return categories.stream()
                 .filter(c -> c.getName().equals(categoryName))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
     }
 
     public List<Category> findCategoryByNames(String... categoryNames) {
@@ -49,7 +50,7 @@ public class CategoryService {
             categoryList.add(categories.stream()
                     .filter(c -> c.getName().equals(categoryName))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName)));
+                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName)));
         }
 
         return categoryList;
@@ -60,31 +61,32 @@ public class CategoryService {
 
         return categories.stream()
                 .filter(c -> c.getParent() == null)
-                .collect(toList());
+                .toList();
     }
 
     @Transactional
-    public Category changeParentCategory(String categoryName, String newParentCategoryName) {
+    public Category changeParentCategory(String categoryName, CategoryChangeParentRequest request) {
         List<Category> categories = categoryRepository.findAll();
         Category category = categories.stream()
                 .filter(c -> c.getName().equals(categoryName))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
 
         Category newParentCategory = categories.stream()
-                .filter(c -> c.getName().equals(newParentCategoryName))
+                .filter(c -> c.getName().equals(request.name()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + newParentCategoryName));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + request.name()));
 
-        return category.changeParentCategory(newParentCategory);
+        category.changeParentCategory(newParentCategory);
+        return newParentCategory;
     }
 
     @Transactional
     public void deleteCategory(String categoryName) {
         Category category = categoryRepository.findWithChild(categoryName)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
 
-        if (!category.getChild().isEmpty()) {
+        if (!category.getChildren().isEmpty()) {
             throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다");
         } else if (!category.getCategoryProducts().isEmpty()) {
             throw new IllegalStateException("카테고리에 상품이 있어서 삭제할 수 없습니다");
@@ -98,7 +100,7 @@ public class CategoryService {
     }
 
     public CategoryResponse getCategoryDto(Category category) {
-        return CategoryResponse.categoryChangeDto(category);
+        return CategoryResponse.from(category);
     }
 
     public CategoryDisconnectResponse getCategoryDisconnectResponse(Category category) {
@@ -116,7 +118,7 @@ public class CategoryService {
             parentCategory = categories.stream()
                     .filter(c -> c.getName().equals(parentCategoryName))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + parentCategoryName));
+                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + parentCategoryName));
         }
 
         return parentCategory;
@@ -124,14 +126,14 @@ public class CategoryService {
 
     protected List<Category> validateAndGetCategories(List<String> categoryNames) {
         if (categoryNames == null || categoryNames.isEmpty()) {
-            throw new IllegalArgumentException("카테고리가 존재하지 않습니다");
+            throw new DataNotFoundException("카테고리가 존재하지 않습니다");
         }
 
         Set<String> categoryNameSet = new HashSet<>(categoryNames);
 
         List<Category> categories = categoryRepository.findByNameSet(categoryNameSet);
         if (categoryNameSet.size() != categories.size()) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리가 있습니다");
+            throw new DataNotFoundException("존재하지 않는 카테고리가 있습니다");
         }
 
         return categories;

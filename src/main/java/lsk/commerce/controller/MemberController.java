@@ -1,7 +1,6 @@
 package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
@@ -45,25 +44,27 @@ public class MemberController {
     }
 
     @GetMapping("/members/{memberLoginId}")
-    public MemberQueryDto findMember(@PathVariable("memberLoginId") String memberLoginId) {
-        return memberQueryService.findMember(memberLoginId);
+    public ResponseEntity<Result<MemberQueryDto>> findMember(@PathVariable("memberLoginId") String memberLoginId) {
+        MemberQueryDto memberQueryDto = memberQueryService.findMember(memberLoginId);
+        return ResponseEntity.ok(new Result<>(memberQueryDto, 1));
     }
 
     @PostMapping("/members/{memberLoginId}/password")
-    public MemberResponse changePassword(@PathVariable("memberLoginId") String memberLoginId, @Valid MemberChangePasswordRequest form) {
-        Member member = memberService.changePassword(memberLoginId, form.getPassword());
-        return memberService.getMemberDto(member);
+    public ResponseEntity<String> changePassword(@PathVariable("memberLoginId") String memberLoginId, @RequestBody @Valid MemberChangePasswordRequest request) {
+        memberService.changePassword(memberLoginId, request);
+        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }
 
     @PostMapping("/members/{memberLoginId}/address")
-    public MemberResponse changeAddress(@PathVariable("memberLoginId") String memberLoginId, @Valid MemberChangeAddressRequest form) {
-        Member member = memberService.changeAddress(memberLoginId, form.getCity(), form.getStreet(), form.getZipcode());
-        return memberService.getMemberDto(member);
+    public ResponseEntity<Result<MemberResponse>> changeAddress(@PathVariable("memberLoginId") String memberLoginId, @RequestBody @Valid MemberChangeAddressRequest request) {
+        Member member = memberService.changeAddress(memberLoginId, request);
+        MemberResponse memberResponse = memberService.getMemberDto(member);
+        return ResponseEntity.ok(new Result<>(memberResponse, 1));
     }
 
     @DeleteMapping("/members/{memberLoginId}")
-    public String delete(@PathVariable("memberLoginId") String memberLoginId) {
+    public ResponseEntity<String> delete(@PathVariable("memberLoginId") String memberLoginId) {
         memberService.deleteMember(memberLoginId);
-        return "delete";
+        return ResponseEntity.ok("delete");
     }
 }

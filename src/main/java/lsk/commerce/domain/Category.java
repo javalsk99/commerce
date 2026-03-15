@@ -41,11 +41,11 @@ public class Category {
     private Category parent;
 
     @OneToMany(mappedBy = "parent")
-    private List<Category> child = new ArrayList<>();
+    private List<Category> children = new ArrayList<>();
 
     private void connectParent(Category parentCategory) {
         this.parent = parentCategory;
-        parentCategory.child.add(this);
+        parentCategory.children.add(this);
     }
 
     public void unConnectParent() {
@@ -53,7 +53,7 @@ public class Category {
             return;
         }
 
-        this.parent.child.remove(this);
+        this.parent.children.remove(this);
         this.parent = null;
     }
 

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.CategoryRequest;
 import lsk.commerce.dto.request.MemberRequest;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.MemberService;
@@ -49,17 +50,17 @@ public class InitDb {
             String userBId = memberService.join(createMemberRequest("userB", "userBId", "userBPassword"));
             String userCId = memberService.join(createMemberRequest("userC", "userCId", "userCPassword"));
 
-            categoryService.create("가요", null);
-            String albumCategoryName2 = categoryService.create("댄스", "가요");
-            String albumCategoryName3 = categoryService.create("발라드", "가요");
-            categoryService.create("컴퓨터/IT", null);
-            categoryService.create("프로그래밍 언어", "컴퓨터/IT");
-            String bookCategoryName3 = categoryService.create("Java", "프로그래밍 언어");
-            String bookCategoryName4 = categoryService.create("Python", "프로그래밍 언어");
-            String bookCategoryName5 = categoryService.create("프로그래밍 일반", "프로그래밍 언어");
-            categoryService.create("국내 영화", null);
-            String movieCategoryName2 = categoryService.create("액션 영화", "국내 영화");
-            String movieCategoryName3 = categoryService.create("코미디 영화", "국내 영화");
+            categoryService.create(new CategoryRequest("가요", null));
+            String albumCategoryName2 = categoryService.create(new CategoryRequest("댄스", "가요"));
+            String albumCategoryName3 = categoryService.create(new CategoryRequest("발라드", "가요"));
+            categoryService.create(new CategoryRequest("컴퓨터/IT", null));
+            categoryService.create(new CategoryRequest("프로그래밍 언어", "컴퓨터/IT"));
+            String bookCategoryName3 = categoryService.create(new CategoryRequest("Java", "프로그래밍 언어"));
+            String bookCategoryName4 = categoryService.create(new CategoryRequest("Python", "프로그래밍 언어"));
+            String bookCategoryName5 = categoryService.create(new CategoryRequest("프로그래밍 일반", "프로그래밍 언어"));
+            categoryService.create(new CategoryRequest("국내 영화", null));
+            String movieCategoryName2 = categoryService.create(new CategoryRequest("액션 영화", "국내 영화"));
+            String movieCategoryName3 = categoryService.create(new CategoryRequest("코미디 영화", "국내 영화"));
 
             String albumName1 = productService.register(new Album("BANG BANG", 15000, 100, "IVE", "STARSHIP"), List.of(albumCategoryName2));
             productService.register(new Album("Blue Valentine", 15000, 100, "NMIXX", "JYP"), List.of(albumCategoryName2));

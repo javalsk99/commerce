@@ -26,7 +26,7 @@ class CategoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(parentCategory.getParent()).isNull();
-                    softly.then(parentCategory.getChild().getFirst()).isEqualTo(childCategory);
+                    softly.then(parentCategory.getChildren().getFirst()).isEqualTo(childCategory);
                     softly.then(childCategory.getParent()).isEqualTo(parentCategory);
                 });
             }
@@ -62,7 +62,7 @@ class CategoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(childCategory.getParent()).isNull();
-                    softly.then(parentCategory.getChild()).isEmpty();
+                    softly.then(parentCategory.getChildren()).isEmpty();
                 });
             }
 
@@ -74,7 +74,7 @@ class CategoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(childCategory.getParent()).isNull();
-                    softly.then(parentCategory.getChild()).isEmpty();
+                    softly.then(parentCategory.getChildren()).isEmpty();
                 });
 
                 //when & then 두 번째 호출
@@ -104,7 +104,7 @@ class CategoryTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(childCategory.getChild().getFirst()).isEqualTo(category);
+                    softly.then(childCategory.getChildren().getFirst()).isEqualTo(category);
                     softly.then(category.getParent()).isEqualTo(childCategory);
                 });
             }

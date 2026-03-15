@@ -9,6 +9,7 @@ import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
 import lsk.commerce.query.dto.OrderQueryDto;
@@ -104,7 +105,7 @@ class MemberQueryServiceTest {
 
                 //when & then
                 thenThrownBy(() -> memberQueryService.findMember("id_D"))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
                 System.out.println("================= WHEN END ===================");
