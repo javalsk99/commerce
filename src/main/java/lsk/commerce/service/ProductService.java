@@ -6,8 +6,10 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.ProductRequest;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.ProductWithCategoryResponse;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +25,8 @@ public class ProductService {
     private final CategoryService categoryService;
 
     @Transactional
-    public String register(Product product, List<String> categoryNames) {
-        validateProduct(product);
+    public String register(ProductRequest request, List<String> categoryNames) {
+        Product product = validateAndToProduct(request);
         List<Category> categories = categoryService.validateAndGetCategories(categoryNames);
 
         product.connectCategories(categories);
@@ -39,7 +41,7 @@ public class ProductService {
 
     public Product findProductWithCategoryProduct(String productName) {
         return productRepository.findWithCategoryProduct(productName)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다. name: " + productName));
     }
 
     public List<Product> findProducts() {
@@ -73,14 +75,36 @@ public class ProductService {
         return ProductWithCategoryResponse.productChangeResponse(product);
     }
 
-    private void validateProduct(Product product) {
+    private Product validateAndToProduct(ProductRequest request) {
         boolean result;
-        if (product instanceof Album a) {
-            result = productRepository.existsAlbum(a.getName(), a.getArtist(), a.getStudio());
-        } else if (product instanceof Book b) {
-            result = productRepository.existsBook(b.getName(), b.getAuthor(), b.getIsbn());
-        } else if (product instanceof Movie m) {
-            result = productRepository.existsMovie(m.getName(), m.getActor(), m.getDirector());
+        Product product;
+        if (request.dtype().equals("A")) {
+            result = productRepository.existsAlbum(request.name(), request.artist(), request.studio());
+            product = Album.builder()
+                    .name(request.name())
+                    .price(request.price())
+                    .stockQuantity(request.stockQuantity())
+                    .artist(request.artist())
+                    .studio(request.studio())
+                    .build();
+        } else if (request.dtype().equals("B")) {
+            result = productRepository.existsBook(request.name(), request.author(), request.isbn());
+            product = Book.builder()
+                    .name(request.name())
+                    .price(request.price())
+                    .stockQuantity(request.stockQuantity())
+                    .author(request.author())
+                    .isbn(request.isbn())
+                    .build();
+        } else if (request.dtype().equals("M")) {
+            result = productRepository.existsMovie(request.name(), request.actor(), request.director());
+            product = Movie.builder()
+                    .name(request.name())
+                    .price(request.price())
+                    .stockQuantity(request.stockQuantity())
+                    .actor(request.actor())
+                    .director(request.director())
+                    .build();
         } else {
             throw new IllegalArgumentException("잘못된 상품입니다");
         }
@@ -88,5 +112,7 @@ public class ProductService {
         if (result) {
             throw new IllegalArgumentException("이미 존재하는 상품입니다");
         }
+
+        return product;
     }
 }

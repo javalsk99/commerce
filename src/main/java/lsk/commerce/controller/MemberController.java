@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,9 +33,9 @@ public class MemberController {
     private final MemberQueryService memberQueryService;
 
     @PostMapping("/members")
-    public ResponseEntity<String> create(@RequestBody @Valid MemberRequest request) {
+    public ResponseEntity<Result<String>> create(@RequestBody @Valid MemberRequest request) {
         String loginId = memberService.join(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(loginId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new Result<>(loginId, 1));
     }
 
     @GetMapping("/members")
@@ -50,12 +51,12 @@ public class MemberController {
     }
 
     @PostMapping("/members/{memberLoginId}/password")
-    public ResponseEntity<String> changePassword(@PathVariable("memberLoginId") String memberLoginId, @RequestBody @Valid MemberChangePasswordRequest request) {
+    public ResponseEntity<Result<String>> changePassword(@PathVariable("memberLoginId") String memberLoginId, @RequestBody @Valid MemberChangePasswordRequest request) {
         memberService.changePassword(memberLoginId, request);
-        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
+        return ResponseEntity.ok(new Result<>("비밀번호가 변경되었습니다.", 1));
     }
 
-    @PostMapping("/members/{memberLoginId}/address")
+    @PatchMapping("/members/{memberLoginId}/address")
     public ResponseEntity<Result<MemberResponse>> changeAddress(@PathVariable("memberLoginId") String memberLoginId, @RequestBody @Valid MemberChangeAddressRequest request) {
         Member member = memberService.changeAddress(memberLoginId, request);
         MemberResponse memberResponse = memberService.getMemberDto(member);
@@ -63,8 +64,8 @@ public class MemberController {
     }
 
     @DeleteMapping("/members/{memberLoginId}")
-    public ResponseEntity<String> delete(@PathVariable("memberLoginId") String memberLoginId) {
+    public ResponseEntity<Result<String>> delete(@PathVariable("memberLoginId") String memberLoginId) {
         memberService.deleteMember(memberLoginId);
-        return ResponseEntity.ok("delete");
+        return ResponseEntity.ok(new Result<>("delete", 1));
     }
 }

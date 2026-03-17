@@ -361,20 +361,14 @@ class CategoryServiceTest {
                     softly.check(() -> BDDMockito.then(categoryRepository).should().delete(category4));
                 });
             }
-        }
-
-        @Nested
-        class FailureCase {
 
             @Test
-            void categoryNotFound() {
+            void shouldIgnoreDelete_WhenCategoryNotFound() {
                 //given
                 given(categoryRepository.findWithChild(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> categoryService.deleteCategory("C++"))
-                        .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "C++");
+                categoryService.deleteCategory("C++");
 
                 //then
                 thenSoftly(softly -> {
@@ -382,6 +376,36 @@ class CategoryServiceTest {
                     softly.check(() -> BDDMockito.then(categoryRepository).should(never()).delete(any()));
                 });
             }
+
+            @Test
+            void idempotency() {
+                //given
+                given(categoryRepository.findWithChild(anyString()))
+                        .willReturn(Optional.of(category4))
+                        .willReturn(Optional.empty());
+
+                //when 첫 번째 호출
+                categoryService.deleteCategory("Python");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithChild(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().delete(category4));
+                });
+
+                //when & then 두 번째 호출
+                categoryService.deleteCategory("Python");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(times(2)).findWithChild(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().delete(any()));
+                });
+            }
+        }
+
+        @Nested
+        class FailureCase {
 
             @Test
             void hasChild() {
@@ -428,34 +452,6 @@ class CategoryServiceTest {
                             .containsExactly(tuple("Python", "자바 ORM 표준 JPA 프로그래밍", "김영한"));
                 });
             }
-
-            @Test
-            void alreadyDeleted() {
-                //given
-                given(categoryRepository.findWithChild(anyString()))
-                        .willReturn(Optional.of(category4))
-                        .willReturn(Optional.empty());
-
-                //when 첫 번째 호출
-                categoryService.deleteCategory("Python");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithChild(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().delete(category4));
-                });
-
-                //when & then 두 번째 호출
-                thenThrownBy(() -> categoryService.deleteCategory("Python"))
-                        .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "Python");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should(times(2)).findWithChild(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().delete(category4));
-                });
-            }
         }
     }
 
@@ -489,8 +485,8 @@ class CategoryServiceTest {
                             .containsExactly(category3.getName());
                 });
                 thenSoftly(softly -> {
-                    softly.then(categoryDisconnectResponse.getName()).isEqualTo(category1.getName());
-                    softly.then(categoryDisconnectResponse.getProducts())
+                    softly.then(categoryDisconnectResponse.name()).isEqualTo(category1.getName());
+                    softly.then(categoryDisconnectResponse.productResponseList())
                             .isNotEmpty()
                             .extracting("name", "author")
                             .containsExactly(tuple("자바 ORM 표준 JPA 프로그래밍", "김영한"));
@@ -542,22 +538,6 @@ class CategoryServiceTest {
 
         @Nested
         class FailureCase {
-
-            @Test
-            void categoryNotFound() {
-                //when & then
-                thenSoftly(softly -> {
-                    softly.thenThrownBy(() -> categoryService.validateAndGetCategories(null))
-                            .isInstanceOf(DataNotFoundException.class)
-                            .hasMessage("카테고리가 존재하지 않습니다");
-                    softly.thenThrownBy(() -> categoryService.validateAndGetCategories(Collections.emptyList()))
-                            .isInstanceOf(DataNotFoundException.class)
-                            .hasMessage("카테고리가 존재하지 않습니다");
-                });
-
-                //then
-                BDDMockito.then(categoryRepository).should(never()).findByNameSet(any());
-            }
 
             @Test
             void sizeMismatch() {

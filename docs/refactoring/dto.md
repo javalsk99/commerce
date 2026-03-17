@@ -30,6 +30,11 @@ JSON 데이터로 보내기 쉽고, 간결한 Record로 변경
 
 
 - CategoryResponse  
-  정적 메서드의 children을 생성하는 로직을 Stream으로 변경했다.
+  정적 메서드에서 children을 생성하는 로직을 Stream으로 변경했다.
 
 
+- CategoryDisconnectResponse
+  정적 메서드에서 productResponseList를 생성하는 로직을 Stream으로 변경했다.
+
+
+- ProductRequest

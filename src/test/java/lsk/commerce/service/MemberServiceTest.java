@@ -359,20 +359,14 @@ class MemberServiceTest {
                     softly.check(() -> BDDMockito.then(memberRepository).should().delete(member));
                 });
             }
-        }
-
-        @Nested
-        class FailureCase {
 
             @Test
-            void memberNotFound() {
+            void shouldIgnoreDelete_WhenMemberNotFound() {
                 //given
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> memberService.deleteMember(loginId))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다");
+                memberService.deleteMember(loginId);
 
                 //then
                 thenSoftly(softly -> {
@@ -382,7 +376,7 @@ class MemberServiceTest {
             }
 
             @Test
-            void alreadyDeleted() {
+            void idempotency() {
                 //given
                 Member member = Member.builder()
                         .loginId(loginId)
@@ -401,10 +395,8 @@ class MemberServiceTest {
                     softly.check(() -> BDDMockito.then(memberRepository).should(times(1)).delete(member));
                 });
 
-                //when & then 두 번째 호출
-                thenThrownBy(() -> memberService.deleteMember(loginId))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다");
+                //when 두 번째 호출
+                memberService.deleteMember(loginId);
 
                 //then
                 thenSoftly(softly -> {

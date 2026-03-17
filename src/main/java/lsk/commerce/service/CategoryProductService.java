@@ -27,6 +27,10 @@ public class CategoryProductService {
     public Category disconnect(String categoryName, String productName) {
         Category category = categoryService.findCategoryByName(categoryName);
         Product product = productService.findProductWithCategoryProduct(productName);
+        if (category.getCategoryProducts().stream().noneMatch(cp -> cp.getProduct().equals(product))) {
+            return category;
+        }
+
         CategoryProduct categoryProduct = product.removeCategoryProduct(category);
         categoryProductRepository.delete(categoryProduct);
         return category;
@@ -36,7 +40,7 @@ public class CategoryProductService {
         Category category = categoryService.findCategoryByName(categoryName);
         List<CategoryProduct> categoryProducts = new ArrayList<>(findCategoryProductsWithProductByCategory(category));
         if (categoryProducts.isEmpty()) {
-            throw new IllegalArgumentException("카테고리에 상품이 없습니다");
+            return category;
         }
 
         for (CategoryProduct categoryProduct : categoryProducts) {

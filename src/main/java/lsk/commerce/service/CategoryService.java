@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -83,8 +84,12 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(String categoryName) {
-        Category category = categoryRepository.findWithChild(categoryName)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
+        Optional<Category> optionalCategory = categoryRepository.findWithChild(categoryName);
+        if (optionalCategory.isEmpty()) {
+            return;
+        }
+
+        Category category = optionalCategory.get();
 
         if (!category.getChildren().isEmpty()) {
             throw new IllegalStateException("자식 카테고리가 있어서 삭제할 수 없습니다");
@@ -104,7 +109,7 @@ public class CategoryService {
     }
 
     public CategoryDisconnectResponse getCategoryDisconnectResponse(Category category) {
-        return CategoryDisconnectResponse.categoryChangeDisconnectResponse(category);
+        return CategoryDisconnectResponse.from(category);
     }
 
     private Category validateCategory(String categoryName, String parentCategoryName) {
@@ -125,10 +130,6 @@ public class CategoryService {
     }
 
     protected List<Category> validateAndGetCategories(List<String> categoryNames) {
-        if (categoryNames == null || categoryNames.isEmpty()) {
-            throw new DataNotFoundException("카테고리가 존재하지 않습니다");
-        }
-
         Set<String> categoryNameSet = new HashSet<>(categoryNames);
 
         List<Category> categories = categoryRepository.findByNameSet(categoryNameSet);

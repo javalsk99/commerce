@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lsk.commerce.config.WebConfig;
 import lsk.commerce.dto.request.MemberLoginRequest;
 import lsk.commerce.service.AuthService;
-import lsk.commerce.util.JwtProvider;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +30,6 @@ import static org.mockito.BDDMockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -71,7 +69,8 @@ class AuthControllerTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json))
                         .andExpect(status().isOk())
-                        .andExpect(content().string("login"))
+                        .andExpect(jsonPath("$.data").value("login"))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andExpect(cookie().value("jjwt", "token"))
                         .andExpect(cookie().maxAge("jjwt", 3600))
                         .andDo(print());
@@ -93,7 +92,8 @@ class AuthControllerTest {
                 mvc.perform(get("/web/login")
                                 .params(request))
                         .andExpect(status().isOk())
-                        .andExpect(content().string("login"))
+                        .andExpect(jsonPath("$.data").value("login"))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andExpect(cookie().value("jjwt", "token"))
                         .andExpect(cookie().maxAge("jjwt", 3600))
                         .andDo(print());
@@ -107,7 +107,7 @@ class AuthControllerTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("invalidMemberLoginRequestProvider")
+            @MethodSource("invalidLoginRequestProvider")
             void invalidInput(MemberLoginRequest request) throws Exception {
                 //given
                 String json = objectMapper.writeValueAsString(request);
@@ -146,7 +146,7 @@ class AuthControllerTest {
                 BDDMockito.then(authService).should().login(anyString(), anyString());
             }
 
-            static Stream<Arguments> invalidMemberLoginRequestProvider() {
+            static Stream<Arguments> invalidLoginRequestProvider() {
                 return Stream.of(
                         argumentSet("loginId null", new MemberLoginRequest(null, "00000000")),
                         argumentSet("password null", new MemberLoginRequest("id_A", null)),
@@ -169,7 +169,8 @@ class AuthControllerTest {
                 //when & then
                 mvc.perform(post("/logout"))
                         .andExpect(status().isOk())
-                        .andExpect(content().string("logout"))
+                        .andExpect(jsonPath("$.data").value("logout"))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andExpect(cookie().exists("jjwt"))
                         .andExpect(cookie().maxAge("jjwt", 0))
                         .andDo(print());

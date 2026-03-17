@@ -1,10 +1,12 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
+import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.ProductRequest;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.ProductWithCategoryResponse;
 import lsk.commerce.repository.ProductRepository;
@@ -12,7 +14,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,6 +48,9 @@ class ProductServiceTest {
     @InjectMocks
     ProductService productService;
 
+    @Captor
+    ArgumentCaptor<Product> productCaptor;
+
     Category category1;
     Category category2;
     Category category3;
@@ -68,10 +75,11 @@ class ProductServiceTest {
             @Test
             void album() {
                 //given
-                Album album = Album.builder()
+                ProductRequest request = ProductRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
                         .stockQuantity(10)
+                        .dtype("A")
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
@@ -80,14 +88,21 @@ class ProductServiceTest {
                 given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category1));
 
                 //when
-                productService.register(album, List.of("가요"));
+                productService.register(request, List.of("가요"));
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productRepository).should().existsAlbum(anyString(), anyString(), anyString()));
                     softly.check(() -> BDDMockito.then(categoryService).should().validateAndGetCategories(List.of("가요")));
-                    softly.check(() -> BDDMockito.then(productRepository).should().save(argThat(p -> p.getName().equals("BANG BANG"))));
-                    softly.then(album.getCategoryProducts())
+                    softly.check(() -> BDDMockito.then(productRepository).should().save(productCaptor.capture()));
+                });
+
+                Product product = productCaptor.getValue();
+                thenSoftly(softly -> {
+                    softly.then(product)
+                            .extracting("name", "artist", "studio")
+                            .containsExactly("BANG BANG", "IVE", "STARSHIP");
+                    softly.then(product.getCategoryProducts())
                             .isNotEmpty()
                             .extracting("category.name")
                             .containsExactly("가요");
@@ -97,10 +112,11 @@ class ProductServiceTest {
             @Test
             void book() {
                 //given
-                Book book = Book.builder()
+                ProductRequest request = ProductRequest.builder()
                         .name("자바 ORM 표준 JPA 프로그래밍")
                         .price(15000)
                         .stockQuantity(10)
+                        .dtype("B")
                         .author("김영한")
                         .isbn("9788960777330")
                         .build();
@@ -109,14 +125,21 @@ class ProductServiceTest {
                 given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category2));
 
                 //when
-                productService.register(book, List.of("컴퓨터/IT"));
+                productService.register(request, List.of("컴퓨터/IT"));
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productRepository).should().existsBook(anyString(), anyString(), anyString()));
                     softly.check(() -> BDDMockito.then(categoryService).should().validateAndGetCategories(List.of("컴퓨터/IT")));
-                    softly.check(() -> BDDMockito.then(productRepository).should().save(argThat(p -> p.getName().equals("자바 ORM 표준 JPA 프로그래밍"))));
-                    softly.then(book.getCategoryProducts())
+                    softly.check(() -> BDDMockito.then(productRepository).should().save(productCaptor.capture()));
+                });
+
+                Product product = productCaptor.getValue();
+                thenSoftly(softly -> {
+                    softly.then(product)
+                            .extracting("name", "author", "isbn")
+                            .containsExactly("자바 ORM 표준 JPA 프로그래밍", "김영한", "9788960777330");
+                    softly.then(product.getCategoryProducts())
                             .isNotEmpty()
                             .extracting("category.name")
                             .containsExactly("컴퓨터/IT");
@@ -126,10 +149,11 @@ class ProductServiceTest {
             @Test
             void movie() {
                 //given
-                Movie movie = Movie.builder()
+                ProductRequest request = ProductRequest.builder()
                         .name("범죄도시")
                         .price(15000)
                         .stockQuantity(10)
+                        .dtype("M")
                         .actor("마동석")
                         .director("강윤성")
                         .build();
@@ -138,14 +162,21 @@ class ProductServiceTest {
                 given(categoryService.validateAndGetCategories(anyList())).willReturn(List.of(category3));
 
                 //when
-                productService.register(movie, List.of("국내 영화"));
+                productService.register(request, List.of("국내 영화"));
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productRepository).should().existsMovie(anyString(), anyString(), anyString()));
                     softly.check(() -> BDDMockito.then(categoryService).should().validateAndGetCategories(List.of("국내 영화")));
-                    softly.check(() -> BDDMockito.then(productRepository).should().save(argThat(p -> p.getName().equals("범죄도시"))));
-                    softly.then(movie.getCategoryProducts())
+                    softly.check(() -> BDDMockito.then(productRepository).should().save(productCaptor.capture()));
+                });
+
+                Product product = productCaptor.getValue();
+                thenSoftly(softly -> {
+                    softly.then(product)
+                            .extracting("name", "actor", "director")
+                            .containsExactly("범죄도시", "마동석", "강윤성");
+                    softly.then(product.getCategoryProducts())
                             .isNotEmpty()
                             .extracting("category.name")
                             .containsExactly("국내 영화");
@@ -159,10 +190,11 @@ class ProductServiceTest {
             @Test
             void duplicateProduct() {
                 //given
-                Album album = Album.builder()
+                ProductRequest request = ProductRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
                         .stockQuantity(10)
+                        .dtype("A")
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
@@ -170,7 +202,7 @@ class ProductServiceTest {
                 given(productRepository.existsAlbum(anyString(), anyString(), anyString())).willReturn(true);
 
                 //when & then
-                thenThrownBy(() -> productService.register(album, List.of("가요")))
+                thenThrownBy(() -> productService.register(request, List.of("가요")))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("이미 존재하는 상품입니다");
 
@@ -185,10 +217,11 @@ class ProductServiceTest {
             @Test
             void failedValidateCategories() {
                 //given
-                Album album = Album.builder()
+                ProductRequest request = ProductRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
                         .stockQuantity(10)
+                        .dtype("A")
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
@@ -197,7 +230,7 @@ class ProductServiceTest {
                 given(categoryService.validateAndGetCategories(anyList())).willThrow(new IllegalArgumentException());
 
                 //when & then
-                thenThrownBy(() -> productService.register(album, List.of("가요")))
+                thenThrownBy(() -> productService.register(request, List.of("가요")))
                         .isInstanceOf(IllegalArgumentException.class);
 
                 //then

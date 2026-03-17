@@ -88,7 +88,7 @@ public class Member {
 
     public void changeAddress(String newCity, String newStreet, String newZipcode) {
         if (this.address.getCity().equals(newCity) && this.address.getStreet().equals(newStreet) && this.address.getZipcode().equals(newZipcode)) {
-            throw new IllegalArgumentException("주소가 기존과 달라야 합니다");
+            return;
         }
 
         this.address = new Address(newCity, newStreet, newZipcode);

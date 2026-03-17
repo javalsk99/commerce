@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -62,8 +64,8 @@ public class MemberService {
 
     @Transactional
     public void deleteMember(String memberLoginId) {
-        Member member = findMemberByLoginId(memberLoginId);
-        memberRepository.delete(member);
+        Optional<Member> member = memberRepository.findByLoginId(memberLoginId);
+        member.ifPresent(memberRepository::delete);
     }
 
     public MemberResponse getMemberDto(Member member) {

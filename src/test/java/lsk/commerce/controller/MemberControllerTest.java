@@ -41,12 +41,12 @@ import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.BDDMockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -89,7 +89,8 @@ class MemberControllerTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json))
                         .andExpect(status().isCreated())
-                        .andExpect(content().string("id_A"))
+                        .andExpect(jsonPath("$.data").value("id_A"))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
@@ -265,7 +266,7 @@ class MemberControllerTest {
                 given(memberQueryService.findMember(anyString())).willThrow(new DataNotFoundException("존재하지 않는 아이디입니다"));
 
                 //when & then
-                mvc.perform(get("/members/{memberLoginId}", "id_C"))
+                mvc.perform(get("/members/{memberLoginId}", "id_D"))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
                         .andExpect(jsonPath("$.message").value("존재하지 않는 아이디입니다"))
@@ -302,7 +303,8 @@ class MemberControllerTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json))
                         .andExpect(status().isOk())
-                        .andExpect(content().string("비밀번호가 변경되었습니다."))
+                        .andExpect(jsonPath("$.data").value("비밀번호가 변경되었습니다."))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
@@ -314,10 +316,9 @@ class MemberControllerTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("invalidPasswordProvider")
-            void invalidInput(String password) throws Exception {
+            @MethodSource("invalidPasswordRequestProvider")
+            void invalidInput(MemberChangePasswordRequest request) throws Exception {
                 //given
-                MemberChangePasswordRequest request = new MemberChangePasswordRequest(password);
                 String json = objectMapper.writeValueAsString(request);
 
                 //when & then
@@ -354,13 +355,13 @@ class MemberControllerTest {
                 BDDMockito.then(memberService).should().changePassword("id_A", request);
             }
 
-            static Stream<Arguments> invalidPasswordProvider() {
+            static Stream<Arguments> invalidPasswordRequestProvider() {
                 return Stream.of(
-                        argumentSet("비밀번호 null", (String) null),
-                        argumentSet("비밀번호 빈 문자열", ""),
-                        argumentSet("비밀번호 공백", " ".repeat(8)),
-                        argumentSet("비밀번호 7자 미만", "1".repeat(7)),
-                        argumentSet("비밀번호 21자 초과", "1".repeat(21))
+                        argumentSet("비밀번호 null", new MemberChangePasswordRequest(null)),
+                        argumentSet("비밀번호 빈 문자열", new MemberChangePasswordRequest("")),
+                        argumentSet("비밀번호 공백", new MemberChangePasswordRequest(" ".repeat(8))),
+                        argumentSet("비밀번호 7자 미만", new MemberChangePasswordRequest("1".repeat(7))),
+                        argumentSet("비밀번호 21자 초과", new MemberChangePasswordRequest("1".repeat(21)))
                 );
             }
         }
@@ -372,33 +373,28 @@ class MemberControllerTest {
         @Nested
         class SuccessCase {
 
-            @ParameterizedTest
-            @MethodSource("addressProvider")
-            void basic(String city, String street, String zipcode) throws Exception {
+            @Test
+            void shouldReturnOk_WhenAddressIsSame() throws Exception {
                 //given
-                MemberChangeAddressRequest request = new MemberChangeAddressRequest(city, street, zipcode);
+                MemberChangeAddressRequest request = new MemberChangeAddressRequest("Seoul", "Gangnam", "01234");
                 String json = objectMapper.writeValueAsString(request);
 
-                Member member = Member.builder()
-                        .loginId("id_A")
-                        .city("Seoul")
-                        .street("Gangnam")
-                        .zipcode("01234")
-                        .build();
-                MemberResponse memberResponse = new MemberResponse("id_A", city, street, zipcode);
+                Member member = createMember();
+                MemberResponse memberResponse = new MemberResponse("id_A", "Seoul", "Gangnam", "01234");
 
                 given(memberService.changeAddress(anyString(), any(MemberChangeAddressRequest.class))).willReturn(member);
                 given(memberService.getMemberDto(any(Member.class))).willReturn(memberResponse);
 
                 //when & then
-                mvc.perform(post("/members/{memberLoginId}/address", "id_A")
+                mvc.perform(patch("/members/{memberLoginId}/address", "id_A")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data.city").value(city))
-                        .andExpect(jsonPath("$.data.street").value(street))
-                        .andExpect(jsonPath("$.data.zipcode").value(zipcode))
+                        .andExpect(jsonPath("$.data.city").value("Seoul"))
+                        .andExpect(jsonPath("$.data.street").value("Gangnam"))
+                        .andExpect(jsonPath("$.data.zipcode").value("01234"))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
@@ -408,12 +404,92 @@ class MemberControllerTest {
                 });
             }
 
-            static Stream<Arguments> addressProvider() {
+            @ParameterizedTest
+            @MethodSource("addressRequestProvider")
+            void shouldReturnOk_WhenAddressFieldsAreDifferent(MemberChangeAddressRequest request) throws Exception {
+                //given
+                String json = objectMapper.writeValueAsString(request);
+
+                Member member = createMember();
+                MemberResponse memberResponse = new MemberResponse("id_A", request.city(), request.street(), request.zipcode());
+
+                given(memberService.changeAddress(anyString(), any(MemberChangeAddressRequest.class))).willReturn(member);
+                given(memberService.getMemberDto(any(Member.class))).willReturn(memberResponse);
+
+                //when & then
+                mvc.perform(patch("/members/{memberLoginId}/address", "id_A")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.city").value(request.city()))
+                        .andExpect(jsonPath("$.data.street").value(request.street()))
+                        .andExpect(jsonPath("$.data.zipcode").value(request.zipcode()))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should().changeAddress("id_A", request));
+                    softly.check(() -> BDDMockito.then(memberService).should().getMemberDto(member));
+                });
+            }
+
+            @Test
+            void idempotency() throws Exception {
+                //given
+                MemberChangeAddressRequest request = new MemberChangeAddressRequest("Seoul", "Gangbuk", "01234");
+                String json = objectMapper.writeValueAsString(request);
+
+                Member member = createMember();
+                MemberResponse memberResponse = new MemberResponse("id_A", "Seoul", "Gangbuk", "01234");
+
+                given(memberService.changeAddress(anyString(), any(MemberChangeAddressRequest.class))).willReturn(member);
+                given(memberService.getMemberDto(any(Member.class))).willReturn(memberResponse);
+
+                //when & then 첫 번째 요청
+                mvc.perform(patch("/members/{memberLoginId}/address", "id_A")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.city").value("Seoul"))
+                        .andExpect(jsonPath("$.data.street").value("Gangbuk"))
+                        .andExpect(jsonPath("$.data.zipcode").value("01234"))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should().changeAddress("id_A", request));
+                    softly.check(() -> BDDMockito.then(memberService).should().getMemberDto(member));
+                });
+
+                //when & then 두 번째 요청
+                mvc.perform(patch("/members/{memberLoginId}/address", "id_A")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.city").value("Seoul"))
+                        .andExpect(jsonPath("$.data.street").value("Gangbuk"))
+                        .andExpect(jsonPath("$.data.zipcode").value("01234"))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should(times(2)).changeAddress("id_A", request));
+                    softly.check(() -> BDDMockito.then(memberService).should(times(2)).getMemberDto(member));
+                });
+            }
+
+            static Stream<Arguments> addressRequestProvider() {
                 return Stream.of(
-                        argumentSet("city만 변경", "Gyeonggi-do", "Gangnam", "01234"),
-                        argumentSet("street만 변경", "Seoul", "Gangbuk", "01234"),
-                        argumentSet("zipcode만 변경", "Seoul", "Gangnam", "01235"),
-                        argumentSet("전부 변경", "Gyeonggi-do", "Gangbuk", "01235")
+                        argumentSet("city만 변경", new MemberChangeAddressRequest("Gyeonggi-do", "Gangnam", "01234")),
+                        argumentSet("street만 변경", new MemberChangeAddressRequest("Seoul", "Gangbuk", "01234")),
+                        argumentSet("zipcode만 변경", new MemberChangeAddressRequest("Seoul", "Gangnam", "01235")),
+                        argumentSet("전부 변경", new MemberChangeAddressRequest("Gyeonggi-do", "Gangbuk", "01235"))
                 );
             }
         }
@@ -422,14 +498,13 @@ class MemberControllerTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("invalidAddressProvider")
-            void invalidInput(String city, String street, String zipcode) throws Exception {
+            @MethodSource("invalidAddressRequestProvider")
+            void invalidInput(MemberChangeAddressRequest request) throws Exception {
                 //given
-                MemberChangeAddressRequest request = new MemberChangeAddressRequest(city, street, zipcode);
                 String json = objectMapper.writeValueAsString(request);
 
                 //when & then
-                mvc.perform(post("/members/{memberLoginId}/address", "id_A")
+                mvc.perform(patch("/members/{memberLoginId}/address", "id_A")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json))
@@ -443,39 +518,14 @@ class MemberControllerTest {
                 });
             }
 
-            @Test
-            void changeAddress_Failed_AddressIsSame() throws Exception {
-                //given
-                MemberChangeAddressRequest request = new MemberChangeAddressRequest("Seoul", "Gangnam", "01234");
-                String json = objectMapper.writeValueAsString(request);
-
-                given(memberService.changeAddress(anyString(), any(MemberChangeAddressRequest.class))).willThrow(new IllegalArgumentException("주소가 기존과 달라야 합니다"));
-
-                //when & then
-                mvc.perform(post("/members/{memberLoginId}/address", "id_A")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .content(json))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.code").value("BAD_ARGUMENT"))
-                        .andExpect(jsonPath("$.message").value("주소가 기존과 달라야 합니다"))
-                        .andDo(print());
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(memberService).should().changeAddress("id_A", request));
-                    softly.check(() -> BDDMockito.then(memberService).should(never()).getMemberDto(any()));
-                });
-            }
-
-            static Stream<Arguments> invalidAddressProvider() {
+            static Stream<Arguments> invalidAddressRequestProvider() {
                 return Stream.of(
-                        argumentSet("city null", null, "Gangnam", "01234"),
-                        argumentSet("street null", "Seoul", null, "01234"),
-                        argumentSet("zipcode null", "Seoul", "Gangnam", null),
-                        argumentSet("city 빈 문자열", "", "Gangnam", "01234"),
-                        argumentSet("city 공백", " ", "Gangnam", "01234"),
-                        argumentSet("city 50자 초과", "a".repeat(51), "Gangnam", "01234")
+                        argumentSet("city null", new MemberChangeAddressRequest(null, "Gangnam", "01234")),
+                        argumentSet("street null", new MemberChangeAddressRequest("Seoul", null, "01234")),
+                        argumentSet("zipcode null", new MemberChangeAddressRequest("Seoul", "Gangnam", null)),
+                        argumentSet("city 빈 문자열", new MemberChangeAddressRequest("", "Gangnam", "01234")),
+                        argumentSet("city 공백", new MemberChangeAddressRequest(" ", "Gangnam", "01234")),
+                        argumentSet("city 50자 초과", new MemberChangeAddressRequest("a".repeat(51), "Gangnam", "01234"))
                 );
             }
         }
@@ -492,32 +542,48 @@ class MemberControllerTest {
                 //when & then
                 mvc.perform(delete("/members/{memberLoginId}", "id_A"))
                         .andExpect(status().isOk())
-                        .andExpect(content().string("delete"))
+                        .andExpect(jsonPath("$.data").value("delete"))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
                 BDDMockito.then(memberService).should().deleteMember("id_A");
             }
-        }
-
-        @Nested
-        class FailureCase {
 
             @Test
-            void deleteMember_Failed_MemberNotFound() throws Exception {
+            void idempotency() throws Exception {
                 //given
-                willThrow(new IllegalArgumentException("존재하지 않는 아이디입니다")).given(memberService).deleteMember(anyString());
+                createMember();
 
-                //when & then
-                mvc.perform(delete("/members/{memberLoginId}", "id_C"))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.code").value("BAD_ARGUMENT"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 아이디입니다"))
+                //when & then 첫 번째 호출
+                mvc.perform(delete("/members/{memberLoginId}", "id_A"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data").value("delete"))
+                        .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
-                BDDMockito.then(memberService).should().deleteMember("id_C");
+                BDDMockito.then(memberService).should().deleteMember("id_A");
+
+                //when & then 두 번째 호출
+                mvc.perform(delete("/members/{memberLoginId}", "id_A"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data").value("delete"))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
+
+                //then
+                BDDMockito.then(memberService).should(times(2)).deleteMember("id_A");
             }
         }
+    }
+
+    private static Member createMember() {
+        return Member.builder()
+                .loginId("id_A")
+                .city("Seoul")
+                .street("Gangnam")
+                .zipcode("01234")
+                .build();
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenNoException;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
 class CategoryTest {
@@ -108,22 +109,52 @@ class CategoryTest {
                     softly.then(category.getParent()).isEqualTo(childCategory);
                 });
             }
+
+            @Test
+            void shouldIgnoreChange_WhenParentIsSelf() {
+                //when
+                parentCategory.changeParentCategory(parentCategory);
+
+                //then
+                then(parentCategory.getParent()).isNull();
+            }
+
+            @Test
+            void idempotency() {
+                //given
+                Category category = createCategory();
+
+                ReflectionTestUtils.setField(category, "id", 3L);
+
+                //when 첫 번째 호출
+                category.changeParentCategory(childCategory);
+
+                //then
+                thenSoftly(softly -> {
+                    softly.then(childCategory.getChildren().getFirst()).isEqualTo(category);
+                    softly.then(category.getParent()).isEqualTo(childCategory);
+                });
+
+                //when 두 번째 호출
+                category.changeParentCategory(childCategory);
+
+                //then
+                thenSoftly(softly -> {
+                    softly.then(childCategory.getChildren().getFirst()).isEqualTo(category);
+                    softly.then(category.getParent()).isEqualTo(childCategory);
+                });
+            }
         }
 
         @Nested
         class FailureCase {
 
             @Test
-            void selfOrChild() {
+            void shouldFailToChange_WhenParentIsChild() {
                 //when & then
-                thenSoftly(softly -> {
-                    softly.thenThrownBy(() -> parentCategory.changeParentCategory(parentCategory))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다");
-                    softly.thenThrownBy(() -> parentCategory.changeParentCategory(childCategory))
-                            .isInstanceOf(IllegalArgumentException.class)
-                            .hasMessage("자신 또는 자식을 부모로 설정할 수 없습니다");
-                });
+                thenThrownBy(() -> parentCategory.changeParentCategory(childCategory))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("자식을 부모로 설정할 수 없습니다");
             }
         }
     }

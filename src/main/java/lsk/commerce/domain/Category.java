@@ -67,11 +67,15 @@ public class Category {
         return category;
     }
 
-    public Category changeParentCategory(Category newParentCategory) {
+    public void changeParentCategory(Category newParentCategory) {
+        if (this.getId().equals(newParentCategory.getId())) {
+            return;
+        }
+
         Category check = newParentCategory;
         while (check != null) {
             if (this.getId().equals(check.getId())) {
-                throw new IllegalArgumentException("자신 또는 자식을 부모로 설정할 수 없습니다");
+                throw new IllegalArgumentException("자식을 부모로 설정할 수 없습니다");
             }
 
             check = check.parent;
@@ -79,6 +83,5 @@ public class Category {
 
         this.unConnectParent();
         this.connectParent(newParentCategory);
-        return this;
     }
 }

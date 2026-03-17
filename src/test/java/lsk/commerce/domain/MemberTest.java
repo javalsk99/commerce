@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -83,7 +84,7 @@ class MemberTest {
             }
 
             @Test
-            void samePassword() {
+            void passwordIsSame() {
                 //given
                 Member member = getMember();
 
@@ -116,9 +117,22 @@ class MemberTest {
         @Nested
         class SuccessCase {
 
+            @Test
+            void shouldIgnoreUpdate_WhenAddressIsSame() {
+                //given
+                Member member = Member.builder()
+                        .city("Seoul")
+                        .street("Gangnam")
+                        .zipcode("01234")
+                        .build();
+
+                //when
+                member.changeAddress(member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode());
+            }
+
             @ParameterizedTest
             @MethodSource("addressProvider")
-            void basic(String city, String street, String zipcode) {
+            void shouldUpdateSuccess_WhenAddressFieldsAreDifferent(String city, String street, String zipcode) {
                 //given
                 Member member = Member.builder()
                         .city("Seoul")
@@ -137,21 +151,8 @@ class MemberTest {
                 });
             }
 
-            static Stream<Arguments> addressProvider() {
-                return Stream.of(
-                        argumentSet("city 변경", "Gyeonggi-do", "Gangnam", "01234"),
-                        argumentSet("street 변경", "Seoul", "Gangbuk", "01234"),
-                        argumentSet("zipcode 변경", "Seoul", "Gangnam", "01235"),
-                        argumentSet("모두 변경", "Gyeonggi-do", "Gangbuk", "01235")
-                );
-            }
-        }
-
-        @Nested
-        class FailureCase {
-
             @Test
-            void sameAddress() {
+            void idempotency() {
                 //given
                 Member member = Member.builder()
                         .city("Seoul")
@@ -159,10 +160,34 @@ class MemberTest {
                         .zipcode("01234")
                         .build();
 
-                //when & then
-                thenThrownBy(() -> member.changeAddress(member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode()))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주소가 기존과 달라야 합니다");
+                //when 첫 번째 호출
+                member.changeAddress("Seoul", "Gangbuk", "01234");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.then(member.getAddress().getCity()).isEqualTo("Seoul");
+                    softly.then(member.getAddress().getStreet()).isEqualTo("Gangbuk");
+                    softly.then(member.getAddress().getZipcode()).isEqualTo("01234");
+                });
+
+                //when 두 번째 호출
+                thenNoException().isThrownBy(() -> member.changeAddress("Seoul", "Gangbuk", "01234"));
+
+                //then
+                thenSoftly(softly -> {
+                    softly.then(member.getAddress().getCity()).isEqualTo("Seoul");
+                    softly.then(member.getAddress().getStreet()).isEqualTo("Gangbuk");
+                    softly.then(member.getAddress().getZipcode()).isEqualTo("01234");
+                });
+            }
+
+            static Stream<Arguments> addressProvider() {
+                return Stream.of(
+                        argumentSet("city 변경", "Gyeonggi-do", "Gangnam", "01234"),
+                        argumentSet("street 변경", "Seoul", "Gangbuk", "01234"),
+                        argumentSet("zipcode 변경", "Seoul", "Gangnam", "01235"),
+                        argumentSet("모두 변경", "Gyeonggi-do", "Gangbuk", "01235")
+                );
             }
         }
     }

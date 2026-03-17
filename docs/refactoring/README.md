@@ -5,3 +5,5 @@
 - [dto](dto.md)
 - [member](member.md)
 - [category](category.md)
+- [categoryProduct](categoryProduct.md)
+- [product](product.md)
