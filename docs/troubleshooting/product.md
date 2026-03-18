@@ -90,7 +90,7 @@
 - POST /products/{productName}/{categoryName}에서 Response로 카테고리에서 상품을 조회하는 DTO를 반환해서 select 쿼리가 한 번 더 나오는 문제  
   해결: DTO를 상품의 카테고리 상품이 나오게 바꾼다. - 상품이 한 개이므로 조회할 때 left join fetch로 카테고리 상품을 가져온다.
 
-      ProductWithCategoryResponse
+      ProductNameWithCategoryNameResponse
       private String name;
       private List<CategoryNameResponse> categoryNames = new ArrayList<>();
 
@@ -127,3 +127,8 @@
                   .setParameter("categoryIds", categoryIds)
                   .getSingleResult();
       }
+
+
+## 문제점
+- 다른 엔티티들은 유니크 키가 있는 데 상품에는 없어서 find할 때 문제가 생길 수 있다.  
+  해결: 나노 아이디를 사용하는 유니크 키인 productNumber 필드를 추가했다.

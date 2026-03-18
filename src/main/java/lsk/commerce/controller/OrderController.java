@@ -1,13 +1,18 @@
 package lsk.commerce.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Order;
+import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.dto.response.Result;
 import lsk.commerce.query.OrderQueryService;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -28,14 +33,9 @@ public class OrderController {
     private final OrderQueryService orderQueryService;
 
     @PostMapping("/orders")
-    public String create(String memberLoginId, @RequestBody Map<String, Integer> productMap) {
-        if (productMap.isEmpty()) {
-            throw new IllegalArgumentException("주문 상품이 없습니다");
-        }
-
-        String orderNumber = orderService.order(memberLoginId, productMap);
-
-        return orderNumber + " created";
+    public ResponseEntity<Result<String>> create(@RequestBody @Valid OrderCreateRequest request) {
+        String orderNumber = orderService.order(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new Result<>(orderNumber, 1));
     }
 
     @GetMapping("/orders")

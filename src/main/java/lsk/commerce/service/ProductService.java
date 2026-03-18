@@ -6,15 +6,17 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.dto.request.ProductRequest;
+import lsk.commerce.dto.request.ProductCreateRequest;
+import lsk.commerce.dto.request.ProductUpdateRequest;
 import lsk.commerce.dto.response.ProductResponse;
-import lsk.commerce.dto.response.ProductWithCategoryResponse;
+import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -25,7 +27,7 @@ public class ProductService {
     private final CategoryService categoryService;
 
     @Transactional
-    public String register(ProductRequest request, List<String> categoryNames) {
+    public String register(ProductCreateRequest request, List<String> categoryNames) {
         Product product = validateAndToProduct(request);
         List<Category> categories = categoryService.validateAndGetCategories(categoryNames);
 
@@ -34,14 +36,14 @@ public class ProductService {
         return product.getName();
     }
 
-    public Product findProductByName(String productName) {
-        return productRepository.findByName(productName)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
+    public Product findProduct(String productNumber) {
+        return productRepository.findByNumber(productNumber)
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다."));
     }
 
-    public Product findProductWithCategoryProduct(String productName) {
-        return productRepository.findWithCategoryProduct(productName)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다. name: " + productName));
+    public Product findProductWithCategoryProduct(String productNumber) {
+        return productRepository.findWithCategoryProduct(productNumber)
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다."));
     }
 
     public List<Product> findProducts() {
@@ -49,16 +51,20 @@ public class ProductService {
     }
 
     @Transactional
-    public Product updateProduct(String productName, Integer newPrice, Integer newStockQuantity) {
-        Product product = findProductByName(productName);
-        product.updateProduct(newPrice, newStockQuantity);
+    public Product updateProduct(String productNumber, ProductUpdateRequest request) {
+        Product product = findProduct(productNumber);
+        product.updateProduct(request.price(), request.stockQuantity());
         return product;
     }
 
     @Transactional
-    public void deleteProduct(String productName) {
-        Product product = productRepository.findWithCategoryProductCategory(productName)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
+    public void deleteProduct(String productNumber) {
+        Optional<Product> optionalProduct = productRepository.findWithCategoryProductCategory(productNumber);
+        if (optionalProduct.isEmpty()) {
+            return;
+        }
+
+        Product product = optionalProduct.get();
 
         if (!product.getCategoryProducts().isEmpty()) {
             product.removeCategoryProductsFormCategory();
@@ -68,14 +74,14 @@ public class ProductService {
     }
 
     public ProductResponse getProductDto(Product product) {
-        return ProductResponse.productChangeDto(product);
+        return ProductResponse.from(product);
     }
 
-    public ProductWithCategoryResponse getProductWithCategoryDto(Product product) {
-        return ProductWithCategoryResponse.productChangeResponse(product);
+    public ProductNameWithCategoryNameResponse getProductWithCategoryDto(Product product) {
+        return ProductNameWithCategoryNameResponse.from(product);
     }
 
-    private Product validateAndToProduct(ProductRequest request) {
+    private Product validateAndToProduct(ProductCreateRequest request) {
         boolean result;
         Product product;
         if (request.dtype().equals("A")) {

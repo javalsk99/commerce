@@ -3,7 +3,7 @@ package lsk.commerce.service;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
 import lsk.commerce.dto.request.CategoryChangeParentRequest;
-import lsk.commerce.dto.request.CategoryRequest;
+import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.exception.DataNotFoundException;
@@ -26,7 +26,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
-    public String create(CategoryRequest request) {
+    public String create(CategoryCreateRequest request) {
         Category parentCategory = validateCategory(request.name(), request.parentName());
         Category category = Category.createCategory(parentCategory, request.name());
         categoryRepository.save(category);

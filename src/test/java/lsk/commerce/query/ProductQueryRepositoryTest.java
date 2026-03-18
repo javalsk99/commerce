@@ -70,7 +70,7 @@ class ProductQueryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(productResponseList)
-                            .filteredOn(p -> "A".equals(p.getDtype()))
+                            .filteredOn(p -> "A".equals(p.dtype()))
                             .hasSize(6)
                             .extracting("name", "artist", "studio")
                             .containsExactlyInAnyOrder(
@@ -82,7 +82,7 @@ class ProductQueryRepositoryTest {
                                     tuple("천상연", "이창섭", "판타지오")
                             );
                     softly.then(productResponseList)
-                            .filteredOn(p -> "B".equals(p.getDtype()))
+                            .filteredOn(p -> "B".equals(p.dtype()))
                             .hasSize(3)
                             .extracting("name", "author", "isbn")
                             .containsExactlyInAnyOrder(
@@ -91,7 +91,7 @@ class ProductQueryRepositoryTest {
                                     tuple("Do it! 점프 투 파이썬", "박응용", "9791163034735")
                             );
                     softly.then(productResponseList)
-                            .filteredOn(p -> "M".equals(p.getDtype()))
+                            .filteredOn(p -> "M".equals(p.dtype()))
                             .hasSize(4)
                             .extracting("name", "actor", "director")
                             .containsExactlyInAnyOrder(

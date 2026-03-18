@@ -1,9 +1,12 @@
 # DTO 리팩토링
-JSON 데이터로 보내기 쉽고, 간결한 Record로 변경
+- JSON 데이터로 보내기 쉽고, 간결한 Record로 변경
+
 
 - MemberLoginRequest
-- MemberRequest
+- MemberCreateRequest
 - MemberSearchCond
+
+
 - MemberQueryDto  
   toBuilder()를 이용해 새로운 인스턴스를 만들면서 orderQueryDtoList 필드를 담는다.
 
@@ -26,15 +29,31 @@ JSON 데이터로 보내기 쉽고, 간결한 Record로 변경
 
 - MemberChangePassword
 - MemberChangeAddress
-- CategoryRequest
+- CategoryCreateRequest
 
 
 - CategoryResponse  
   정적 메서드에서 children을 생성하는 로직을 Stream으로 변경했다.
 
 
-- CategoryDisconnectResponse
+- CategoryDisconnectResponse  
   정적 메서드에서 productResponseList를 생성하는 로직을 Stream으로 변경했다.
 
 
-- ProductRequest
+- ProductCreateRequest  
+  다른 dtype의 필드 검증을 추가했다.
+
+
+- ProductResponse  
+  @QueryProjection를 사용하기 위해 컴팩트 생성자로 변경했다.
+
+
+- ProductUpdateRequest
+
+
+- ProductNameWithCategoryNameResponse, CategoryNameResponse  
+  정적 메서드에서 categoryNameResponseList를 생성하는 로직을 Stream으로 변경했다.
+
+
+- OrderCreateRequest  
+  

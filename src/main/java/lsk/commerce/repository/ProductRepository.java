@@ -18,30 +18,30 @@ public class ProductRepository {
         em.persist(product);
     }
 
-    public Optional<Product> findByName(String productName) {
-        return em.createQuery("select p from Product p where p.name = :name", Product.class)
-                .setParameter("name", productName)
+    public Optional<Product> findByNumber(String productNumber) {
+        return em.createQuery("select p from Product p where p.productNumber = :productNumber", Product.class)
+                .setParameter("productNumber", productNumber)
                 .getResultStream()
                 .findFirst();
     }
 
-    public Optional<Product> findWithCategoryProduct(String productName) {
+    public Optional<Product> findWithCategoryProduct(String productNumber) {
         return em.createQuery(
                         "select p from Product p" +
                                 " left join fetch p.categoryProducts" +
-                                " where p.name = :name", Product.class)
-                .setParameter("name", productName)
+                                " where p.productNumber = :productNumber", Product.class)
+                .setParameter("productNumber", productNumber)
                 .getResultStream()
                 .findFirst();
     }
 
-    public Optional<Product> findWithCategoryProductCategory(String productName) {
+    public Optional<Product> findWithCategoryProductCategory(String productNumber) {
         return em.createQuery(
                         "select p from Product p" +
                                 " left join fetch p.categoryProducts cp" +
                                 " left join fetch cp.category" +
-                                " where p.name = :name", Product.class)
-                .setParameter("name", productName)
+                                " where p.productNumber = :productNumber", Product.class)
+                .setParameter("productNumber", productNumber)
                 .getResultStream()
                 .findFirst();
     }

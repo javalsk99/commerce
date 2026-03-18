@@ -8,6 +8,19 @@
   빠졌던 Argument Resolver를 DTO인 request에 @RequestBody, 리스트인 categoryNames에 @RequestParam을 추가하고 Bean Validation을 추가했다.
 
 
+- updateProduct  
+  POST에서 멱등성에 더 적합한 PATCH로 변경했다.
+  빠졌던 Argument Resolver인 @RequestBody와 DTO 검증인 @Valid를 추가했다.
+
+
+- connectCategory  
+  POST에서 멱등성에 더 적합한 PATCH로 변경했다.
+
+
+- findProduct, updateProduct, delete, connectCategory  
+  productName이 유니크 키가 아니어서 나노 아이디를 사용하는 productNumber로 변경했다.
+
+
 ## ProductService
 - register  
   유지보수의 효율을 위해 파라미터를 엔티티에서 DTO로 변경했다.
@@ -15,3 +28,24 @@
 
 - validateAndGetProduct  
   검증하면서 DTO를 엔티티로 변환했다.
+
+
+- deleteProduct  
+  멱등성을 위해 조회 후 존재하지 않으면 이후의 로직을 실행하지 않고 끝낸다.
+
+
+- findProduct, findProductWithCategoryProduct, updateProduct, deleteProduct  
+  productName이 유니크 키가 아니어서 나노 아이디를 사용하는 productNumber로 변경했다.
+
+
+## Product
+- updateProduct  
+  기존과 다를 때만 변경해서 여러 번 호출 시 UPDATE 쿼리가 한 번만 나오게 했다.
+
+
+- productNumber 필드를 나노 아이디로 생성하면서 Order의 orderNumber와 겹치는 부분을 NanoIdProvider 클래스로 만들어 사용했다.
+
+
+## ProductRepository
+- findByNumber, findWithCategoryProduct, findWithCategoryProductCategory  
+  productName이 유니크 키가 아니어서 나노 아이디를 사용하는 productNumber로 변경했다.

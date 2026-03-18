@@ -24,9 +24,9 @@ public class CategoryProductService {
         return categoryProductRepository.findAllWithProductByCategory(category);
     }
 
-    public Category disconnect(String categoryName, String productName) {
+    public Category disconnect(String categoryName, String productNumber) {
         Category category = categoryService.findCategoryByName(categoryName);
-        Product product = productService.findProductWithCategoryProduct(productName);
+        Product product = productService.findProductWithCategoryProduct(productNumber);
         if (category.getCategoryProducts().stream().noneMatch(cp -> cp.getProduct().equals(product))) {
             return category;
         }
@@ -51,12 +51,12 @@ public class CategoryProductService {
         return category;
     }
 
-    public Product connect(String productName, String categoryName) {
-        Product product = productService.findProductWithCategoryProduct(productName);
+    public Product connect(String productNumber, String categoryName) {
+        Product product = productService.findProductWithCategoryProduct(productNumber);
         Category category = categoryService.findCategoryByName(categoryName);
 
         if (product.getCategoryProducts().stream().anyMatch(c -> category.equals(c.getCategory()))) {
-            throw new IllegalArgumentException("이미 상품이 해당 카테고리에 연결되어 있습니다");
+            return product;
         }
 
         product.connectCategory(category);

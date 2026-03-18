@@ -13,7 +13,7 @@ public record CategoryDisconnectResponse(
         return new CategoryDisconnectResponse(
                 category.getName(),
                 category.getCategoryProducts().stream()
-                        .map(categoryProduct -> ProductResponse.productChangeDto(categoryProduct.getProduct()))
+                        .map(categoryProduct -> ProductResponse.from(categoryProduct.getProduct()))
                         .toList()
         );
     }

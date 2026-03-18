@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
-import lsk.commerce.dto.request.MemberRequest;
+import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.dto.response.Result;
 import lsk.commerce.query.MemberQueryService;
@@ -33,7 +33,7 @@ public class MemberController {
     private final MemberQueryService memberQueryService;
 
     @PostMapping("/members")
-    public ResponseEntity<Result<String>> create(@RequestBody @Valid MemberRequest request) {
+    public ResponseEntity<Result<String>> create(@RequestBody @Valid MemberCreateRequest request) {
         String loginId = memberService.join(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new Result<>(loginId, 1));
     }

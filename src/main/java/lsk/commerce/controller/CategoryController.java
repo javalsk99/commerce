@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Category;
 import lsk.commerce.dto.request.CategoryChangeParentRequest;
-import lsk.commerce.dto.request.CategoryRequest;
+import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.dto.response.Result;
@@ -30,7 +30,7 @@ public class CategoryController {
     private final CategoryProductService categoryProductService;
 
     @PostMapping("/categories")
-    public ResponseEntity<Result<String>> create(@RequestBody @Valid CategoryRequest request) {
+    public ResponseEntity<Result<String>> create(@RequestBody @Valid CategoryCreateRequest request) {
         String categoryName = categoryService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new Result<>(categoryName, 1));
     }
@@ -64,9 +64,9 @@ public class CategoryController {
         return ResponseEntity.ok(new Result<>("delete", 1));
     }
 
-    @DeleteMapping("/categories/{categoryName}/{productName}")
-    public ResponseEntity<Result<CategoryDisconnectResponse>> disconnectProduct(@PathVariable("categoryName") String categoryName, @PathVariable("productName") String productName) {
-        Category category = categoryProductService.disconnect(categoryName, productName);
+    @DeleteMapping("/categories/{categoryName}/{productNumber}")
+    public ResponseEntity<Result<CategoryDisconnectResponse>> disconnectProduct(@PathVariable("categoryName") String categoryName, @PathVariable("productNumber") String productNumber) {
+        Category category = categoryProductService.disconnect(categoryName, productNumber);
         CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category);
         return ResponseEntity.ok(new Result<>(categoryDisconnectResponse, 1));
     }

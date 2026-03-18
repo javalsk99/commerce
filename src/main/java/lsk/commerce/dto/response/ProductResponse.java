@@ -1,56 +1,42 @@
 package lsk.commerce.dto.response;
 
 import com.querydsl.core.annotations.QueryProjection;
-import lombok.Getter;
 import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import org.hibernate.Hibernate;
 
-@Getter
-public class ProductResponse {
+public record ProductResponse(
+        String name,
+        Integer price,
+        Integer stockQuantity,
 
-    private String name;
-    private Integer price;
-    private Integer stockQuantity;
+        String dtype,
 
-    private String dtype;
+        String artist,
+        String studio,
 
-    private String artist;
-    private String studio;
+        String author,
+        String isbn,
 
-    private String author;
-    private String isbn;
-
-    private String actor;
-    private String director;
-
+        String actor,
+        String director
+) {
     @QueryProjection
-    public ProductResponse(String name, Integer price, Integer stockQuantity, String dtype, String artist,
-                           String studio, String author, String isbn, String actor, String director) {
-        this.name = name;
-        this.price = price;
-        this.stockQuantity = stockQuantity;
-        this.dtype = dtype;
-        this.artist = artist;
-        this.studio = studio;
-        this.author = author;
-        this.isbn = isbn;
-        this.actor = actor;
-        this.director = director;
+    public ProductResponse {
     }
 
-    public static ProductResponse productChangeDto(Product product) {
-        Object unproxiedProduct = Hibernate.unproxy(product);
-        if (unproxiedProduct instanceof Album album) {
+    public static ProductResponse from(Product product) {
+        Object actualProduct = Hibernate.unproxy(product);
+        if (actualProduct instanceof Album album) {
             return new ProductResponse(album.getName(), album.getPrice(), album.getStockQuantity(), "A", album.getArtist(), album.getStudio(), null, null, null, null);
-        } else if (unproxiedProduct instanceof Book book) {
+        } else if (actualProduct instanceof Book book) {
             return new ProductResponse(book.getName(), book.getPrice(), book.getStockQuantity(), "B", null, null, book.getAuthor(), book.getIsbn(), null, null);
-        } else if (unproxiedProduct instanceof Movie movie) {
+        } else if (actualProduct instanceof Movie movie) {
             return new ProductResponse(movie.getName(), movie.getPrice(), movie.getStockQuantity(), "M", null, null, null, null, movie.getActor(), movie.getDirector());
         } else {
-            throw new IllegalArgumentException("잘못된 상품입니다. product: " + unproxiedProduct.getClass().getName());
+            throw new IllegalArgumentException("잘못된 상품입니다. product: " + actualProduct.getClass().getName());
         }
     }
 }

@@ -1,14 +1,15 @@
 package lsk.commerce.service;
 
 import lsk.commerce.domain.Category;
-import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.dto.request.ProductRequest;
+import lsk.commerce.dto.request.ProductCreateRequest;
+import lsk.commerce.dto.request.ProductUpdateRequest;
+import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
-import lsk.commerce.dto.response.ProductWithCategoryResponse;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -26,12 +27,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyList;
 import static org.mockito.BDDMockito.anyString;
-import static org.mockito.BDDMockito.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.times;
@@ -55,6 +56,8 @@ class ProductServiceTest {
     Category category2;
     Category category3;
 
+    String productNumber = "div973bkzi95";
+
     @BeforeEach
     void beforeEach() {
         category1 = Category.createCategory(null, "가요");
@@ -75,7 +78,7 @@ class ProductServiceTest {
             @Test
             void album() {
                 //given
-                ProductRequest request = ProductRequest.builder()
+                ProductCreateRequest request = ProductCreateRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
                         .stockQuantity(10)
@@ -112,7 +115,7 @@ class ProductServiceTest {
             @Test
             void book() {
                 //given
-                ProductRequest request = ProductRequest.builder()
+                ProductCreateRequest request = ProductCreateRequest.builder()
                         .name("자바 ORM 표준 JPA 프로그래밍")
                         .price(15000)
                         .stockQuantity(10)
@@ -149,7 +152,7 @@ class ProductServiceTest {
             @Test
             void movie() {
                 //given
-                ProductRequest request = ProductRequest.builder()
+                ProductCreateRequest request = ProductCreateRequest.builder()
                         .name("범죄도시")
                         .price(15000)
                         .stockQuantity(10)
@@ -190,7 +193,7 @@ class ProductServiceTest {
             @Test
             void duplicateProduct() {
                 //given
-                ProductRequest request = ProductRequest.builder()
+                ProductCreateRequest request = ProductCreateRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
                         .stockQuantity(10)
@@ -217,7 +220,7 @@ class ProductServiceTest {
             @Test
             void failedValidateCategories() {
                 //given
-                ProductRequest request = ProductRequest.builder()
+                ProductCreateRequest request = ProductCreateRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
                         .stockQuantity(10)
@@ -250,20 +253,20 @@ class ProductServiceTest {
         class SuccessCase {
 
             @Test
-            void byName() {
+            void basic() {
                 //given
                 Album album = Album.builder()
                         .name("BANG BANG")
                         .build();
 
-                given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
+                given(productRepository.findByNumber(anyString())).willReturn(Optional.of(album));
 
                 //when
-                Product findProduct = productService.findProductByName("BANG BANG");
+                Product findProduct = productService.findProduct(productNumber);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productRepository).should().findByName(anyString()));
+                    softly.check(() -> BDDMockito.then(productRepository).should().findByNumber(anyString()));
                     softly.then(findProduct.getName()).isEqualTo("BANG BANG");
                 });
             }
@@ -300,15 +303,15 @@ class ProductServiceTest {
             @Test
             void byName_ProductNotFound() {
                 //given
-                given(productRepository.findByName(anyString())).willReturn(Optional.empty());
+                given(productRepository.findByNumber(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> productService.findProductByName("하얀 그리움"))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
+                thenThrownBy(() -> productService.findProduct("lllIIIll00OO"))
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 상품입니다.");
 
                 //then
-                BDDMockito.then(productRepository).should().findByName(anyString());
+                BDDMockito.then(productRepository).should().findByNumber(anyString());
             }
         }
     }
@@ -324,12 +327,17 @@ class ProductServiceTest {
                 //given
                 Album album = Album.builder()
                         .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
                         .build();
+                ProductUpdateRequest request = new ProductUpdateRequest(12000, 20);
 
-                given(productRepository.findByName(anyString())).willReturn(Optional.of(album));
+                given(productRepository.findByNumber(anyString())).willReturn(Optional.of(album));
 
                 //when
-                productService.updateProduct("BANG BANG", 12000, 20);
+                productService.updateProduct(productNumber, request);
 
                 //then
                 then(album)
@@ -350,12 +358,16 @@ class ProductServiceTest {
                 //given
                 Album album = Album.builder()
                         .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
                         .build();
 
                 given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.of(album));
 
                 //when
-                productService.deleteProduct("BANG BANG");
+                productService.deleteProduct(productNumber);
 
                 //then
                 thenSoftly(softly -> {
@@ -363,20 +375,14 @@ class ProductServiceTest {
                     softly.check(() -> BDDMockito.then(productRepository).should().delete(album));
                 });
             }
-        }
-
-        @Nested
-        class FailureCase {
 
             @Test
-            void productNotFound() {
+            void shouldIgnoreDelete_WhenProductNotFound() {
                 //given
                 given(productRepository.findWithCategoryProductCategory(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> productService.deleteProduct("하얀 그리움"))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다. name: " + "하얀 그리움");
+                productService.deleteProduct("lllIIIll00OO");
 
                 //then
                 thenSoftly(softly -> {
@@ -386,10 +392,14 @@ class ProductServiceTest {
             }
 
             @Test
-            void alreadyDeleted() {
+            void idempotency() {
                 //given
                 Album album = Album.builder()
                         .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
                         .build();
 
                 given(productRepository.findWithCategoryProductCategory(anyString()))
@@ -397,7 +407,7 @@ class ProductServiceTest {
                         .willReturn(Optional.empty());
 
                 //when 첫 번째 호출
-                productService.deleteProduct("BANG BANG");
+                productService.deleteProduct(productNumber);
 
                 //then
                 thenSoftly(softly -> {
@@ -406,9 +416,7 @@ class ProductServiceTest {
                 });
 
                 //when & then 두 번째 호출
-                thenThrownBy(() -> productService.deleteProduct("BANG BANG"))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다. name: " + "BANG BANG");
+                thenNoException().isThrownBy(() -> productService.deleteProduct(productNumber));
 
                 //then
                 thenSoftly(softly -> {
@@ -455,10 +463,10 @@ class ProductServiceTest {
                 book.connectCategory(category2);
 
                 //when
-                ProductWithCategoryResponse productWithCategoryDto = productService.getProductWithCategoryDto(book);
+                ProductNameWithCategoryNameResponse productWithCategoryDto = productService.getProductWithCategoryDto(book);
 
                 //then
-                then(productWithCategoryDto.getCategoryNames())
+                then(productWithCategoryDto.categoryNameResponseList())
                         .isNotEmpty()
                         .extracting("categoryName")
                         .containsExactly("컴퓨터/IT");

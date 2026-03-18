@@ -21,6 +21,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
@@ -53,6 +54,7 @@ class CategoryProductServiceTest {
     Category category4;
     Album album1;
     Album album2;
+    String productNumber = "djg8b246ibd8";
 
     @BeforeEach
     void beforeEach() {
@@ -115,7 +117,7 @@ class CategoryProductServiceTest {
                 given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
 
                 //when
-                categoryProductService.disconnect("가요", "BANG BANG");
+                categoryProductService.disconnect("가요", productNumber);
 
                 //then
                 thenSoftly(softly -> {
@@ -139,7 +141,7 @@ class CategoryProductServiceTest {
                 given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
 
                 //when 첫 번째 호출
-                categoryProductService.disconnect("가요", "BANG BANG");
+                categoryProductService.disconnect("가요", productNumber);
 
                 //then
                 thenSoftly(softly -> {
@@ -149,7 +151,7 @@ class CategoryProductServiceTest {
                 });
 
                 //when & then 두 번째 호출
-                categoryProductService.disconnect("가요", "BANG BANG");
+                thenNoException().isThrownBy(() -> categoryProductService.disconnect("가요", productNumber));
 
                 //then
                 thenSoftly(softly -> {
@@ -169,7 +171,7 @@ class CategoryProductServiceTest {
                 given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
 
                 //when & then
-                thenThrownBy(() -> categoryProductService.disconnect("록", "BANG BANG"))
+                thenThrownBy(() -> categoryProductService.disconnect("록", productNumber))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "록");
 
@@ -185,12 +187,12 @@ class CategoryProductServiceTest {
             void productNotFound() {
                 //given
                 given(categoryService.findCategoryByName(anyString())).willReturn(category2);
-                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
+                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다."));
 
                 //when & then
-                thenThrownBy(() -> categoryProductService.disconnect("댄스", "천상연"))
+                thenThrownBy(() -> categoryProductService.disconnect("댄스", "lllIIIll00OO"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다. name: " + "천상연");
+                        .hasMessage("존재하지 않는 상품입니다.");
 
                 //then
                 thenSoftly(softly -> {
@@ -273,7 +275,7 @@ class CategoryProductServiceTest {
                         .containsExactlyInAnyOrder(tuple("가요", "BANG BANG"), tuple("가요", "타임 캡슐"));
 
                 //when 두 번째 호출
-                categoryProductService.disconnectAll("가요");
+                thenNoException().isThrownBy(() -> categoryProductService.disconnectAll("가요"));
 
                 //then
                 thenSoftly(softly -> {
@@ -320,12 +322,45 @@ class CategoryProductServiceTest {
                 given(categoryService.findCategoryByName(anyString())).willReturn(category3);
 
                 //when
-                categoryProductService.connect("BANG BANG", "발라드");
+                categoryProductService.connect(productNumber, "발라드");
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
                     softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.then(album1.getCategoryProducts())
+                            .hasSize(3)
+                            .extracting("category.name")
+                            .containsExactlyInAnyOrder("가요", "댄스", "발라드");
+                });
+            }
+
+            @Test
+            void idempotency() {
+                //given
+                given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
+                given(categoryService.findCategoryByName(anyString())).willReturn(category3);
+
+                //when 첫 번째 호출
+                categoryProductService.connect(productNumber, "발라드");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.then(album1.getCategoryProducts())
+                            .hasSize(3)
+                            .extracting("category.name")
+                            .containsExactlyInAnyOrder("가요", "댄스", "발라드");
+                });
+
+                //when & then 두 번째 호출
+                thenNoException().isThrownBy(() -> categoryProductService.connect(productNumber, "발라드"));
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productService).should(times(2)).findProductWithCategoryProduct(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByName(anyString()));
                     softly.then(album1.getCategoryProducts())
                             .hasSize(3)
                             .extracting("category.name")
@@ -340,12 +375,12 @@ class CategoryProductServiceTest {
             @Test
             void productNotFound() {
                 //given
-                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. name: " + "천상연"));
+                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다."));
 
                 //when & then
-                thenThrownBy(() -> categoryProductService.connect("천상연", "발라드"))
+                thenThrownBy(() -> categoryProductService.connect("lllIIIll00OO", "발라드"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다. name: " + "천상연");
+                        .hasMessage("존재하지 않는 상품입니다.");
 
                 //then
                 thenSoftly(softly -> {
@@ -361,7 +396,7 @@ class CategoryProductServiceTest {
                 given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
 
                 //when & then
-                thenThrownBy(() -> categoryProductService.connect("BANG BANG", "록"))
+                thenThrownBy(() -> categoryProductService.connect(productNumber, "록"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 카테고리입니다. name: " + "록");
 
@@ -373,41 +408,6 @@ class CategoryProductServiceTest {
                             .hasSize(2)
                             .extracting("category.name")
                             .containsExactlyInAnyOrder("가요", "댄스");
-                });
-            }
-
-            @Test
-            void alreadyConnected() {
-                //given
-                given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-                given(categoryService.findCategoryByName(anyString())).willReturn(category3);
-
-                //when 첫 번째 호출
-                categoryProductService.connect("BANG BANG", "발라드");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
-                    softly.then(album1.getCategoryProducts())
-                            .hasSize(3)
-                            .extracting("category.name")
-                            .containsExactlyInAnyOrder("가요", "댄스", "발라드");
-                });
-
-                //when & then 두 번째 호출
-                thenThrownBy(() -> categoryProductService.connect("BANG BANG", "발라드"))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 상품이 해당 카테고리에 연결되어 있습니다");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should(times(2)).findProductWithCategoryProduct(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByName(anyString()));
-                    softly.then(album1.getCategoryProducts())
-                            .hasSize(3)
-                            .extracting("category.name")
-                            .containsExactlyInAnyOrder("가요", "댄스", "발라드");
                 });
             }
         }

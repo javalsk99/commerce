@@ -5,7 +5,7 @@ import lsk.commerce.config.WebConfig;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.dto.request.CategoryChangeParentRequest;
-import lsk.commerce.dto.request.CategoryRequest;
+import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.dto.response.ProductResponse;
@@ -67,6 +67,8 @@ class CategoryControllerTest {
     @MockitoBean
     CategoryProductService categoryProductService;
 
+    String productNumber = "ngf7x89dbbh3";
+
     @Nested
     class Create {
 
@@ -76,10 +78,10 @@ class CategoryControllerTest {
             @Test
             void basic() throws Exception {
                 //given
-                CategoryRequest request = new CategoryRequest("가요", null);
+                CategoryCreateRequest request = new CategoryCreateRequest("가요", null);
                 String json = objectMapper.writeValueAsString(request);
 
-                given(categoryService.create(any(CategoryRequest.class))).willReturn("가요");
+                given(categoryService.create(any(CategoryCreateRequest.class))).willReturn("가요");
 
                 //when & then
                 mvc.perform(post("/categories")
@@ -100,8 +102,8 @@ class CategoryControllerTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("invalidCategoryRequestProvider")
-            void invalidInput(CategoryRequest request) throws Exception {
+            @MethodSource("invalidCreateRequestProvider")
+            void invalidInput(CategoryCreateRequest request) throws Exception {
                 //given
                 String json = objectMapper.writeValueAsString(request);
 
@@ -120,10 +122,10 @@ class CategoryControllerTest {
             @Test
             void create_Failed_ParentNotFound() throws Exception {
                 //given
-                CategoryRequest request = new CategoryRequest("댄스", "록");
+                CategoryCreateRequest request = new CategoryCreateRequest("댄스", "록");
                 String json = objectMapper.writeValueAsString(request);
 
-                given(categoryService.create(any(CategoryRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + "록"));
+                given(categoryService.create(any(CategoryCreateRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + "록"));
 
                 //when & then
                 mvc.perform(post("/categories")
@@ -139,12 +141,12 @@ class CategoryControllerTest {
                 BDDMockito.then(categoryService).should().create(request);
             }
 
-            static Stream<Arguments> invalidCategoryRequestProvider() {
+            static Stream<Arguments> invalidCreateRequestProvider() {
                 return Stream.of(
-                        argumentSet("categoryName null", new CategoryRequest(null, null)),
-                        argumentSet("categoryName 빈 문자열", new CategoryRequest("", null)),
-                        argumentSet("categoryName 공백", new CategoryRequest(" ", null)),
-                        argumentSet("categoryName 20자 초과", new CategoryRequest("a".repeat(21), null))
+                        argumentSet("categoryName null", new CategoryCreateRequest(null, null)),
+                        argumentSet("categoryName 빈 문자열", new CategoryCreateRequest("", null)),
+                        argumentSet("categoryName 공백", new CategoryCreateRequest(" ", null)),
+                        argumentSet("categoryName 20자 초과", new CategoryCreateRequest("a".repeat(21), null))
                 );
             }
         }
@@ -395,6 +397,9 @@ class CategoryControllerTest {
 
             @Test
             void basic() throws Exception {
+                //given
+                Category.createCategory(null, "댄스");
+
                 //when & then
                 mvc.perform(delete("/categories/{categoryName}", "댄스"))
                         .andExpect(status().isOk())
@@ -475,14 +480,14 @@ class CategoryControllerTest {
                 album1.connectCategory(category);
                 album2.connectCategory(category);
 
-                ProductResponse productResponse = ProductResponse.productChangeDto(album1);
+                ProductResponse productResponse = ProductResponse.from(album1);
                 CategoryDisconnectResponse categoryDisconnectResponse = new CategoryDisconnectResponse("가요", List.of(productResponse));
 
                 given(categoryProductService.disconnect(anyString(), anyString())).willReturn(category);
                 given(categoryService.getCategoryDisconnectResponse(any(Category.class))).willReturn(categoryDisconnectResponse);
 
                 //when & then
-                mvc.perform(delete("/categories/{categoryName}/{productName}", "가요", "타임 캡슐"))
+                mvc.perform(delete("/categories/{categoryName}/{productNumber}", "가요", productNumber))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.name").value("가요"))
                         .andExpect(jsonPath("$.data.productResponseList[0].name").value("BANG BANG"))
@@ -491,7 +496,7 @@ class CategoryControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should().disconnect("가요", "타임 캡슐"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should().disconnect("가요", productNumber));
                     softly.check(() -> BDDMockito.then(categoryService).should().getCategoryDisconnectResponse(category));
                 });
             }
@@ -508,14 +513,14 @@ class CategoryControllerTest {
                 album1.connectCategory(category);
                 album2.connectCategory(category);
 
-                ProductResponse productResponse = ProductResponse.productChangeDto(album1);
+                ProductResponse productResponse = ProductResponse.from(album1);
                 CategoryDisconnectResponse categoryDisconnectResponse = new CategoryDisconnectResponse("가요", List.of(productResponse));
 
                 given(categoryProductService.disconnect(anyString(), anyString())).willReturn(category);
                 given(categoryService.getCategoryDisconnectResponse(any(Category.class))).willReturn(categoryDisconnectResponse);
 
                 //when & then 첫 번째 요청
-                mvc.perform(delete("/categories/{categoryName}/{productName}", "가요", "타임 캡슐"))
+                mvc.perform(delete("/categories/{categoryName}/{productNumber}", "가요", productNumber))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.name").value("가요"))
                         .andExpect(jsonPath("$.data.productResponseList[0].name").value("BANG BANG"))
@@ -524,12 +529,12 @@ class CategoryControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should().disconnect("가요", "타임 캡슐"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should().disconnect("가요", productNumber));
                     softly.check(() -> BDDMockito.then(categoryService).should().getCategoryDisconnectResponse(category));
                 });
 
                 //when & then 두 번째 요청
-                mvc.perform(delete("/categories/{categoryName}/{productName}", "가요", "타임 캡슐"))
+                mvc.perform(delete("/categories/{categoryName}/{productNumber}", "가요", productNumber))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.name").value("가요"))
                         .andExpect(jsonPath("$.data.productResponseList[0].name").value("BANG BANG"))
@@ -538,7 +543,7 @@ class CategoryControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should(times(2)).disconnect("가요", "타임 캡슐"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should(times(2)).disconnect("가요", productNumber));
                     softly.check(() -> BDDMockito.then(categoryService).should(times(2)).getCategoryDisconnectResponse(category));
                 });
             }
@@ -550,18 +555,18 @@ class CategoryControllerTest {
             @Test
             void disconnect_Failed_ProductNotFound() throws Exception {
                 //given
-                given(categoryProductService.disconnect(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다. name: " + "하얀 그리움"));
+                given(categoryProductService.disconnect(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다."));
 
                 //when & then
-                mvc.perform(delete("/categories/{categoryName}/{productName}", "가요", "하얀 그리움"))
+                mvc.perform(delete("/categories/{categoryName}/{productNumber}", "가요", "lllIIIll00OO"))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다. name: " + "하얀 그리움"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다."))
                         .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should().disconnect("가요", "하얀 그리움"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should().disconnect("가요", "lllIIIll00OO"));
                     softly.check(() -> BDDMockito.then(categoryService).should(never()).getCategoryDisconnectResponse(any()));
                 });
             }

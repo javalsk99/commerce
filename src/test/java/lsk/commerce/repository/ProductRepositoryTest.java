@@ -43,12 +43,16 @@ class ProductRepositoryTest {
     Album album;
     Book book;
     Movie movie;
+    String productNumber1;
+    String productNumber2;
 
     @BeforeEach
     void beforeEach() {
         album = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
         book = Book.builder().name("자바 ORM 표준 JPA 프로그래밍").price(15000).stockQuantity(7).author("김영한").isbn("9788960777330").build();
         movie = Movie.builder().name("범죄도시").price(15000).stockQuantity(5).actor("마동석").director("강윤성").build();
+        productNumber1 = album.getProductNumber();
+        productNumber2 = book.getProductNumber();
     }
 
     @Nested
@@ -344,7 +348,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                Optional<Product> findProduct = productRepository.findByName("BANG BANG");
+                Optional<Product> findProduct = productRepository.findByNumber(productNumber1);
 
                 System.out.println("================= WHEN END ===================");
 
@@ -365,7 +369,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                Optional<Product> findProduct = productRepository.findWithCategoryProduct("BANG BANG");
+                Optional<Product> findProduct = productRepository.findWithCategoryProduct(productNumber1);
 
                 System.out.println("================= WHEN END ===================");
 
@@ -386,7 +390,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                Optional<Product> findProduct = productRepository.findWithCategoryProductCategory("BANG BANG");
+                Optional<Product> findProduct = productRepository.findWithCategoryProductCategory(productNumber1);
 
                 System.out.println("================= WHEN END ===================");
 
@@ -407,7 +411,7 @@ class ProductRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                Optional<Product> findProduct = productRepository.findWithCategoryProduct("자바 ORM 표준 JPA 프로그래밍");
+                Optional<Product> findProduct = productRepository.findWithCategoryProduct(productNumber2);
 
                 System.out.println("================= WHEN END ===================");
 

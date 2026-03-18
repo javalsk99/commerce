@@ -4,7 +4,7 @@ import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
-import lsk.commerce.dto.request.MemberRequest;
+import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.repository.MemberRepository;
 import org.junit.jupiter.api.Nested;
@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.any;
@@ -53,7 +54,7 @@ class MemberServiceTest {
             @Test
             void user() {
                 //given
-                MemberRequest request = MemberRequest.builder()
+                MemberCreateRequest request = MemberCreateRequest.builder()
                         .loginId(loginId)
                         .password(rawPassword)
                         .build();
@@ -76,7 +77,7 @@ class MemberServiceTest {
             @Test
             void admin() {
                 //given
-                MemberRequest request = MemberRequest.builder()
+                MemberCreateRequest request = MemberCreateRequest.builder()
                         .loginId(loginId)
                         .password(rawPassword)
                         .build();
@@ -102,7 +103,7 @@ class MemberServiceTest {
             @Test
             void existsLoginId() {
                 //given
-                MemberRequest request = MemberRequest.builder()
+                MemberCreateRequest request = MemberCreateRequest.builder()
                         .loginId(loginId)
                         .password(rawPassword)
                         .build();
@@ -126,10 +127,10 @@ class MemberServiceTest {
             @Test
             void passwordBlank() {
                 //given
-                MemberRequest request1 = MemberRequest.builder()
+                MemberCreateRequest request1 = MemberCreateRequest.builder()
                         .password(null)
                         .build();
-                MemberRequest request2 = MemberRequest.builder()
+                MemberCreateRequest request2 = MemberCreateRequest.builder()
                         .password(" ")
                         .build();
 
@@ -153,7 +154,7 @@ class MemberServiceTest {
             @Test
             void rawPassword() {
                 //given
-                MemberRequest request = MemberRequest.builder()
+                MemberCreateRequest request = MemberCreateRequest.builder()
                         .password(rawPassword)
                         .build();
 
@@ -396,7 +397,7 @@ class MemberServiceTest {
                 });
 
                 //when 두 번째 호출
-                memberService.deleteMember(loginId);
+                thenNoException().isThrownBy(() -> memberService.deleteMember(loginId));
 
                 //then
                 thenSoftly(softly -> {

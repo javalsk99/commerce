@@ -2,27 +2,24 @@ package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Product;
-import lsk.commerce.domain.product.Album;
-import lsk.commerce.domain.product.Book;
-import lsk.commerce.domain.product.Movie;
-import lsk.commerce.dto.request.ProductRequest;
+import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.request.ProductUpdateRequest;
+import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
-import lsk.commerce.dto.response.ProductWithCategoryResponse;
 import lsk.commerce.dto.response.Result;
 import lsk.commerce.query.ProductQueryService;
 import lsk.commerce.query.dto.ProductSearchCond;
 import lsk.commerce.service.CategoryProductService;
-import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,39 +38,43 @@ public class ProductController {
 
     @PostMapping("/products")
     public ResponseEntity<Result<String>> create(
-            @RequestBody @Valid ProductRequest request,
-            @RequestParam @Size(min = 1) List<@NotBlank @Size(max = 20) String> categoryNames
+            @RequestBody @Valid ProductCreateRequest request,
+            @RequestParam @NotEmpty List<@NotBlank @Size(max = 20) String> categoryNames
     ) {
         productService.register(request, categoryNames);
         return ResponseEntity.ok(new Result<>(request.name(), 1));
     }
 
     @GetMapping("/products")
-    public List<ProductResponse> productList(@ModelAttribute ProductSearchCond cond) {
-        return productQueryService.searchProducts(cond);
+    public ResponseEntity<Result<List<ProductResponse>>> productList(@ModelAttribute ProductSearchCond cond) {
+        List<ProductResponse> productResponseList = productQueryService.searchProducts(cond);
+        return ResponseEntity.ok(new Result<>(productResponseList, productResponseList.size()));
     }
 
-    @GetMapping("/products/{productName}")
-    public ProductResponse findProduct(@PathVariable("productName") String productName) {
-        Product product = productService.findProductByName(productName);
-        return productService.getProductDto(product);
+    @GetMapping("/products/{productNumber}")
+    public ResponseEntity<Result<ProductResponse>> findProduct(@PathVariable("productNumber") String productNumber) {
+        Product product = productService.findProduct(productNumber);
+        ProductResponse productResponse = productService.getProductDto(product);
+        return ResponseEntity.ok(new Result<>(productResponse, 1));
     }
 
-    @PostMapping("/products/{productName}")
-    public ProductResponse updateProduct(@PathVariable("productName") String productName, ProductUpdateRequest request) {
-        Product product = productService.updateProduct(productName, request.getPrice(), request.getStockQuantity());
-        return productService.getProductDto(product);
+    @PatchMapping("/products/{productNumber}")
+    public ResponseEntity<Result<ProductResponse>> updateProduct(@PathVariable("productNumber") String productNumber, @RequestBody @Valid ProductUpdateRequest request) {
+        Product product = productService.updateProduct(productNumber, request);
+        ProductResponse productResponse = productService.getProductDto(product);
+        return ResponseEntity.ok(new Result<>(productResponse, 1));
     }
 
-    @DeleteMapping("/products/{productName}")
-    public String delete(@PathVariable("productName") String productName) {
-        productService.deleteProduct(productName);
-        return "delete";
+    @DeleteMapping("/products/{productNumber}")
+    public ResponseEntity<Result<String>> delete(@PathVariable("productNumber") String productNumber) {
+        productService.deleteProduct(productNumber);
+        return ResponseEntity.ok(new Result<>("delete", 1));
     }
 
-    @PostMapping("/products/{productName}/{categoryName}")
-    public ProductWithCategoryResponse connectCategory(@PathVariable("productName") String productName, @PathVariable("categoryName") String categoryName) {
-        Product product = categoryProductService.connect(productName, categoryName);
-        return productService.getProductWithCategoryDto(product);
+    @PatchMapping("/products/{productNumber}/{categoryName}")
+    public ResponseEntity<Result<ProductNameWithCategoryNameResponse>> connectCategory(@PathVariable("productNumber") String productNumber, @PathVariable("categoryName") String categoryName) {
+        Product product = categoryProductService.connect(productNumber, categoryName);
+        ProductNameWithCategoryNameResponse productWithCategoryResponse = productService.getProductWithCategoryDto(product);
+        return ResponseEntity.ok(new Result<>(productWithCategoryResponse, 1));
     }
 }

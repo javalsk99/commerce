@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lsk.commerce.util.NanoIdProvider;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -42,15 +43,12 @@ import static lsk.commerce.domain.OrderStatus.CREATED;
 @SQLDelete(sql = "UPDATE orders SET deleted = true WHERE order_id = ?")
 public class Order {
 
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    private static final char[] NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnoqprstuvwxyz".toCharArray();
-
     @Id @GeneratedValue(strategy = IDENTITY)
     @Column(name = "order_id")
     private Long id;
 
     @NotBlank @Size(min = 12, max = 12)
-    @Column(length = 12)
+    @Column(unique = true, length = 12)
     private String orderNumber;
 
     @NotNull
@@ -118,7 +116,7 @@ public class Order {
         order.totalAmount = calculatedPrice;
         order.orderDate = LocalDateTime.now();
         order.orderStatus = OrderStatus.CREATED;
-        order.orderNumber = NanoIdUtils.randomNanoId(SECURE_RANDOM, NUMBER_ALPHABET, 12);
+        order.orderNumber = NanoIdProvider.createNanoId();
 
         return order;
     }

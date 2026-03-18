@@ -12,17 +12,16 @@ import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.OrderProductJdbcRepository;
 import lsk.commerce.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
 import org.mockito.Captor;
@@ -36,13 +35,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyList;
 import static org.mockito.BDDMockito.anyLong;
@@ -85,6 +82,9 @@ class OrderServiceTest {
     Album album;
     Book book;
     Movie movie;
+    String productNumber1;
+    String productNumber2;
+    String productNumber3;
     String wrongOrderNumber = "lllIIllIO00O";
 
     @BeforeEach
@@ -119,12 +119,20 @@ class OrderServiceTest {
                 .director("강윤성")
                 .build();
 
+        productNumber1 = album.getProductNumber();
+        productNumber2 = book.getProductNumber();
+        productNumber3 = movie.getProductNumber();
     }
 
     @Nested
-    class create {
+    class Create {
 
-        Map<String, Integer> productMap = Map.of("BANG BANG", 3, "자바 ORM 표준 JPA 프로그래밍", 2, "범죄도시", 4);
+        Map<String, Integer> productMap;
+
+        @BeforeEach
+        void beforeEach() {
+            productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
+        }
 
         @Nested
         class SuccessCase {
@@ -132,13 +140,15 @@ class OrderServiceTest {
             @Test
             void basic() {
                 //given
+                OrderCreateRequest request = new OrderCreateRequest("id_A", productMap);
+
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 InOrder inOrder = inOrder(em, orderRepository, orderProductJdbcRepository);
 
                 //when
-                orderService.order("id_A", productMap);
+                orderService.order(request);
 
                 //then
                 thenSoftly(softly -> {
@@ -183,31 +193,14 @@ class OrderServiceTest {
         class FailureCase {
 
             @Test
-            void productMapIsEmpty() {
-                //given
-                Map<String, Integer> emptyProductMap = new HashMap<>();
-
-                //when & then
-                thenThrownBy(() -> orderService.order("id_A", emptyProductMap))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주문할 상품이 없습니다");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(memberService).should(never()).findMemberByLoginId(any()));
-                    softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
-                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).save(any()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).saveAll(any()));
-                });
-            }
-
-            @Test
             void memberNotFound() {
                 //given
+                OrderCreateRequest request = new OrderCreateRequest("id_B", productMap);
+
                 given(memberService.findMemberByLoginId(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 아이디입니다"));
 
                 //when & then
-                thenThrownBy(() -> orderService.order("id_B", productMap))
+                thenThrownBy(() -> orderService.order(request))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
@@ -220,20 +213,44 @@ class OrderServiceTest {
                 });
             }
 
-            @ParameterizedTest
-            @MethodSource("lsk.commerce.service.OrderServiceTest#keyValueProvider")
-            void productMapContainsNullEntry(String key, Integer value, String message) {
+            @Test
+            void productMapContainsNullKey() {
                 //given
+                Map<String, Integer> hasNullProductMap = new HashMap<>();
+                hasNullProductMap.put(null, 3);
+                OrderCreateRequest request = new OrderCreateRequest("id_A", hasNullProductMap);
+
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
+                //when & then
+                thenThrownBy(() -> orderService.order(request))
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 상품입니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should().findMemberByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).save(any()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).saveAll(any()));
+                });
+            }
+
+            @Test
+            void productMapContainsNullValue() {
+                //given
                 Map<String, Integer> hasNullProductMap = new HashMap<>();
-                hasNullProductMap.put(key, value);
+                hasNullProductMap.put(productNumber1, null);
+                OrderCreateRequest request = new OrderCreateRequest("id_A", hasNullProductMap);
+
+                given(memberService.findMemberByLoginId(anyString())).willReturn(member);
+                given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.order("id_A", hasNullProductMap))
+                thenThrownBy(() -> orderService.order(request))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage(message);
+                        .hasMessage("수량이 없습니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -247,15 +264,16 @@ class OrderServiceTest {
             @Test
             void productNotFound() {
                 //given
+                Map<String, Integer> notExistsNameProductMap = Map.of("lllIIIll00OO", 3);
+                OrderCreateRequest request = new OrderCreateRequest("id_A", notExistsNameProductMap);
+
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
-                Map<String, Integer> notExistsNameProductMap = Map.of("타임 캡슐", 3);
-
                 //when & then
-                thenThrownBy(() -> orderService.order("id_A", notExistsNameProductMap))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다. name: " + "타임 캡슐");
+                thenThrownBy(() -> orderService.order(request))
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 상품입니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -269,12 +287,14 @@ class OrderServiceTest {
             @Test
             void failedSaveAll() {
                 //given
+                OrderCreateRequest request = new OrderCreateRequest("id_A", productMap);
+
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
                 willThrow(new RuntimeException("JDBC Batch INSERT Failed")).given(orderProductJdbcRepository).saveAll(anyList());
 
                 //when & then
-                thenThrownBy(() -> orderService.order("id_A", productMap))
+                thenThrownBy(() -> orderService.order(request))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC Batch INSERT Failed");
 
@@ -358,6 +378,8 @@ class OrderServiceTest {
             @Test
             void basic() {
                 //given
+                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -365,7 +387,7 @@ class OrderServiceTest {
                 InOrder inOrder = inOrder(em, orderRepository, orderProductJdbcRepository);
 
                 //when
-                orderService.updateOrder(order.getOrderNumber(), Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5));
+                orderService.updateOrder(order.getOrderNumber(), productMap);
 
                 //then
                 thenSoftly(softly -> {
@@ -403,12 +425,14 @@ class OrderServiceTest {
             @Test
             void idempotency() {
                 //given
+                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when 첫 번째 호출
-                orderService.updateOrder(order.getOrderNumber(), Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5));
+                orderService.updateOrder(order.getOrderNumber(), productMap);
 
                 //then
                 thenSoftly(softly -> {
@@ -435,15 +459,15 @@ class OrderServiceTest {
                 });
 
                 //when & then 두 번째 호출
-                thenNoException().isThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5)));
+                thenNoException().isThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap));
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findByOrderNumber(any()));
-                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().saveAll(any()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(times(2)).deleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findByOrderNumber(any()));
+                    softly.check(() -> BDDMockito.then(productService).should(times(2)).findProducts());
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(times(2)).saveAll(any()));
                 });
 
                 thenSoftly(softly -> {
@@ -480,12 +504,12 @@ class OrderServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                Map<String, Integer> newProductMap = Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5);
+                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(wrongOrderNumber, newProductMap))
+                thenThrownBy(() -> orderService.updateOrder(wrongOrderNumber, productMap))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
@@ -503,13 +527,12 @@ class OrderServiceTest {
             void orderIdIsNull() {
                 //given
                 Order order = createNotSavedOrder();
-
-                Map<String, Integer> newProductMap = Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5);
+                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
+                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("식별자가 없는 잘못된 주문입니다");
 
@@ -526,13 +549,13 @@ class OrderServiceTest {
             @Test
             void failedDeleteOrderProducts() {
                 //given
-                Map<String, Integer> newProductMap = Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5);
+                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 willThrow(new RuntimeException("JDBC DELETE Failed")).given(orderProductJdbcRepository).deleteOrderProductsByOrderId(anyLong());
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
+                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC DELETE Failed");
 
@@ -546,12 +569,36 @@ class OrderServiceTest {
                 });
             }
 
-            @ParameterizedTest
-            @MethodSource("lsk.commerce.service.OrderServiceTest#keyValueProvider")
-            void productMapContainsNullEntry(String key, Integer value, String message) {
+            @Test
+            void productMapContainsNullKey() {
                 //given
                 Map<String, Integer> newProductMap = new HashMap<>();
-                newProductMap.put(key, value);
+                newProductMap.put(null, 3);
+
+                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
+                given(productService.findProducts()).willReturn(List.of(album, book, movie));
+
+                //when & then
+                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 상품입니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(anyLong()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findByOrderNumber(anyString()));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).saveAll(any()));
+                });
+            }
+
+            @Test
+            void productMapContainsNullValue() {
+                //given
+                Map<String, Integer> newProductMap = new HashMap<>();
+                newProductMap.put(productNumber1, null);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -560,7 +607,7 @@ class OrderServiceTest {
                 //when & then
                 thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage(message);
+                        .hasMessage("수량이 없습니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -575,7 +622,7 @@ class OrderServiceTest {
             @Test
             void productNotFound() {
                 //given
-                Map<String, Integer> newProductMap = Map.of("타임 캡슐", 3);
+                Map<String, Integer> newProductMap = Map.of("lllIIIll00OO", 3);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -583,8 +630,8 @@ class OrderServiceTest {
 
                 //when & then
                 thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다. name: " + "타임 캡슐");
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 상품입니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -599,7 +646,7 @@ class OrderServiceTest {
             @Test
             void failedSaveAll() {
                 //given
-                Map<String, Integer> newProductMap = Map.of("BANG BANG", 2, "자바 ORM 표준 JPA 프로그래밍", 5);
+                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -607,7 +654,7 @@ class OrderServiceTest {
                 willThrow(new RuntimeException("JDBC Batch INSERT Failed")).given(orderProductJdbcRepository).saveAll(anyList());
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
+                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC Batch INSERT Failed");
 
@@ -953,13 +1000,5 @@ class OrderServiceTest {
                 });
             }
         }
-    }
-
-    static Stream<Arguments> keyValueProvider() {
-        return Stream.of(
-                argumentSet("키 null", null, 3, "존재하지 않는 상품입니다. name: " + "null"),
-                argumentSet("값 null", "BANG BANG", null, "수량이 없습니다"),
-                argumentSet("키, 값 모두 null", null, null, "존재하지 않는 상품입니다. name: " + "null")
-        );
     }
 }

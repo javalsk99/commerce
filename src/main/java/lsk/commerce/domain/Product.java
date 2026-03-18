@@ -18,6 +18,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.util.InitialExtractor;
+import lsk.commerce.util.NanoIdProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,10 @@ public abstract class Product {
     @Column(name = "product_id")
     private Long id;
 
+    @NotBlank @Size(min = 12, max = 12)
+    @Column(unique = true, length = 12)
+    private String productNumber;
+
     //양방향 매핑으로 변경
     @OneToMany(mappedBy = "product", cascade = ALL)
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
@@ -63,6 +68,7 @@ public abstract class Product {
 
     protected Product(String name, Integer price, Integer stockQuantity) {
         this.name = name;
+        this.productNumber = NanoIdProvider.createNanoId();
         this.price = price;
         this.stockQuantity = stockQuantity;
     }
@@ -109,10 +115,10 @@ public abstract class Product {
             throw new IllegalArgumentException("수정할 가격 또는 수량이 있어야 합니다");
         }
 
-        if (newPrice != null) {
+        if (newPrice != null && !newPrice.equals(this.price)) {
             this.price = newPrice;
         }
-        if (newStockQuantity != null) {
+        if (newStockQuantity != null && !newStockQuantity.equals(this.stockQuantity)) {
             this.stockQuantity = newStockQuantity;
         }
     }

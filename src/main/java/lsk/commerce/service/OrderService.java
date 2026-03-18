@@ -7,8 +7,10 @@ import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.OrderProductJdbcRepository;
 import lsk.commerce.repository.OrderRepository;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 
 @Service
 @Transactional
@@ -32,13 +33,9 @@ public class OrderService {
 
     private final OrderProductJdbcRepository orderProductJdbcRepository;
 
-    public String order(String memberLoginId, Map<String, Integer> productNamesCount) {
-        if (productNamesCount == null || productNamesCount.isEmpty()) {
-            throw new IllegalArgumentException("주문할 상품이 없습니다");
-        }
-
+    public String order(OrderCreateRequest request) {
         //엔티티 조회
-        Member member = memberService.findMemberByLoginId(memberLoginId);
+        Member member = memberService.findMemberByLoginId(request.memberLoginId());
         List<Product> products = productService.findProducts();
 
         //배송 정보 생성
@@ -46,17 +43,8 @@ public class OrderService {
 
         List<OrderProduct> orderProducts = new ArrayList<>();
 
-        for (Map.Entry<String, Integer> productNameCountEntry : productNamesCount.entrySet()) {
-            String productName = productNameCountEntry.getKey();
-            Integer count = productNameCountEntry.getValue();
-
-            //주문 상품 생성
-            Product product = products.stream()
-                    .filter(p -> p.getName().equals(productName))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + productName));
-            orderProducts.add(OrderProduct.createOrderProduct(product, count));
-        }
+        //주문 상품 생성
+        createOrderProducts(request.productMap(), products, orderProducts);
 
         //주문 생성
         Order order = Order.createOrder(member, delivery, orderProducts);
@@ -104,8 +92,8 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
     }
 
-    public void updateOrder(String orderNumber, Map<String, Integer> newProductNamesCount) {
-        if (newProductNamesCount == null || newProductNamesCount.isEmpty()) {
+    public void updateOrder(String orderNumber, Map<String, Integer> productMap) {
+        if (productMap == null || productMap.isEmpty()) {
             throw new IllegalArgumentException("주문을 수정할 상품이 없습니다");
         }
 
@@ -116,7 +104,7 @@ public class OrderService {
         }
 
         Map<String, Integer> currentProductNamesCount = order.getOrderProductsAsMap();
-        if (currentProductNamesCount.equals(newProductNamesCount)) {
+        if (currentProductNamesCount.equals(productMap)) {
             return;
         }
 
@@ -135,16 +123,8 @@ public class OrderService {
 
         List<OrderProduct> newOrderProducts = new ArrayList<>();
 
-        for (Map.Entry<String, Integer> newProductNameCountEntry : newProductNamesCount.entrySet()) {
-            String newProductName = newProductNameCountEntry.getKey();
-            Integer newCount = newProductNameCountEntry.getValue();
-
-            Product newProduct = currentProducts.stream()
-                    .filter(p -> p.getName().equals(newProductName))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. name: " + newProductName));
-            newOrderProducts.add(OrderProduct.createOrderProduct(newProduct, newCount));
-        }
+        //주문 상품 생성
+        createOrderProducts(productMap, currentProducts, newOrderProducts);
 
         //새로운 주문 상품으로 변경
         currentOrder.updateOrder(newOrderProducts);
@@ -183,6 +163,19 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderResponse(Order order) {
         return OrderResponse.orderChangeResponse(order);
+    }
+
+    private static void createOrderProducts(Map<String, Integer> productMap, List<Product> products, List<OrderProduct> orderProducts) {
+        for (Map.Entry<String, Integer> productMapEntry : productMap.entrySet()) {
+            String productNumber = productMapEntry.getKey();
+            Integer count = productMapEntry.getValue();
+
+            Product product = products.stream()
+                    .filter(p -> p.getProductNumber().equals(productNumber))
+                    .findFirst()
+                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
+            orderProducts.add(OrderProduct.createOrderProduct(product, count));
+        }
     }
 
     private void registerOrderProducts(List<OrderProduct> orderProducts) {

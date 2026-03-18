@@ -35,7 +35,7 @@ public class Payment {
     private Long id;
 
     @NotBlank @Size(min = 36, max = 36)
-    @Column(name = "payment_number", length = 36)
+    @Column(name = "payment_number",unique = true, length = 36)
     private String paymentId;
 
     @OneToOne(mappedBy = "payment", fetch = LAZY)

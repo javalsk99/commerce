@@ -136,7 +136,7 @@ class CategoryTest {
                 });
 
                 //when 두 번째 호출
-                category.changeParentCategory(childCategory);
+                thenNoException().isThrownBy(() -> category.changeParentCategory(childCategory));
 
                 //then
                 thenSoftly(softly -> {

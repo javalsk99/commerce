@@ -3,7 +3,7 @@ package lsk.commerce.service;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.dto.request.CategoryChangeParentRequest;
-import lsk.commerce.dto.request.CategoryRequest;
+import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.exception.DataNotFoundException;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
@@ -80,7 +81,7 @@ class CategoryServiceTest {
             @Test
             void parentCategory() {
                 //given
-                CategoryRequest request = new CategoryRequest("컴퓨터/IT", null);
+                CategoryCreateRequest request = new CategoryCreateRequest("컴퓨터/IT", null);
 
                 given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(Collections.emptyList());
 
@@ -98,7 +99,7 @@ class CategoryServiceTest {
             @Test
             void childCategory() {
                 //given
-                CategoryRequest request = new CategoryRequest("프로그래밍 언어", "컴퓨터/IT");
+                CategoryCreateRequest request = new CategoryCreateRequest("프로그래밍 언어", "컴퓨터/IT");
 
                 given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(categories1);
 
@@ -120,7 +121,7 @@ class CategoryServiceTest {
             @Test
             void existsName() {
                 //given
-                CategoryRequest request = new CategoryRequest("컴퓨터/IT", null);
+                CategoryCreateRequest request = new CategoryCreateRequest("컴퓨터/IT", null);
 
                 given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(categories1);
 
@@ -139,7 +140,7 @@ class CategoryServiceTest {
             @Test
             void childCategory_ParentNotFound() {
                 //given
-                CategoryRequest request = new CategoryRequest("프로그래밍 언어", "컴퓨터/IT");
+                CategoryCreateRequest request = new CategoryCreateRequest("프로그래밍 언어", "컴퓨터/IT");
 
                 given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(Collections.emptyList());
 
@@ -394,7 +395,7 @@ class CategoryServiceTest {
                 });
 
                 //when & then 두 번째 호출
-                categoryService.deleteCategory("Python");
+                thenNoException().isThrownBy(() -> categoryService.deleteCategory("Python"));
 
                 //then
                 thenSoftly(softly -> {

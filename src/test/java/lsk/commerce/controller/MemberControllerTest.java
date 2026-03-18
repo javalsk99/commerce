@@ -6,7 +6,7 @@ import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
-import lsk.commerce.dto.request.MemberRequest;
+import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.MemberQueryService;
@@ -78,10 +78,10 @@ class MemberControllerTest {
             @Test
             void basic() throws Exception {
                 //given
-                MemberRequest request = createMemberRequest();
+                MemberCreateRequest request = createMemberCreateRequest();
                 String json = objectMapper.writeValueAsString(request);
 
-                given(memberService.join(any(MemberRequest.class))).willReturn(request.loginId());
+                given(memberService.join(any(MemberCreateRequest.class))).willReturn(request.loginId());
 
                 //when & then
                 mvc.perform(post("/members")
@@ -102,8 +102,8 @@ class MemberControllerTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("invalidMemberRequestProvider")
-            void invalidInput(MemberRequest request) throws Exception {
+            @MethodSource("invalidCreateRequestProvider")
+            void invalidInput(MemberCreateRequest request) throws Exception {
                 //given
                 String json = objectMapper.writeValueAsString(request);
 
@@ -122,10 +122,10 @@ class MemberControllerTest {
             @Test
             void join_Failed_existsLoginId() throws Exception {
                 //given
-                MemberRequest request = createMemberRequest();
+                MemberCreateRequest request = createMemberCreateRequest();
                 String json = objectMapper.writeValueAsString(request);
 
-                given(memberService.join(any(MemberRequest.class))).willThrow(new IllegalArgumentException("이미 사용 중인 아이디입니다"));
+                given(memberService.join(any(MemberCreateRequest.class))).willThrow(new IllegalArgumentException("이미 사용 중인 아이디입니다"));
 
                 //when & then
                 mvc.perform(post("/members")
@@ -141,24 +141,24 @@ class MemberControllerTest {
                 BDDMockito.then(memberService).should().join(request);
             }
 
-            static Stream<Arguments> invalidMemberRequestProvider() {
+            static Stream<Arguments> invalidCreateRequestProvider() {
                 return Stream.of(
-                        argumentSet("name null", MemberRequest.builder().loginId("id_A").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("loginId null", MemberRequest.builder().name("User").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("password null", MemberRequest.builder().name("User").loginId("id_A").city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("city null", MemberRequest.builder().name("User").loginId("id_A").password("00000000").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("street null", MemberRequest.builder().name("User").loginId("id_A").password("00000000").city("Seoul").zipcode("01234").build()),
-                        argumentSet("zipcode null", MemberRequest.builder().name("User").loginId("id_A").password("00000000").city("Seoul").street("Gangnam").build()),
-                        argumentSet("password 빈 문자열", MemberRequest.builder().name("User").loginId("id_A").password("").city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("password 공백", MemberRequest.builder().loginId("id_A").password(" ".repeat(8)).city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("password 8자 미만", MemberRequest.builder().loginId("id_A").password("0".repeat(7)).city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("password 20자 초과", MemberRequest.builder().loginId("id_A").password("0".repeat(21)).city("Seoul").street("Gangnam").zipcode("01234").build())
+                        argumentSet("name null", MemberCreateRequest.builder().loginId("id_A").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build()),
+                        argumentSet("loginId null", MemberCreateRequest.builder().name("User").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build()),
+                        argumentSet("password null", MemberCreateRequest.builder().name("User").loginId("id_A").city("Seoul").street("Gangnam").zipcode("01234").build()),
+                        argumentSet("city null", MemberCreateRequest.builder().name("User").loginId("id_A").password("00000000").street("Gangnam").zipcode("01234").build()),
+                        argumentSet("street null", MemberCreateRequest.builder().name("User").loginId("id_A").password("00000000").city("Seoul").zipcode("01234").build()),
+                        argumentSet("zipcode null", MemberCreateRequest.builder().name("User").loginId("id_A").password("00000000").city("Seoul").street("Gangnam").build()),
+                        argumentSet("password 빈 문자열", MemberCreateRequest.builder().name("User").loginId("id_A").password("").city("Seoul").street("Gangnam").zipcode("01234").build()),
+                        argumentSet("password 공백", MemberCreateRequest.builder().loginId("id_A").password(" ".repeat(8)).city("Seoul").street("Gangnam").zipcode("01234").build()),
+                        argumentSet("password 8자 미만", MemberCreateRequest.builder().loginId("id_A").password("0".repeat(7)).city("Seoul").street("Gangnam").zipcode("01234").build()),
+                        argumentSet("password 20자 초과", MemberCreateRequest.builder().loginId("id_A").password("0".repeat(21)).city("Seoul").street("Gangnam").zipcode("01234").build())
                 );
             }
         }
 
-        private static MemberRequest createMemberRequest() {
-            return MemberRequest.builder()
+        private static MemberCreateRequest createMemberCreateRequest() {
+            return MemberCreateRequest.builder()
                     .name("User")
                     .loginId("id_A")
                     .password("00000000")
@@ -539,6 +539,9 @@ class MemberControllerTest {
 
             @Test
             void basic() throws Exception {
+                //given
+                createMember();
+
                 //when & then
                 mvc.perform(delete("/members/{memberLoginId}", "id_A"))
                         .andExpect(status().isOk())

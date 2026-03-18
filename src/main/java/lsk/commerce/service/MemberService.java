@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
-import lsk.commerce.dto.request.MemberRequest;
+import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +22,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public String join(MemberRequest request) {
+    public String join(MemberCreateRequest request) {
         Member member = getMember(request);
         validateMember(member);
         memberRepository.save(member);
@@ -30,7 +30,7 @@ public class MemberService {
     }
 
     @Transactional
-    public String adminJoin(MemberRequest request) {
+    public String adminJoin(MemberCreateRequest request) {
         Member member = getMember(request);
         validateMember(member);
         member.setAdmin();
@@ -72,7 +72,7 @@ public class MemberService {
         return MemberResponse.from(member);
     }
 
-    private Member getMember(MemberRequest request) {
+    private Member getMember(MemberCreateRequest request) {
         if (request.password() == null || request.password().isBlank()) {
             throw new IllegalArgumentException("비밀번호가 비어있습니다");
         }
