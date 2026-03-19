@@ -63,7 +63,7 @@ public class OrderRequest {
     public static OrderRequest orderChangeRequest(Order order) {
         List<OrderProductDto> orderProductForms = new ArrayList<>();
         for (OrderProduct orderProduct : order.getOrderProducts()) {
-            OrderProductDto orderProductForm = OrderProductDto.orderProductChangeForm(orderProduct);
+            OrderProductDto orderProductForm = OrderProductDto.from(orderProduct);
             orderProductForms.add(orderProductForm);
         }
 

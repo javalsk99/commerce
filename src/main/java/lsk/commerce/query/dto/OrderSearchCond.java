@@ -1,38 +1,24 @@
 package lsk.commerce.query.dto;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.PaymentStatus;
 
 import java.time.LocalDate;
 
-@Getter @Setter
-public class OrderSearchCond {
+@Builder
+public record OrderSearchCond(
+        String memberLoginId,
 
-    private String memberLoginId;
+        String productName,
 
-    private String productName;
+        OrderStatus orderStatus,
+        LocalDate startDate,
+        LocalDate endDate,
 
-    private OrderStatus orderStatus;
-    private LocalDate startDate;
-    private LocalDate endDate;
+        PaymentStatus paymentStatus,
 
-    private PaymentStatus paymentStatus;
-
-    private DeliveryStatus deliveryStatus;
-
-    @Builder
-    public OrderSearchCond(String memberLoginId, String productName, OrderStatus orderStatus, LocalDate startDate,
-                           LocalDate endDate, PaymentStatus paymentStatus, DeliveryStatus deliveryStatus) {
-        this.memberLoginId = memberLoginId;
-        this.productName = productName;
-        this.orderStatus = orderStatus;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.paymentStatus = paymentStatus;
-        this.deliveryStatus = deliveryStatus;
-    }
+        DeliveryStatus deliveryStatus
+) {
 }

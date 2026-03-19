@@ -1,6 +1,5 @@
 package lsk.commerce.domain;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -21,7 +20,6 @@ import lsk.commerce.util.NanoIdProvider;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,19 +133,17 @@ public class Order {
     public Map<String, Integer> getOrderProductsAsMap() {
         return this.orderProducts.stream()
                 .collect(Collectors.toMap(
-                        op -> op.getProductName(),
-                        op -> op.getCount()));
+                        OrderProduct::getProductNumber,
+                        OrderProduct::getCount));
     }
 
-    public Order updateOrder(List<OrderProduct> newOrderProducts) {
+    public void updateOrder(List<OrderProduct> newOrderProducts) {
         int calculatedPrice = 0;
         for (OrderProduct newOrderProduct : newOrderProducts) {
             this.addOrderProduct(newOrderProduct);
             calculatedPrice += newOrderProduct.getOrderPrice();
         }
         this.totalAmount = calculatedPrice;
-
-        return this;
     }
 
     public void cancel() {

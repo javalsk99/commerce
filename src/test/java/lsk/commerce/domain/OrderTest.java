@@ -248,13 +248,17 @@ class OrderTest {
 
             @Test
             void basic() {
+                //given
+                String productNumber1 = album.getProductNumber();
+                String productNumber2 = book.getProductNumber();
+
                 //when
                 Map<String, Integer> orderProductsAsMap = order.getOrderProductsAsMap();
 
                 //then
                 then(orderProductsAsMap)
                         .hasSize(2)
-                        .containsOnly(entry("BANG BANG", 5), entry("자바 ORM 표준 JPA 프로그래밍", 3));
+                        .containsOnly(entry(productNumber1, 5), entry(productNumber2, 3));
             }
         }
     }

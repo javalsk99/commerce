@@ -111,10 +111,6 @@ public abstract class Product {
 
     //가격, 수량만 변경
     public void updateProduct(Integer newPrice, Integer newStockQuantity) {
-        if (newPrice == null && newStockQuantity == null) {
-            throw new IllegalArgumentException("수정할 가격 또는 수량이 있어야 합니다");
-        }
-
         if (newPrice != null && !newPrice.equals(this.price)) {
             this.price = newPrice;
         }

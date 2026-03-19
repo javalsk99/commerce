@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
@@ -38,8 +39,8 @@ public class OrderQueryRepository {
 
     protected List<String> extractOrderNumbers(List<OrderQueryDto> result) {
         return result.stream()
-                .map(o -> o.getOrderNumber())
-                .filter(orderNumber -> orderNumber != null)
+                .map(OrderQueryDto::orderNumber)
+                .filter(Objects::nonNull)
                 .collect(toList());
     }
 
@@ -85,13 +86,13 @@ public class OrderQueryRepository {
                 .leftJoin(order.payment, payment)
                 .join(order.delivery, delivery)
                 .where(
-                        eqMemberLoginId(cond.getMemberLoginId()),
-                        containsProductName(cond.getProductName()),
-                        eqOrderStatus(cond.getOrderStatus()),
-                        startDate(cond.getStartDate()),
-                        endDate(cond.getEndDate()),
-                        eqPaymentStatus(cond.getPaymentStatus()),
-                        eqDeliveryStatus(cond.getDeliveryStatus())
+                        eqMemberLoginId(cond.memberLoginId()),
+                        containsProductName(cond.productName()),
+                        eqOrderStatus(cond.orderStatus()),
+                        startDate(cond.startDate()),
+                        endDate(cond.endDate()),
+                        eqPaymentStatus(cond.paymentStatus()),
+                        eqDeliveryStatus(cond.deliveryStatus())
                 )
                 .fetch();
     }

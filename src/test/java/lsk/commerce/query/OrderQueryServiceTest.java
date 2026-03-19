@@ -11,6 +11,7 @@ import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
 import org.hibernate.Hibernate;
@@ -78,12 +79,12 @@ class OrderQueryServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(orderQueryDto).isNotNull();
-                    softly.then(Hibernate.isInitialized(orderQueryDto.getOrderProducts())).isTrue();
-                    softly.then(orderQueryDto.getOrderProducts())
+                    softly.then(Hibernate.isInitialized(orderQueryDto.orderProductQueryDtoList())).isTrue();
+                    softly.then(orderQueryDto.orderProductQueryDtoList())
                             .hasSize(2)
                             .extracting("name", "price", "count", "orderPrice")
                             .containsExactlyInAnyOrder(tuple("BANG BANG", 15000, 3, 45000), tuple("404", 15000, 4, 60000));
-                    softly.then(orderQueryDto.getTotalAmount()).isEqualTo(105000);
+                    softly.then(orderQueryDto.totalAmount()).isEqualTo(105000);
                 });
             }
         }
@@ -97,7 +98,7 @@ class OrderQueryServiceTest {
 
                 //when & then
                 thenThrownBy(() -> orderQueryService.findOrder("ll1lI1IlOO00"))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 System.out.println("================= WHEN END ===================");
@@ -125,10 +126,10 @@ class OrderQueryServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(Hibernate.isInitialized(orderQueryDtoList.getFirst().getOrderProducts())).isTrue();
+                    softly.then(Hibernate.isInitialized(orderQueryDtoList.getFirst().orderProductQueryDtoList())).isTrue();
                     softly.then(orderQueryDtoList)
                             .hasSize(8)
-                            .flatExtracting("orderProducts")
+                            .flatExtracting("orderProductQueryDtoList")
                             .hasSize(16)
                             .extracting("name")
                             .containsExactlyInAnyOrder(
@@ -158,7 +159,7 @@ class OrderQueryServiceTest {
                 //then
                 then(orderQueryDtoList)
                         .hasSize(2)
-                        .flatExtracting("orderProducts")
+                        .flatExtracting("orderProductQueryDtoList")
                         .hasSize(5)
                         .extracting("name")
                         .containsExactlyInAnyOrder("너의 모든 순간", "천상연", "면접을 위한 CS 전공지식 노트", "Do it! 점프 투 파이썬", "범죄도시");

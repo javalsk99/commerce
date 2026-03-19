@@ -297,29 +297,6 @@ class ProductTest {
                         .contains(12000, 10);
             }
         }
-
-        @Nested
-        class FailureCase {
-
-            @Test
-            void priceQuantityNull() {
-                //given
-                Album album = Album.builder()
-                        .price(15000)
-                        .stockQuantity(10)
-                        .build();
-
-                //when & then
-                thenThrownBy(() -> album.updateProduct(null, null))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("수정할 가격 또는 수량이 있어야 합니다");
-
-                //then
-                then(album)
-                        .extracting("price", "stockQuantity")
-                        .contains(15000, 10);
-            }
-        }
     }
 
     abstract class CategorySetup {

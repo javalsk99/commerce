@@ -35,7 +35,7 @@
 
 ## MemberQueryService
 - findMember  
-  Member가 없을 때 404 에러를 반환하기 위해 커스텀 예외를 만들어 404 에러를 반환했다.
+  Member가 없을 때, 404 에러를 반환하기 위해 커스텀 예외를 만들어 404 에러를 반환했다.
 
 
 ## MemberService

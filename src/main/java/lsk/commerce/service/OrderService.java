@@ -7,10 +7,12 @@ import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.Product;
+import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.InvalidDataException;
 import lsk.commerce.repository.OrderProductJdbcRepository;
 import lsk.commerce.repository.OrderRepository;
 import org.springframework.stereotype.Service;
@@ -41,10 +43,8 @@ public class OrderService {
         //배송 정보 생성
         Delivery delivery = new Delivery(member);
 
-        List<OrderProduct> orderProducts = new ArrayList<>();
-
         //주문 상품 생성
-        createOrderProducts(request.productMap(), products, orderProducts);
+        List<OrderProduct> orderProducts = createOrderProducts(request.productMap(), products);
 
         //주문 생성
         Order order = Order.createOrder(member, delivery, orderProducts);
@@ -65,46 +65,42 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Order findOrder(String orderNumber) {
         return orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithDelivery(String orderNumber) {
         return orderRepository.findWithDelivery(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithDeliveryPayment(String orderNumber) {
         return orderRepository.findWithDeliveryPayment(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithAllExceptMember(String orderNumber) {
         return orderRepository.findWithAllExceptMember(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithAll(String orderNumber) {
         return orderRepository.findWithAll(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
     }
 
-    public void updateOrder(String orderNumber, Map<String, Integer> productMap) {
-        if (productMap == null || productMap.isEmpty()) {
-            throw new IllegalArgumentException("주문을 수정할 상품이 없습니다");
-        }
-
+    public void changeOrder(String orderNumber, OrderChangeRequest request) {
         Order order = findOrderWithAllExceptMember(orderNumber);
 
         if (order.getId() == null) {
-            throw new IllegalArgumentException("식별자가 없는 잘못된 주문입니다");
+            throw new InvalidDataException("식별자가 없는 잘못된 주문입니다");
         }
 
-        Map<String, Integer> currentProductNamesCount = order.getOrderProductsAsMap();
-        if (currentProductNamesCount.equals(productMap)) {
+        Map<String, Integer> currentProductMap = order.getOrderProductsAsMap();
+        if (currentProductMap.equals(request.productMap())) {
             return;
         }
 
@@ -121,10 +117,8 @@ public class OrderService {
         Order currentOrder = findOrder(orderNumber);
         List<Product> currentProducts = productService.findProducts();
 
-        List<OrderProduct> newOrderProducts = new ArrayList<>();
-
         //주문 상품 생성
-        createOrderProducts(productMap, currentProducts, newOrderProducts);
+        List<OrderProduct> newOrderProducts = createOrderProducts(request.productMap(), currentProducts);
 
         //새로운 주문 상품으로 변경
         currentOrder.updateOrder(newOrderProducts);
@@ -162,10 +156,12 @@ public class OrderService {
     //주문 리턴용
     @Transactional(readOnly = true)
     public OrderResponse getOrderResponse(Order order) {
-        return OrderResponse.orderChangeResponse(order);
+        return OrderResponse.from(order);
     }
 
-    private static void createOrderProducts(Map<String, Integer> productMap, List<Product> products, List<OrderProduct> orderProducts) {
+    private static List<OrderProduct> createOrderProducts(Map<String, Integer> productMap, List<Product> products) {
+        List<OrderProduct> orderProducts = new ArrayList<>();
+
         for (Map.Entry<String, Integer> productMapEntry : productMap.entrySet()) {
             String productNumber = productMapEntry.getKey();
             Integer count = productMapEntry.getValue();
@@ -176,6 +172,8 @@ public class OrderService {
                     .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
             orderProducts.add(OrderProduct.createOrderProduct(product, count));
         }
+
+        return orderProducts;
     }
 
     private void registerOrderProducts(List<OrderProduct> orderProducts) {

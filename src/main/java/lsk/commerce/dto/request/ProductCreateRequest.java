@@ -29,7 +29,7 @@ public record ProductCreateRequest(
         String director
 ) {
     @AssertTrue
-    public boolean isValidateFields() {
+    public boolean isValidFields() {
         if ("A".equals(dtype)) {
             return (artist != null && studio != null) &&
                     (author == null && isbn == null) &&

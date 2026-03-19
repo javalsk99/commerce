@@ -1,5 +1,6 @@
 package lsk.commerce.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.portone.sdk.server.payment.PaidPayment;
 import lsk.commerce.api.portone.PaymentCustomData;
@@ -248,7 +249,7 @@ class PaymentServiceTest {
         class SuccessCase {
 
             @Test
-            void hasSingleOrderProduct() {
+            void hasSingleOrderProduct() throws JsonProcessingException {
                 //given
                 OrderProductDto orderProductDto = new OrderProductDto("범죄도시", 15000, 2, 30000);
 
@@ -274,14 +275,18 @@ class PaymentServiceTest {
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
                 });
                 then(paidPayment)
-                        .extracting("customData", "amount.total", "orderName", "id", "paidAt")
-                        .containsExactly("{\"orderNumber\":\"" + singleOrder.getOrderNumber() + "\"}", 30000L,
-                                orderRequest.getOrderProducts().getFirst().getName(), singleOrder.getPayment().getPaymentId(),
-                                singleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant());
+                        .extracting("amount.total", "orderName", "id", "paidAt")
+                        .containsExactly(
+                                30000L, orderRequest.getOrderProducts().getFirst().name(), singleOrder.getPayment().getPaymentId(),
+                                singleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
+                        );
+
+                PaymentCustomData paymentCustomData = objectMapper.readValue(paidPayment.getCustomData(), PaymentCustomData.class);
+                then(paymentCustomData.orderNumber()).isEqualTo(singleOrder.getOrderNumber());
             }
 
             @Test
-            void hasMultipleOrderProducts() {
+            void hasMultipleOrderProducts() throws JsonProcessingException {
                 //given
                 OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 5, 75000);
                 OrderProductDto orderProductDto2 = new OrderProductDto("자바 ORM 표준 JPA 프로그래밍", 15000, 3, 45000);
@@ -308,10 +313,14 @@ class PaymentServiceTest {
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
                 });
                 then(paidPayment)
-                        .extracting("customData", "amount.total", "orderName", "id", "paidAt")
-                        .containsExactly("{\"orderNumber\":\"" + multipleOrder.getOrderNumber() + "\"}", 120000L,
-                                orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건",
-                                multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant());
+                        .extracting("amount.total", "orderName", "id", "paidAt")
+                        .containsExactly(
+                                120000L, orderRequest.getOrderProducts().getFirst().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건",
+                                multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
+                        );
+
+                PaymentCustomData paymentCustomData = objectMapper.readValue(paidPayment.getCustomData(), PaymentCustomData.class);
+                then(paymentCustomData.orderNumber()).isEqualTo(multipleOrder.getOrderNumber());
             }
 
             private void givenCompletePayment(Order order) {
@@ -446,7 +455,7 @@ class PaymentServiceTest {
                 given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
                 given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
 
-                String orderName = orderRequest.getOrderProducts().getLast().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+                String orderName = orderRequest.getOrderProducts().getLast().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
 
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
@@ -478,7 +487,7 @@ class PaymentServiceTest {
                 given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
                 given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
 
-                String orderName = orderRequest.getOrderProducts().getFirst().getName();
+                String orderName = orderRequest.getOrderProducts().getFirst().name();
 
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
@@ -588,9 +597,9 @@ class PaymentServiceTest {
 
             String orderName;
             if (orderRequest.getOrderProducts().size() == 1) {
-                orderName = orderRequest.getOrderProducts().getFirst().getName();
+                orderName = orderRequest.getOrderProducts().getFirst().name();
             } else {
-                orderName = orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+                orderName = orderRequest.getOrderProducts().getFirst().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
             }
 
             given(paidPayment.getOrderName()).willReturn(orderName);

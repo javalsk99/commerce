@@ -1,39 +1,22 @@
 package lsk.commerce.query.dto;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter @Setter
-public class ProductSearchCond {
+@Builder
+public record ProductSearchCond(
+        String categoryName,
 
-    private String categoryName;
+        String productName,
+        Integer minPrice,
+        Integer maxPrice,
 
-    private String productName;
-    private Integer minPrice;
-    private Integer maxPrice;
+        String artist,
+        String studio,
 
-    private String artist;
-    private String studio;
+        String author,
+        String isbn,
 
-    private String author;
-    private String isbn;
-
-    private String actor;
-    private String director;
-
-    @Builder
-    public ProductSearchCond(String categoryName, String productName, Integer minPrice, Integer maxPrice,
-                             String artist, String studio, String author, String isbn, String actor, String director) {
-        this.categoryName = categoryName;
-        this.productName = productName;
-        this.minPrice = minPrice;
-        this.maxPrice = maxPrice;
-        this.artist = artist;
-        this.studio = studio;
-        this.author = author;
-        this.isbn = isbn;
-        this.actor = actor;
-        this.director = director;
-    }
+        String actor,
+        String director
+) {
 }

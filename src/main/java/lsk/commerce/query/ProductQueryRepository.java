@@ -45,16 +45,16 @@ public class ProductQueryRepository {
                         album.artist, album.studio, book.author, book.isbn, movie.actor, movie.director))
                 .from(product)
                 .where(
-                        eqCategoryName(cond.getCategoryName()),
-                        containsProductName(cond.getProductName()),
-                        minPrice(cond.getMinPrice()),
-                        maxPrice(cond.getMaxPrice()),
-                        containsArtist(cond.getArtist()),
-                        containsStudio(cond.getStudio()),
-                        containsAuthor(cond.getAuthor()),
-                        containsIsbn(cond.getIsbn()),
-                        containsActor(cond.getActor()),
-                        containsDirector(cond.getDirector())
+                        eqCategoryName(cond.categoryName()),
+                        containsProductName(cond.productName()),
+                        minPrice(cond.minPrice()),
+                        maxPrice(cond.maxPrice()),
+                        containsArtist(cond.artist()),
+                        containsStudio(cond.studio()),
+                        containsAuthor(cond.author()),
+                        containsIsbn(cond.isbn()),
+                        containsActor(cond.actor()),
+                        containsDirector(cond.director())
                 )
                 .fetch();
     }

@@ -3,6 +3,7 @@ package lsk.commerce.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Order;
+import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.dto.response.Result;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,24 +41,23 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    public List<OrderQueryDto> orderList(@ModelAttribute OrderSearchCond cond) {
-        return orderQueryService.searchOrders(cond);
+    public ResponseEntity<Result<List<OrderQueryDto>>> orderList(@ModelAttribute OrderSearchCond cond) {
+        List<OrderQueryDto> orderQueryDtoList = orderQueryService.searchOrders(cond);
+        return ResponseEntity.ok(new Result<>(orderQueryDtoList, orderQueryDtoList.size()));
     }
 
     @GetMapping("/orders/{orderNumber}")
-    public OrderQueryDto findOrder(@PathVariable("orderNumber") String orderNumber) {
-        return orderQueryService.findOrder(orderNumber);
+    public ResponseEntity<Result<OrderQueryDto>> findOrder(@PathVariable("orderNumber") String orderNumber) {
+        OrderQueryDto orderQueryDto = orderQueryService.findOrder(orderNumber);
+        return ResponseEntity.ok(new Result<>(orderQueryDto, 1));
     }
 
-    @PostMapping("/orders/{orderNumber}")
-    public OrderResponse changeOrder(@PathVariable("orderNumber") String orderNumber, @RequestBody Map<String, Integer> newProductMap) {
-        if (newProductMap.isEmpty()) {
-            throw new IllegalArgumentException("주문을 수정할 주문 상품이 없습니다");
-        }
-
-        orderService.updateOrder(orderNumber, newProductMap);
+    @PatchMapping("/orders/{orderNumber}")
+    public ResponseEntity<Result<OrderResponse>> changeOrder(@PathVariable("orderNumber") String orderNumber, @RequestBody @Valid OrderChangeRequest request) {
+        orderService.changeOrder(orderNumber, request);
         Order order = orderService.findOrderWithDeliveryPayment(orderNumber);
-        return orderService.getOrderResponse(order);
+        OrderResponse orderResponse = orderService.getOrderResponse(order);
+        return ResponseEntity.ok(new Result<>(orderResponse, 1));
     }
 
     @DeleteMapping("/orders/{orderNumber}")

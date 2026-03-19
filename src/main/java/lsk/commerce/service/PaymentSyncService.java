@@ -3,19 +3,17 @@ package lsk.commerce.service;
 import io.portone.sdk.server.payment.PaidPayment;
 import io.portone.sdk.server.payment.PaymentClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lsk.commerce.api.portone.SyncPaymentException;
 import lsk.commerce.dto.request.PaymentRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentSyncService {
-
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final PaymentService paymentService;
     private final PaymentClient portone;
@@ -23,7 +21,7 @@ public class PaymentSyncService {
     public Mono<PaymentRequest> syncPayment(String paymentId) {
         return Mono.fromFuture(portone.getPayment(paymentId))
                 .onErrorMap(e -> {
-                    logger.error("포트원 조회 중 에러 발생: {}", e.getMessage());
+                    log.error("포트원 조회 중 에러 발생: {}", e.getMessage());
                     e.printStackTrace();
                     return new SyncPaymentException();
                 })

@@ -1,8 +1,11 @@
 package lsk.commerce.domain;
 
 import lsk.commerce.domain.product.Album;
+import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.InvalidDataException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
@@ -82,13 +85,14 @@ class OrderProductTest {
                         .price(15000)
                         .stockQuantity(10)
                         .build();
+                String albumNumber = album.getProductNumber();
                 OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
 
                 //when
-                String productName = orderProduct.getProductName();
+                String productNumber = orderProduct.getProductNumber();
 
                 //then
-                then(productName).isEqualTo("BANG BANG");
+                then(productNumber).isEqualTo(albumNumber);
             }
         }
 
@@ -100,23 +104,24 @@ class OrderProductTest {
                 OrderProduct orderProduct = new OrderProduct();
 
                 //when & then
-                thenThrownBy(() -> orderProduct.getProductName())
-                        .isInstanceOf(IllegalStateException.class)
+                thenThrownBy(orderProduct::getProductNumber)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("상품이 없습니다");
             }
 
             @Test
             void productNameIsNull() {
-                Album album = Album.builder()
-                        .price(15000)
-                        .stockQuantity(10)
-                        .build();
+                Album album = new Album();
+
+                ReflectionTestUtils.setField(album, "price", 15000);
+                ReflectionTestUtils.setField(album, "stockQuantity", 10);
+
                 OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 5);
 
                 //when & then
-                thenThrownBy(() -> orderProduct.getProductName())
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("상품 이름이 없습니다");
+                thenThrownBy(orderProduct::getProductNumber)
+                        .isInstanceOf(InvalidDataException.class)
+                        .hasMessage("상품 번호가 없습니다");
             }
         }
     }

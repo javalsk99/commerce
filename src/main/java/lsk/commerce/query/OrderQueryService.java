@@ -1,6 +1,7 @@
 package lsk.commerce.query;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.OrderProductQueryDto;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
@@ -23,13 +24,13 @@ public class OrderQueryService {
 
     public OrderQueryDto findOrder(String orderNumber) {
         OrderQueryDto order = orderQueryRepository.findOrderByOrderNumber(orderNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
 
         List<OrderProductQueryDto> orderProductList = orderProductQueryRepository.findOrderProductListByOrderNumber(orderNumber);
 
-        order.setOrderProducts(orderProductList);
-
-        return order;
+        return order.toBuilder()
+                .orderProductQueryDtoList(orderProductList)
+                .build();
     }
 
     public List<OrderQueryDto> searchOrders(OrderSearchCond cond) {
@@ -42,9 +43,11 @@ public class OrderQueryService {
 
         Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductListByOrderNumbers(orderNumbers);
 
-        orders.forEach(orderQueryDto -> orderQueryDto.setOrderProducts(orderProductMap.get(orderQueryDto.getOrderNumber())));
-
-        return orders;
+        return orders.stream()
+                .map(orderQueryDto -> orderQueryDto.toBuilder()
+                        .orderProductQueryDtoList(orderProductMap.get(orderQueryDto.orderNumber()))
+                        .build())
+                .toList();
     }
 
     protected Map<String, List<OrderQueryDto>> findOrderMapByLoginId(String loginId) {
@@ -63,10 +66,13 @@ public class OrderQueryService {
 
         Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductListByOrderNumbers(orderNumbers);
 
-        orders.forEach(orderQueryDto -> orderQueryDto.setOrderProducts(orderProductMap.get(orderQueryDto.getOrderNumber())));
+        List<OrderQueryDto> orderQueryDtoList = orders.stream()
+                .map(orderQueryDto -> orderQueryDto.toBuilder()
+                        .orderProductQueryDtoList(orderProductMap.get(orderQueryDto.orderNumber()))
+                        .build())
+                .toList();
 
-        Map<String, List<OrderQueryDto>> orderMap = orders.stream()
-                .collect(groupingBy(orderQueryDto -> orderQueryDto.getLoginId()));
-        return orderMap;
+        return orderQueryDtoList.stream()
+                .collect(groupingBy(OrderQueryDto::loginId));
     }
 }

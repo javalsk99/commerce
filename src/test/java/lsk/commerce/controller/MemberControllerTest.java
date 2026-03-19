@@ -273,7 +273,7 @@ class MemberControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(memberQueryService).should().findMember(anyString());
+                BDDMockito.then(memberQueryService).should().findMember("id_D");
             }
         }
     }
@@ -558,7 +558,7 @@ class MemberControllerTest {
                 //given
                 createMember();
 
-                //when & then 첫 번째 호출
+                //when & then 첫 번째 요청
                 mvc.perform(delete("/members/{memberLoginId}", "id_A"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value("delete"))
@@ -568,7 +568,7 @@ class MemberControllerTest {
                 //then
                 BDDMockito.then(memberService).should().deleteMember("id_A");
 
-                //when & then 두 번째 호출
+                //when & then 두 번째 요청
                 mvc.perform(delete("/members/{memberLoginId}", "id_A"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value("delete"))

@@ -36,19 +36,27 @@
   정적 메서드에서 children을 생성하는 로직을 Stream으로 변경했다.
 
 
+- CategoryChangeParentRequest  
+  컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.
+
+
 - CategoryDisconnectResponse  
   정적 메서드에서 productResponseList를 생성하는 로직을 Stream으로 변경했다.
 
 
 - ProductCreateRequest  
-  다른 dtype의 필드 검증을 추가했다.
+  다른 dtype의 필드가 있는지 검증을 추가했다.
 
 
 - ProductResponse  
-  @QueryProjection를 사용하기 위해 컴팩트 생성자로 변경했다.
+  DTO를 QClass로 생성해 주는 @QueryProjection를 사용하기 위해 컴팩트 생성자로 변경했다.
 
 
-- ProductUpdateRequest
+- ProductSearchCond
+
+
+- ProductUpdateRequest  
+  price와 stockQuantity 둘 다 null인 상황만 아니면 돼서 @NotNull을 제거하고 @AssertTrue를 추가했다.
 
 
 - ProductNameWithCategoryNameResponse, CategoryNameResponse  
@@ -56,4 +64,22 @@
 
 
 - OrderCreateRequest  
-  
+  컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.
+
+
+- OrderQueryDto  
+  전체 필드 중 orderProductQueryDtoList 필드만 빠진 생성자를 QueryDSL의 Q파일 생성자와, DTO 직접 조회의 member.loginId로 조회에서 사용했다.  
+  전체 필드 중 loginId, orderProductQueryDtoList 필드가 빠진 생성자를 DTO 직접 조회의 orderNumber로 조회에서 사용했다.
+
+
+- OrderProductQueryDto
+- OrderSearchCond
+
+
+- OrderChangeRequest  
+  컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.
+
+
+- OrderResponse
+- OrderProductDto
+

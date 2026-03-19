@@ -4,5 +4,4 @@ public record MemberSearchCond(
         String name,
         String loginId
 ) {
-
 }

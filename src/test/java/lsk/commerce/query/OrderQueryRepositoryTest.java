@@ -82,7 +82,7 @@ class OrderQueryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(orderQueryDto).isPresent();
-                    softly.then(orderQueryDto.get().getOrderProducts()).isEmpty();
+                    softly.then(orderQueryDto.get().orderProductQueryDtoList()).isEmpty();
                     softly.then(orderQueryDto.get())
                             .extracting("totalAmount", "orderStatus", "deliveryStatus")
                             .containsExactly(105000, OrderStatus.CREATED, DeliveryStatus.WAITING);
@@ -104,7 +104,7 @@ class OrderQueryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(orderQueryDto).isPresent();
-                    softly.then(orderQueryDto.get().getOrderProducts()).isEmpty();
+                    softly.then(orderQueryDto.get().orderProductQueryDtoList()).isEmpty();
                     softly.then(orderQueryDto.get())
                             .extracting("totalAmount", "orderStatus", "paymentStatus", "deliveryStatus")
                             .containsExactly(30000, OrderStatus.CREATED, PaymentStatus.PENDING, DeliveryStatus.WAITING);
@@ -126,7 +126,7 @@ class OrderQueryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(orderQueryDto).isPresent();
-                    softly.then(orderQueryDto.get().getOrderProducts()).isEmpty();
+                    softly.then(orderQueryDto.get().orderProductQueryDtoList()).isEmpty();
                     softly.then(orderQueryDto.get())
                             .extracting("totalAmount", "orderStatus", "paymentStatus", "deliveryStatus")
                             .containsExactly(60000, OrderStatus.CANCELED, PaymentStatus.CANCELED, DeliveryStatus.CANCELED);
@@ -161,7 +161,7 @@ class OrderQueryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(orderQueryDtoList)
-                            .extracting("orderProducts")
+                            .extracting("orderProductQueryDtoList")
                             .containsOnly(Collections.emptyList());
                     softly.then(orderQueryDtoList)
                             .hasSize(5)
@@ -195,7 +195,7 @@ class OrderQueryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(orderQueryDtoList)
-                            .extracting("orderProducts")
+                            .extracting("orderProductQueryDtoList")
                             .containsOnly(Collections.emptyList());
                     softly.then(orderQueryDtoList)
                             .hasSize(3)
@@ -243,7 +243,7 @@ class OrderQueryRepositoryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(orderQueryDtoList)
-                            .extracting("orderProducts")
+                            .extracting("orderProductQueryDtoList")
                             .containsOnly(Collections.emptyList());
                     softly.then(orderQueryDtoList)
                             .hasSize(8)

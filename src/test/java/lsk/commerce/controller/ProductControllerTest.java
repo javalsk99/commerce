@@ -532,9 +532,8 @@ class ProductControllerTest {
 
             static Stream<Arguments> invalidUpdateRequestProvider() {
                 return Stream.of(
-                        argumentSet("price null", new ProductUpdateRequest(null, 8)),
                         argumentSet("price 100원 미만", new ProductUpdateRequest(99, 8)),
-                        argumentSet("stockQuantity null", new ProductUpdateRequest(20000, null))
+                        argumentSet("price, stockQuantity null", new ProductUpdateRequest(null, null))
                 );
             }
         }

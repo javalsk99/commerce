@@ -11,6 +11,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.InvalidDataException;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -63,14 +65,14 @@ public class OrderProduct {
         return orderProduct;
     }
 
-    public String getProductName() {
+    public String getProductNumber() {
         if (this.product == null) {
-            throw new IllegalStateException("상품이 없습니다");
-        } else if (this.product.getName() == null) {
-            throw new IllegalStateException("상품 이름이 없습니다");
+            throw new DataNotFoundException("상품이 없습니다");
+        } else if (this.product.getProductNumber() == null) {
+            throw new InvalidDataException("상품 번호가 없습니다");
         }
 
-        return this.product.getName();
+        return this.product.getProductNumber();
     }
 
     //Order에서 사용해서 protected

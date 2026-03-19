@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.portone.sdk.server.payment.PaidPayment;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.PaymentCustomData;
 import lsk.commerce.api.portone.SyncPaymentException;
@@ -15,8 +16,6 @@ import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.dto.request.PaymentRequest;
 import lsk.commerce.event.PaymentCompletedEvent;
 import lsk.commerce.repository.PaymentRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,12 +24,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class PaymentService {
-
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final ObjectMapper objectMapper;
     private final PaymentRepository paymentRepository;
@@ -64,7 +62,7 @@ public class PaymentService {
             throw new SyncPaymentException();
         }
 
-        logger.info("결제 성공 {}", paidPayment);
+        log.info("결제 성공 {}", paidPayment);
 
         return this.completePayment(paidPayment);
     }
@@ -112,7 +110,7 @@ public class PaymentService {
         }
 
         for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
-            if (products.stream().noneMatch(p -> p.getName().equals(orderProduct.getName()))) {
+            if (products.stream().noneMatch(p -> p.getName().equals(orderProduct.name()))) {
                 throw new IllegalArgumentException("잘못된 상품이 있습니다");
             }
         }
@@ -126,9 +124,9 @@ public class PaymentService {
         }
 
         if (orderRequest.getOrderProducts().size() == 1) {
-            return paidPayment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().getName());
+            return paidPayment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().name());
         } else {
-            return paidPayment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().getName() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건");
+            return paidPayment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건");
         }
     }
 

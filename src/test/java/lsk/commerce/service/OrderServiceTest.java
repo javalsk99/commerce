@@ -12,10 +12,12 @@ import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.OrderRequest;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.InvalidDataException;
 import lsk.commerce.repository.OrderProductJdbcRepository;
 import lsk.commerce.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -127,19 +129,13 @@ class OrderServiceTest {
     @Nested
     class Create {
 
-        Map<String, Integer> productMap;
-
-        @BeforeEach
-        void beforeEach() {
-            productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
-        }
-
         @Nested
         class SuccessCase {
 
             @Test
             void basic() {
                 //given
+                Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
                 OrderCreateRequest request = new OrderCreateRequest("id_A", productMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
@@ -195,13 +191,14 @@ class OrderServiceTest {
             @Test
             void memberNotFound() {
                 //given
+                Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
                 OrderCreateRequest request = new OrderCreateRequest("id_B", productMap);
 
-                given(memberService.findMemberByLoginId(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 아이디입니다"));
+                given(memberService.findMemberByLoginId(anyString())).willThrow(new DataNotFoundException("존재하지 않는 아이디입니다"));
 
                 //when & then
                 thenThrownBy(() -> orderService.order(request))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
                 //then
@@ -287,6 +284,7 @@ class OrderServiceTest {
             @Test
             void failedSaveAll() {
                 //given
+                Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
                 OrderCreateRequest request = new OrderCreateRequest("id_A", productMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
@@ -360,7 +358,7 @@ class OrderServiceTest {
 
                 //when & then
                 thenThrownBy(() -> orderService.findOrder(wrongOrderNumber))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
@@ -379,6 +377,7 @@ class OrderServiceTest {
             void basic() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(productMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -387,7 +386,7 @@ class OrderServiceTest {
                 InOrder inOrder = inOrder(em, orderRepository, orderProductJdbcRepository);
 
                 //when
-                orderService.updateOrder(order.getOrderNumber(), productMap);
+                orderService.changeOrder(order.getOrderNumber(), request);
 
                 //then
                 thenSoftly(softly -> {
@@ -426,13 +425,14 @@ class OrderServiceTest {
             void idempotency() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(productMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when 첫 번째 호출
-                orderService.updateOrder(order.getOrderNumber(), productMap);
+                orderService.changeOrder(order.getOrderNumber(), request);
 
                 //then
                 thenSoftly(softly -> {
@@ -459,15 +459,15 @@ class OrderServiceTest {
                 });
 
                 //when & then 두 번째 호출
-                thenNoException().isThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap));
+                thenNoException().isThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request));
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(times(2)).deleteOrderProductsByOrderId(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findByOrderNumber(any()));
-                    softly.check(() -> BDDMockito.then(productService).should(times(2)).findProducts());
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(times(2)).saveAll(any()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(times(1)).deleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(1)).findByOrderNumber(any()));
+                    softly.check(() -> BDDMockito.then(productService).should(times(1)).findProducts());
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(times(1)).saveAll(any()));
                 });
 
                 thenSoftly(softly -> {
@@ -482,35 +482,16 @@ class OrderServiceTest {
         class FailureCase {
 
             @Test
-            void productMapIsEmpty() {
-                //given
-                Map<String, Integer> emptyProductMap = new HashMap<>();
-
-                //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), emptyProductMap))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("주문을 수정할 상품이 없습니다");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findWithAllExceptMember(any()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).deleteOrderProductsByOrderId(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
-                    softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).saveAll(any()));
-                });
-            }
-
-            @Test
             void orderNotFound() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(productMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(wrongOrderNumber, productMap))
-                        .isInstanceOf(IllegalArgumentException.class)
+                thenThrownBy(() -> orderService.changeOrder(wrongOrderNumber, request))
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
@@ -528,12 +509,13 @@ class OrderServiceTest {
                 //given
                 Order order = createNotSavedOrder();
                 Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(productMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap))
-                        .isInstanceOf(IllegalArgumentException.class)
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
+                        .isInstanceOf(InvalidDataException.class)
                         .hasMessage("식별자가 없는 잘못된 주문입니다");
 
                 //then
@@ -550,12 +532,13 @@ class OrderServiceTest {
             void failedDeleteOrderProducts() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(productMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 willThrow(new RuntimeException("JDBC DELETE Failed")).given(orderProductJdbcRepository).deleteOrderProductsByOrderId(anyLong());
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC DELETE Failed");
 
@@ -574,13 +557,14 @@ class OrderServiceTest {
                 //given
                 Map<String, Integer> newProductMap = new HashMap<>();
                 newProductMap.put(null, 3);
+                OrderChangeRequest request = new OrderChangeRequest(newProductMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 상품입니다");
 
@@ -599,13 +583,14 @@ class OrderServiceTest {
                 //given
                 Map<String, Integer> newProductMap = new HashMap<>();
                 newProductMap.put(productNumber1, null);
+                OrderChangeRequest request = new OrderChangeRequest(newProductMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("수량이 없습니다");
 
@@ -623,13 +608,14 @@ class OrderServiceTest {
             void productNotFound() {
                 //given
                 Map<String, Integer> newProductMap = Map.of("lllIIIll00OO", 3);
+                OrderChangeRequest request = new OrderChangeRequest(newProductMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), newProductMap))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 상품입니다");
 
@@ -647,6 +633,7 @@ class OrderServiceTest {
             void failedSaveAll() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(productMap);
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -654,7 +641,7 @@ class OrderServiceTest {
                 willThrow(new RuntimeException("JDBC Batch INSERT Failed")).given(orderProductJdbcRepository).saveAll(anyList());
 
                 //when & then
-                thenThrownBy(() -> orderService.updateOrder(order.getOrderNumber(), productMap))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC Batch INSERT Failed");
 
@@ -810,7 +797,7 @@ class OrderServiceTest {
 
                 //when & then
                 thenThrownBy(() -> orderService.cancelOrder(wrongOrderNumber))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
@@ -877,7 +864,7 @@ class OrderServiceTest {
 
                 //when & then
                 thenThrownBy(() -> orderService.deleteOrder(wrongOrderNumber))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
@@ -958,7 +945,7 @@ class OrderServiceTest {
 
                 //when & then 두 번째 호출
                 thenThrownBy(() -> orderService.deleteOrder(order.getOrderNumber()))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
@@ -996,7 +983,7 @@ class OrderServiceTest {
                             .containsOnlyNulls();
                     softly.then(orderRequest.getOrderProducts())
                             .usingRecursiveComparison()
-                            .isEqualTo(orderResponse.getOrderProducts());
+                            .isEqualTo(orderResponse.orderProductDtoList());
                 });
             }
         }

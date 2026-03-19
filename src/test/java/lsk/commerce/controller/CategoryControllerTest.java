@@ -416,7 +416,7 @@ class CategoryControllerTest {
                 //given
                 Category.createCategory(null, "댄스");
 
-                //when & then 첫 번째 호출
+                //when & then 첫 번째 요청
                 mvc.perform(delete("/categories/{categoryName}", "댄스"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value("delete"))
@@ -426,7 +426,7 @@ class CategoryControllerTest {
                 //then
                 BDDMockito.then(categoryService).should().deleteCategory("댄스");
 
-                //when & then 두 번째 호출
+                //when & then 두 번째 요청
                 mvc.perform(delete("/categories/{categoryName}", "댄스"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value("delete"))

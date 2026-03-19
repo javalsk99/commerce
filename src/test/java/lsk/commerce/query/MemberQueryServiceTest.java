@@ -80,12 +80,12 @@ class MemberQueryServiceTest {
                 thenSoftly(softly -> {
                     softly.then(memberQueryDto).isNotNull();
                     softly.then(Hibernate.isInitialized(memberQueryDto.orderQueryDtoList())).isTrue();
-                    softly.then(Hibernate.isInitialized(memberQueryDto.orderQueryDtoList().getFirst().getOrderProducts())).isTrue();
+                    softly.then(Hibernate.isInitialized(memberQueryDto.orderQueryDtoList().getFirst().orderProductQueryDtoList())).isTrue();
                     softly.then(memberQueryDto)
                             .extracting("orderQueryDtoList")
                             .asInstanceOf(list(OrderQueryDto.class))
                             .hasSize(5)
-                            .flatExtracting("orderProducts")
+                            .flatExtracting("orderProductQueryDtoList")
                             .hasSize(10)
                             .extracting("name")
                             .containsExactlyInAnyOrder(
@@ -134,12 +134,12 @@ class MemberQueryServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().orderQueryDtoList())).isTrue();
-                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().orderQueryDtoList().getFirst().getOrderProducts())).isTrue();
+                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().orderQueryDtoList().getFirst().orderProductQueryDtoList())).isTrue();
                     softly.then(memberQueryDtoList)
                             .hasSize(3)
                             .flatExtracting("orderQueryDtoList")
                             .hasSize(8)
-                            .flatExtracting("orderProducts")
+                            .flatExtracting("orderProductQueryDtoList")
                             .hasSize(16)
                             .extracting("name")
                             .containsExactlyInAnyOrder(
@@ -167,7 +167,7 @@ class MemberQueryServiceTest {
                         .hasSize(1)
                         .flatExtracting("orderQueryDtoList")
                         .hasSize(1)
-                        .flatExtracting("orderProducts")
+                        .flatExtracting("orderProductQueryDtoList")
                         .hasSize(1)
                         .extracting("name")
                         .containsExactlyInAnyOrder("Blue Valentine");

@@ -36,6 +36,6 @@ public class OrderProductQueryRepository {
                 .getResultList();
 
         return orderProducts.stream()
-                .collect(groupingBy(orderProductQueryDto -> orderProductQueryDto.getOrderNumber()));
+                .collect(groupingBy(OrderProductQueryDto::orderNumber));
     }
 }
