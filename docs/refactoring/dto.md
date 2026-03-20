@@ -83,3 +83,15 @@
 - OrderResponse
 - OrderProductDto
 
+
+- OrderPaymentResponse  
+  주문 정보를 응답하는 DTO이므로 OrderRequest에서 이름을 변경했다.  
+  포트원 서버로 보내는 요청 데이터라고 생각해서 Request라는 이름을 사용했었고, 내 서버에서 포트원 서버로 보내는 응답 데이터이므로 Response로 이름을 변경했다.
+
+
+- CompletePaymentRequest
+
+
+- PaymentCompleteResponse  
+  요청을 검증 후 결제 완료 응답하는 DTO이므로 PaymentRequest에서 이름을 변경했다.
+

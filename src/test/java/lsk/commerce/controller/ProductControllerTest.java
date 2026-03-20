@@ -389,13 +389,13 @@ class ProductControllerTest {
             @Test
             void findProductByName_Failed_ProductNotFound() throws Exception {
                 //given
-                given(productService.findProduct(anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다."));
+                given(productService.findProduct(anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
 
                 //when & then
                 mvc.perform(get("/products/{productNumber}", "lllIIllI00OO"))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다."))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
                         .andDo(print());
 
                 //then
@@ -526,6 +526,31 @@ class ProductControllerTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productService).should(never()).updateProduct(any(), any()));
+                    softly.check(() -> BDDMockito.then(productService).should(never()).getProductDto(any()));
+                });
+            }
+
+            @Test
+            void updateProduct_Failed_ProductNotFound() throws Exception {
+                //given
+                ProductUpdateRequest request = new ProductUpdateRequest(20000, 8);
+                String json = objectMapper.writeValueAsString(request);
+
+                given(productService.updateProduct(anyString(), any(ProductUpdateRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
+
+                //when & then
+                mvc.perform(patch("/products/{productNumber}", "lllIIIll00OO")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json))
+                        .andExpect(status().isNotFound())
+                        .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
+                        .andDo(print());
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productService).should().updateProduct("lllIIIll00OO", request));
                     softly.check(() -> BDDMockito.then(productService).should(never()).getProductDto(any()));
                 });
             }

@@ -5,7 +5,7 @@ import io.portone.sdk.server.payment.PaymentClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lsk.commerce.api.portone.SyncPaymentException;
-import lsk.commerce.dto.request.PaymentRequest;
+import lsk.commerce.dto.request.PaymentCompleteResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -18,13 +18,9 @@ public class PaymentSyncService {
     private final PaymentService paymentService;
     private final PaymentClient portone;
 
-    public Mono<PaymentRequest> syncPayment(String paymentId) {
+    public Mono<PaymentCompleteResponse> syncPayment(String paymentId) {
         return Mono.fromFuture(portone.getPayment(paymentId))
-                .onErrorMap(e -> {
-                    log.error("포트원 조회 중 에러 발생: {}", e.getMessage());
-                    e.printStackTrace();
-                    return new SyncPaymentException();
-                })
+                .onErrorMap(e -> new SyncPaymentException("결제 정보 조회 중 오류 발생"))
                 .flatMap(actualPayment -> {
                     if (actualPayment instanceof PaidPayment paidPayment) {
                         return Mono.fromCallable(() -> paymentService.verifyAndComplete(paidPayment))
@@ -35,6 +31,6 @@ public class PaymentSyncService {
                                 .subscribeOn(Schedulers.boundedElastic());
                     }
                 })
-                .map(updatePayment -> paymentService.getPaymentRequest(updatePayment));
+                .map(paymentService::getPaymentCompleteResponse);
     }
 }

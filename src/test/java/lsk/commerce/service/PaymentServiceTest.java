@@ -15,7 +15,7 @@ import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.OrderProductDto;
-import lsk.commerce.dto.request.OrderRequest;
+import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.event.PaymentCompletedEvent;
 import lsk.commerce.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,7 +50,7 @@ import static org.mockito.BDDMockito.willThrow;
 class PaymentServiceTest {
 
     @Mock
-    OrderRequest orderRequest;
+    OrderPaymentResponse orderPaymentResponse;
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     PaidPayment paidPayment;
@@ -165,7 +165,7 @@ class PaymentServiceTest {
             }
 
             @Test
-            void duplicateRequest() {
+            void alreadyRequest() {
                 //given
                 given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
 
@@ -257,7 +257,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(singleOrder, List.of(orderProductDto));
 
-                String orderName = givenOrderNameAndAmount(singleOrder, orderRequest);
+                String orderName = givenOrderNameAndAmount(singleOrder, orderPaymentResponse);
                 paidPaymentToString(orderName);
 
                 givenCompletePayment(singleOrder);
@@ -269,7 +269,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(singleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(singleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
@@ -277,7 +277,7 @@ class PaymentServiceTest {
                 then(paidPayment)
                         .extracting("amount.total", "orderName", "id", "paidAt")
                         .containsExactly(
-                                30000L, orderRequest.getOrderProducts().getFirst().name(), singleOrder.getPayment().getPaymentId(),
+                                30000L, orderPaymentResponse.orderProductDtoList().getFirst().name(), singleOrder.getPayment().getPaymentId(),
                                 singleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
                         );
 
@@ -295,7 +295,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
-                String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+                String orderName = givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
                 paidPaymentToString(orderName);
 
                 givenCompletePayment(multipleOrder);
@@ -307,7 +307,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(multipleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
@@ -315,7 +315,7 @@ class PaymentServiceTest {
                 then(paidPayment)
                         .extracting("amount.total", "orderName", "id", "paidAt")
                         .containsExactly(
-                                120000L, orderRequest.getOrderProducts().getFirst().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건",
+                                120000L, orderPaymentResponse.orderProductDtoList().getFirst().name() + " 외 " + (orderPaymentResponse.orderProductDtoList().size() - 1) + "건",
                                 multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
                         );
 
@@ -350,7 +350,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should(never()).getOrderRequest(any()));
+                    softly.check(() -> BDDMockito.then(orderService).should(never()).getOrderPaymentResponse(any()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
@@ -363,8 +363,8 @@ class PaymentServiceTest {
                 givenCustomData(multipleOrder.getOrderNumber());
 
                 given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-                given(orderRequest.getOrderProducts()).willReturn(Collections.emptyList());
-                given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+                given(orderPaymentResponse.orderProductDtoList()).willReturn(Collections.emptyList());
+                given(orderService.getOrderPaymentResponse(any())).willReturn(orderPaymentResponse);
 
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
@@ -377,7 +377,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(multipleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
@@ -393,8 +393,8 @@ class PaymentServiceTest {
                 givenCustomData(multipleOrder.getOrderNumber());
 
                 given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
-                given(orderRequest.getOrderProducts()).willReturn(List.of(orderProductDto1, orderProductDto2));
-                given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+                given(orderPaymentResponse.orderProductDtoList()).willReturn(List.of(orderProductDto1, orderProductDto2));
+                given(orderService.getOrderPaymentResponse(any())).willReturn(orderPaymentResponse);
 
                 given(productService.findProducts()).willReturn(List.of(movie));
 
@@ -407,7 +407,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(multipleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
@@ -425,7 +425,7 @@ class PaymentServiceTest {
                 findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
                 given(paidPayment.getAmount().getTotal()).willReturn(10000L);
-                given(orderRequest.getTotalAmount()).willReturn(120000);
+                given(orderPaymentResponse.totalAmount()).willReturn(120000);
 
                 //when & then
                 thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
@@ -435,7 +435,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(multipleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
@@ -453,9 +453,9 @@ class PaymentServiceTest {
                 findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
                 given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
-                given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
+                given(orderPaymentResponse.totalAmount()).willReturn(multipleOrder.getTotalAmount());
 
-                String orderName = orderRequest.getOrderProducts().getLast().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+                String orderName = orderPaymentResponse.orderProductDtoList().getLast().name() + " 외 " + (orderPaymentResponse.orderProductDtoList().size() - 1) + "건";
 
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
@@ -467,7 +467,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(multipleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
@@ -485,9 +485,9 @@ class PaymentServiceTest {
                 findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
                 given(paidPayment.getAmount().getTotal()).willReturn(multipleOrder.getTotalAmount().longValue());
-                given(orderRequest.getTotalAmount()).willReturn(multipleOrder.getTotalAmount());
+                given(orderPaymentResponse.totalAmount()).willReturn(multipleOrder.getTotalAmount());
 
-                String orderName = orderRequest.getOrderProducts().getFirst().name();
+                String orderName = orderPaymentResponse.orderProductDtoList().getFirst().name();
 
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
@@ -499,7 +499,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(multipleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
@@ -518,7 +518,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(notRequestOrder, List.of(orderProductDto1, orderProductDto2));
 
-                String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+                String orderName = givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
                 paidPaymentToString(orderName);
 
                 String paymentId = "jfdioj23489fkjn2";
@@ -534,7 +534,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(notRequestOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(notRequestOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
@@ -551,7 +551,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
-                String orderName = givenOrderNameAndAmount(multipleOrder, orderRequest);
+                String orderName = givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
                 paidPaymentToString(orderName);
 
                 String paymentId = multipleOrder.getPayment().getPaymentId();
@@ -570,7 +570,7 @@ class PaymentServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
                     softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderRequest(multipleOrder));
+                    softly.check(() -> BDDMockito.then(orderService).should().getOrderPaymentResponse(multipleOrder));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
@@ -585,21 +585,21 @@ class PaymentServiceTest {
 
         private void findOrderAndProducts(Order order, List<OrderProductDto> orderProductDto) {
             given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
-            given(orderRequest.getOrderProducts()).willReturn(orderProductDto);
-            given(orderService.getOrderRequest(any())).willReturn(orderRequest);
+            given(orderPaymentResponse.orderProductDtoList()).willReturn(orderProductDto);
+            given(orderService.getOrderPaymentResponse(any())).willReturn(orderPaymentResponse);
 
             given(productService.findProducts()).willReturn(List.of(album, book, movie));
         }
 
-        private String givenOrderNameAndAmount(Order order, OrderRequest orderRequest) {
+        private String givenOrderNameAndAmount(Order order, OrderPaymentResponse orderRequest) {
             given(paidPayment.getAmount().getTotal()).willReturn(order.getTotalAmount().longValue());
-            given(orderRequest.getTotalAmount()).willReturn(order.getTotalAmount());
+            given(orderRequest.totalAmount()).willReturn(order.getTotalAmount());
 
             String orderName;
-            if (orderRequest.getOrderProducts().size() == 1) {
-                orderName = orderRequest.getOrderProducts().getFirst().name();
+            if (orderRequest.orderProductDtoList().size() == 1) {
+                orderName = orderRequest.orderProductDtoList().getFirst().name();
             } else {
-                orderName = orderRequest.getOrderProducts().getFirst().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건";
+                orderName = orderRequest.orderProductDtoList().getFirst().name() + " 외 " + (orderRequest.orderProductDtoList().size() - 1) + "건";
             }
 
             given(paidPayment.getOrderName()).willReturn(orderName);

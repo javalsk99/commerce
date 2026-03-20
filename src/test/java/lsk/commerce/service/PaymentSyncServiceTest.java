@@ -13,7 +13,7 @@ import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.dto.request.PaymentRequest;
+import lsk.commerce.dto.request.PaymentCompleteResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -107,7 +107,7 @@ class PaymentSyncServiceTest {
                     payment.complete(LocalDateTime.now());
                     return payment;
                 });
-                given(paymentService.getPaymentRequest(any(Payment.class))).willAnswer(invocation -> new PaymentRequest(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));
+                given(paymentService.getPaymentCompleteResponse(any(Payment.class))).willAnswer(invocation -> new PaymentCompleteResponse(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));
 
                 //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
@@ -122,7 +122,7 @@ class PaymentSyncServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(paymentClient).should().getPayment(anyString()));
                     softly.check(() -> BDDMockito.then(paymentService).should().verifyAndComplete(any(PaidPayment.class)));
-                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentRequest(any(Payment.class)));
+                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentCompleteResponse(any(Payment.class)));
                 });
             }
         }
@@ -151,7 +151,7 @@ class PaymentSyncServiceTest {
                     payment.failed();
                     return payment;
                 });
-                given(paymentService.getPaymentRequest(any(Payment.class))).willAnswer(invocation -> new PaymentRequest(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));
+                given(paymentService.getPaymentCompleteResponse(any(Payment.class))).willAnswer(invocation -> new PaymentCompleteResponse(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));
 
                 //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
@@ -166,7 +166,7 @@ class PaymentSyncServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(paymentClient).should().getPayment(anyString()));
                     softly.check(() -> BDDMockito.then(paymentService).should().failedPayment(anyString()));
-                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentRequest(any(Payment.class)));
+                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentCompleteResponse(any(Payment.class)));
                 });
             }
         }

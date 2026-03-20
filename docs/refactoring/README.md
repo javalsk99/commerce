@@ -9,3 +9,4 @@
 - [product](product.md)
 - [order](order.md)
 - [orderProduct](orderProduct.md)
+- [payment](payment.md)

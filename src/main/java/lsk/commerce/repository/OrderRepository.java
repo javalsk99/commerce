@@ -50,7 +50,7 @@ public class OrderRepository {
                         "select o from Order o" +
                                 " join fetch o.delivery" +
                                 " left join fetch o.payment" +
-                                " join fetch o.orderProducts op" +
+                                " join fetch o.orderProductDtoList op" +
                                 " join fetch op.product" +
                                 " where o.orderNumber = :orderNumber", Order.class)
                 .setParameter("orderNumber", orderNumber)
@@ -63,7 +63,7 @@ public class OrderRepository {
                         "select o from Order o" +
                                 " join fetch o.delivery" +
                                 " left join fetch o.payment" +
-                                " left join fetch o.orderProducts op" +
+                                " left join fetch o.orderProductDtoList op" +
                                 " join fetch op.product" +
                                 " join fetch o.member" +
                                 " where o.orderNumber = :orderNumber", Order.class)

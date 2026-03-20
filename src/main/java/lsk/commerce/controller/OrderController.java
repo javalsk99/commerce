@@ -61,20 +61,22 @@ public class OrderController {
     }
 
     @DeleteMapping("/orders/{orderNumber}")
-    public String delete(@PathVariable("orderNumber") String orderNumber) {
+    public ResponseEntity<Result<String>> delete(@PathVariable("orderNumber") String orderNumber) {
         orderService.deleteOrder(orderNumber);
-        return "delete";
+        return ResponseEntity.ok(new Result<>("delete", 1));
     }
 
     @PostMapping("/orders/{orderNumber}/payments")
-    public OrderResponse requestPayment(@PathVariable("orderNumber") String orderNumber) {
+    public ResponseEntity<Result<OrderResponse>> requestPayment(@PathVariable("orderNumber") String orderNumber) {
         Order order = paymentService.request(orderNumber);
-        return orderService.getOrderResponse(order);
+        OrderResponse orderResponse = orderService.getOrderResponse(order);
+        return ResponseEntity.ok(new Result<>(orderResponse, 1));
     }
 
-    @PostMapping("/orders/{orderNumber}/cancel")
-    public OrderResponse cancelOrder(@PathVariable("orderNumber") String orderNumber) {
+    @PatchMapping("/orders/{orderNumber}/cancel")
+    public ResponseEntity<Result<OrderResponse>> cancelOrder(@PathVariable("orderNumber") String orderNumber) {
         Order canceledOrder = orderService.cancelOrder(orderNumber);
-        return orderService.getOrderResponse(canceledOrder);
+        OrderResponse orderResponse = orderService.getOrderResponse(canceledOrder);
+        return ResponseEntity.ok(new Result<>(orderResponse, 1));
     }
 }

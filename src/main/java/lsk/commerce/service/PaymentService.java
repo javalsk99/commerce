@@ -12,8 +12,8 @@ import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.OrderProductDto;
-import lsk.commerce.dto.request.OrderRequest;
-import lsk.commerce.dto.request.PaymentRequest;
+import lsk.commerce.dto.response.OrderPaymentResponse;
+import lsk.commerce.dto.request.PaymentCompleteResponse;
 import lsk.commerce.event.PaymentCompletedEvent;
 import lsk.commerce.repository.PaymentRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -59,7 +59,7 @@ public class PaymentService {
 
     protected Payment verifyAndComplete(PaidPayment paidPayment) {
         if (!this.verifyPayment(paidPayment)) {
-            throw new SyncPaymentException();
+            throw new SyncPaymentException("결제 정보 검증 중 오류 발생");
         }
 
         log.info("결제 성공 {}", paidPayment);
@@ -74,15 +74,15 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public PaymentRequest getPaymentRequest(Payment payment) {
-        return PaymentRequest.paymentChangeDto(payment);
+    public PaymentCompleteResponse getPaymentCompleteResponse(Payment payment) {
+        return PaymentCompleteResponse.from(payment);
     }
 
     private boolean verifyPayment(PaidPayment paidPayment) {
         PaymentCustomData customDataDecoded = getPaymentCustomData(paidPayment);
         if (customDataDecoded == null) return false;
 
-        OrderRequest orderRequest = verifyOrderProducts(customDataDecoded.orderNumber());
+        OrderPaymentResponse orderRequest = verifyOrderProducts(customDataDecoded.orderNumber());
 
         return verifyPriceAndOrderName(paidPayment, orderRequest);
     }
@@ -100,33 +100,33 @@ public class PaymentService {
         return customDataDecoded;
     }
 
-    private OrderRequest verifyOrderProducts(String orderNumber) {
+    private OrderPaymentResponse verifyOrderProducts(String orderNumber) {
         Order order = orderService.findOrderWithAllExceptMember(orderNumber);
-        OrderRequest orderRequest = orderService.getOrderRequest(order);
+        OrderPaymentResponse orderPaymentResponse = orderService.getOrderPaymentResponse(order);
         List<Product> products = productService.findProducts();
 
-        if (orderRequest.getOrderProducts().isEmpty()) {
+        if (orderPaymentResponse.orderProductDtoList().isEmpty()) {
             throw new IllegalArgumentException("주문 상품이 비어 있습니다");
         }
 
-        for (OrderProductDto orderProduct : orderRequest.getOrderProducts()) {
+        for (OrderProductDto orderProduct : orderPaymentResponse.orderProductDtoList()) {
             if (products.stream().noneMatch(p -> p.getName().equals(orderProduct.name()))) {
                 throw new IllegalArgumentException("잘못된 상품이 있습니다");
             }
         }
 
-        return orderRequest;
+        return orderPaymentResponse;
     }
 
-    private boolean verifyPriceAndOrderName(PaidPayment paidPayment, OrderRequest orderRequest) {
-        if (paidPayment.getAmount().getTotal() != orderRequest.getTotalAmount().longValue()) {
+    private boolean verifyPriceAndOrderName(PaidPayment paidPayment, OrderPaymentResponse orderPaymentResponse) {
+        if (paidPayment.getAmount().getTotal() != orderPaymentResponse.totalAmount().longValue()) {
             return false;
         }
 
-        if (orderRequest.getOrderProducts().size() == 1) {
-            return paidPayment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().name());
+        if (orderPaymentResponse.orderProductDtoList().size() == 1) {
+            return paidPayment.getOrderName().equals(orderPaymentResponse.orderProductDtoList().getFirst().name());
         } else {
-            return paidPayment.getOrderName().equals(orderRequest.getOrderProducts().getFirst().name() + " 외 " + (orderRequest.getOrderProducts().size() - 1) + "건");
+            return paidPayment.getOrderName().equals(orderPaymentResponse.orderProductDtoList().getFirst().name() + " 외 " + (orderPaymentResponse.orderProductDtoList().size() - 1) + "건");
         }
     }
 

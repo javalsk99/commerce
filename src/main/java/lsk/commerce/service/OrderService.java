@@ -9,7 +9,7 @@ import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
-import lsk.commerce.dto.request.OrderRequest;
+import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.InvalidDataException;
@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -137,7 +138,13 @@ public class OrderService {
     }
 
     public void deleteOrder(String orderNumber) {
-        Order order = findOrderWithDeliveryPayment(orderNumber);
+        Optional<Order> optionalOrder = orderRepository.findWithDeliveryPayment(orderNumber);
+        if (optionalOrder.isEmpty()) {
+            return;
+        }
+
+        Order order = optionalOrder.get();
+
         order.validateDeletable();
 
         orderProductJdbcRepository.softDeleteOrderProductsByOrderId(order.getId());
@@ -149,8 +156,8 @@ public class OrderService {
 
     //결제 로직 검증용
     @Transactional(readOnly = true)
-    public OrderRequest getOrderRequest(Order order) {
-        return OrderRequest.orderChangeRequest(order);
+    public OrderPaymentResponse getOrderPaymentResponse(Order order) {
+        return OrderPaymentResponse.from(order);
     }
 
     //주문 리턴용

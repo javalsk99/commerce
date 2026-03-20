@@ -1,9 +1,10 @@
 package lsk.commerce.api.portone;
 
-public final class CompletePaymentRequest {
-    public String paymentId;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-    public CompletePaymentRequest(String paymentId) {
-        this.paymentId = paymentId;
-    }
+public record CompletePaymentRequest(
+        @NotBlank @Size(min = 12, max = 12)
+        String paymentId
+) {
 }

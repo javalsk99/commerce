@@ -14,7 +14,7 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
-import lsk.commerce.dto.request.OrderRequest;
+import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.InvalidDataException;
@@ -852,20 +852,14 @@ class OrderServiceTest {
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
                 });
             }
-        }
-
-        @Nested
-        class FailureCase {
 
             @Test
-            void orderNotFound() {
+            void shouldIgnoreDelete_WhenOrderNotFound() {
                 //given
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.empty());
 
-                //when & then
-                thenThrownBy(() -> orderService.deleteOrder(wrongOrderNumber))
-                        .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                //when
+                orderService.deleteOrder(wrongOrderNumber);
 
                 //then
                 thenSoftly(softly -> {
@@ -875,6 +869,44 @@ class OrderServiceTest {
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
                 });
             }
+
+            @Test
+            void idempotency() {
+                //given
+                Payment.requestPayment(order);
+                order.cancel();
+
+                given(orderRepository.findWithDeliveryPayment(anyString()))
+                        .willReturn(Optional.of(order))
+                        .willReturn(Optional.empty());
+                given(orderRepository.findWithDelivery(anyString())).willReturn(Optional.of(order));
+
+                //when 첫 번째 호출
+                orderService.deleteOrder(order.getOrderNumber());
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
+                });
+
+                //when & then 두 번째 호출
+                orderService.deleteOrder(order.getOrderNumber());
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().delete(any()));
+                });
+            }
+        }
+
+        @Nested
+        class FailureCase {
 
             @Test
             void failedSoftDeleteOrderProducts() {
@@ -897,65 +929,6 @@ class OrderServiceTest {
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
                 });
             }
-
-            @Test
-            void failedDeleteOrder() {
-                //given
-                order.cancel();
-
-                given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
-                given(orderRepository.findWithDelivery(anyString())).willReturn(Optional.of(order));
-                willThrow(new RuntimeException("DELETE Failed")).given(orderRepository).delete(any());
-
-                //when & then
-                thenThrownBy(() -> orderService.deleteOrder(order.getOrderNumber()))
-                        .isInstanceOf(RuntimeException.class)
-                        .hasMessage("DELETE Failed");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().delete(any()));
-                });
-            }
-
-            @Test
-            void alreadyDeleted() {
-                //given
-                Payment.requestPayment(order);
-                order.cancel();
-
-                given(orderRepository.findWithDeliveryPayment(anyString()))
-                        .willReturn(Optional.of(order))
-                        .willReturn(Optional.empty());
-                given(orderRepository.findWithDelivery(anyString())).willReturn(Optional.of(order));
-
-                //when 첫 번째 호출
-                orderService.deleteOrder(order.getOrderNumber());
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(anyString()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
-                });
-
-                //when & then 두 번째 호출
-                thenThrownBy(() -> orderService.deleteOrder(order.getOrderNumber()))
-                        .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().delete(any()));
-                });
-            }
         }
     }
 
@@ -970,18 +943,18 @@ class OrderServiceTest {
                 Payment.requestPayment(order);
 
                 //when
-                OrderRequest orderRequest = orderService.getOrderRequest(order);
+                OrderPaymentResponse orderPaymentResponse = orderService.getOrderPaymentResponse(order);
                 OrderResponse orderResponse = orderService.getOrderResponse(order);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(orderRequest)
+                    softly.then(orderPaymentResponse)
                             .extracting("orderNumber", "memberLoginId", "paymentId")
                             .containsExactlyInAnyOrder(order.getOrderNumber(), "id_A", order.getPayment().getPaymentId());
                     softly.then(orderResponse)
                             .extracting("paymentDate", "shippedDate", "deliveredDate")
                             .containsOnlyNulls();
-                    softly.then(orderRequest.getOrderProducts())
+                    softly.then(orderPaymentResponse.orderProductDtoList())
                             .usingRecursiveComparison()
                             .isEqualTo(orderResponse.orderProductDtoList());
                 });

@@ -30,3 +30,5 @@
 - [MockMvc](https://shinsunyoung.tistory.com/52)
 - [Record](https://m.blog.naver.com/seek316/223341255150)
 - [ResponseEntity List를 객체에 담아서 반환](https://hyeonic.tistory.com/197)
+- [WebTestClient](https://caporatang.tistory.com/32)
+- [WebTestClient](https://codefarm0.medium.com/webtestclient-vs-mockmvc-in-spring-boot-4e7354e1d1ab)

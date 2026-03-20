@@ -58,7 +58,7 @@
     checkout.load()
 
     function Checkout(storeId, channelKey) {
-      let orderRequest = null
+      let orderPaymentResponse = null
       this.load = async () => {
         const waitPortOne = new Promise((resolve) => {
           const polling = setInterval(() => {
@@ -78,7 +78,7 @@
             credentials: "include"
           })
           if (!response.ok) throw new Error("서버 응답 에러")
-          orderRequest = await response.json()
+          orderPaymentResponse = await response.json()
         }
 
         try {
@@ -98,13 +98,13 @@
 
         productListContainer.innerHTML = ""
 
-        orderRequest.orderProducts.forEach((product, index) => {
+        orderPaymentResponse.orderProductDtoList.forEach((product, index) => {
           totalAmount += product.price * product.count;
 
           if (index === 0) orderName = product.name;
 
           const productHtml = `
-            <div class="orderProducts-product" style="min-width: 120px; flex: 0 0 auto; text-align: center;">
+            <div class="orderProductDtoList-product" style="min-width: 120px; flex: 0 0 auto; text-align: center;">
                 <img src="/${product.name}.png" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" />
                 <h6 style="margin: 5px 0;">${product.name}</h6>
                 <p style="font-size: 0.8rem;">${product.price.toLocaleString()}원 / ${product.count}개</p>
@@ -113,11 +113,11 @@
           productListContainer.insertAdjacentHTML('beforeend', productHtml)
         })
 
-        if (orderRequest.orderProducts.length > 1) {
-          orderName += ` 외 ${orderRequest.orderProducts.length - 1}건`
+        if (orderPaymentResponse.orderProductDtoList.length > 1) {
+          orderName += ` 외 ${orderPaymentResponse.orderProductDtoList.length - 1}건`
         }
 
-        const finalAmount = orderRequest.totalAmount || totalAmount
+        const finalAmount = orderPaymentResponse.totalAmount || totalAmount
         document.getElementById("totalPriceDisplay").innerText = `${finalAmount.toLocaleString()}원`
 
         window.checkoutForm.onsubmit = async (e) => {
@@ -127,13 +127,13 @@
           const payment = await PortOne.requestPayment({
             storeId,
             channelKey,
-            paymentId: orderRequest.paymentId,
+            paymentId: orderPaymentResponse.paymentId,
             orderName: orderName,
             totalAmount: finalAmount,
             currency: "KRW",
             payMethod: "EASY_PAY",
             customData: {
-              orderNumber: orderRequest.orderNumber,
+              orderNumber: orderPaymentResponse.orderNumber,
             },
           })
 
@@ -144,7 +144,7 @@
             return
           }
 
-          const completeResponse = await fetch("/api/payment/complete", {
+          const completeResponse = await fetch("/api/payments/complete", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

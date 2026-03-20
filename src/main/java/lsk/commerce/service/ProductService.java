@@ -38,12 +38,12 @@ public class ProductService {
 
     public Product findProduct(String productNumber) {
         return productRepository.findByNumber(productNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다."));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
     }
 
     public Product findProductWithCategoryProduct(String productNumber) {
         return productRepository.findWithCategoryProduct(productNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다."));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
     }
 
     public List<Product> findProducts() {

@@ -308,7 +308,7 @@ class ProductServiceTest {
                 //when & then
                 thenThrownBy(() -> productService.findProduct("lllIIIll00OO"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 상품입니다.");
+                        .hasMessage("존재하지 않는 상품입니다");
 
                 //then
                 BDDMockito.then(productRepository).should().findByNumber(anyString());

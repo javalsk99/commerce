@@ -187,12 +187,12 @@ class CategoryProductServiceTest {
             void productNotFound() {
                 //given
                 given(categoryService.findCategoryByName(anyString())).willReturn(category2);
-                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다."));
+                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다"));
 
                 //when & then
                 thenThrownBy(() -> categoryProductService.disconnect("댄스", "lllIIIll00OO"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다.");
+                        .hasMessage("존재하지 않는 상품입니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -375,12 +375,12 @@ class CategoryProductServiceTest {
             @Test
             void productNotFound() {
                 //given
-                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다."));
+                given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다"));
 
                 //when & then
                 thenThrownBy(() -> categoryProductService.connect("lllIIIll00OO", "발라드"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 상품입니다.");
+                        .hasMessage("존재하지 않는 상품입니다");
 
                 //then
                 thenSoftly(softly -> {
