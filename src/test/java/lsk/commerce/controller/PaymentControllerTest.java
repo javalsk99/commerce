@@ -11,12 +11,16 @@ import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.OrderStatus;
+import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.dto.OrderProductDto;
 import lsk.commerce.dto.request.PaymentCompleteResponse;
 import lsk.commerce.dto.response.OrderPaymentResponse;
+import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.dto.response.PaymentResponse;
 import lsk.commerce.service.OrderService;
+import lsk.commerce.service.PaymentService;
 import lsk.commerce.service.PaymentSyncService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,19 +34,18 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.MockMvc;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
-import static org.junit.jupiter.params.provider.Arguments.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @WebMvcTest(
         controllers = PaymentController.class,
@@ -65,7 +68,136 @@ class PaymentControllerTest {
     WebhookVerifier portoneWebhook;
 
     @MockitoBean
+    PaymentService paymentService;
+
+    @MockitoBean
     PaymentSyncService paymentSyncService;
+
+    @Nested
+    class RequestPayment {
+
+        @Nested
+        class SuccessCase {
+
+            @Test
+            void basic() {
+                //given
+                Order order = createOrder();
+                String orderNumber = order.getOrderNumber();
+
+                Payment.requestPayment(order);
+                PaymentResponse paymentResponse = new PaymentResponse(order.getPayment().getPaymentAmount(), order.getPayment().getPaymentStatus(), order.getOrderStatus(), order.getOrderDate(), order.getDelivery().getDeliveryStatus());
+
+                given(paymentService.request(anyString())).willReturn(order.getPayment());
+                given(paymentService.getPaymentResponse(any(Payment.class))).willReturn(paymentResponse);
+
+                //when & then
+                client.post().uri("/payments/orders/{orderNumber}", orderNumber)
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBody()
+                        .jsonPath("$.data.totalAmount").isEqualTo(75000)
+                        .jsonPath("$.data.paymentStatus").isEqualTo(PaymentStatus.PENDING.name())
+                        .jsonPath("$.data.orderStatus").isEqualTo(OrderStatus.CREATED.name())
+                        .jsonPath("$.data.deliveryStatus").isEqualTo(DeliveryStatus.WAITING.name())
+                        .jsonPath("$.count").isEqualTo(1)
+                        .consumeWith(System.out::println);
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(paymentService).should().request(orderNumber));
+                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentResponse(order.getPayment()));
+                });
+            }
+        }
+
+        @Nested
+        class FailureCase {
+
+            @Test
+            void request_Failed_AlreadyRequest() {
+                //given
+                Order order = createOrder();
+                String orderNumber = order.getOrderNumber();
+
+                Payment.requestPayment(order);
+                PaymentResponse paymentResponse = new PaymentResponse(order.getPayment().getPaymentAmount(), order.getPayment().getPaymentStatus(), order.getOrderStatus(), order.getOrderDate(), order.getDelivery().getDeliveryStatus());
+
+                given(paymentService.request(anyString()))
+                        .willReturn(order.getPayment())
+                        .willThrow(new IllegalStateException("이미 결제 정보가 있습니다"));
+                given(paymentService.getPaymentResponse(any(Payment.class))).willReturn(paymentResponse);
+
+                //when & then 첫 번째 요청
+                client.post().uri("/payments/orders/{orderNumber}", orderNumber)
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBody()
+                        .jsonPath("$.data.totalAmount").isEqualTo(75000)
+                        .jsonPath("$.data.paymentStatus").isEqualTo(PaymentStatus.PENDING.name())
+                        .jsonPath("$.data.orderStatus").isEqualTo(OrderStatus.CREATED.name())
+                        .jsonPath("$.data.deliveryStatus").isEqualTo(DeliveryStatus.WAITING.name())
+                        .jsonPath("$.count").isEqualTo(1)
+                        .consumeWith(System.out::println);
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(paymentService).should().request(orderNumber));
+                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentResponse(order.getPayment()));
+                });
+
+                //when & then 두 번째 요청
+                client.post().uri("/payments/orders/{orderNumber}", orderNumber)
+                        .exchange()
+                        .expectStatus().isBadRequest()
+                        .expectBody()
+                        .jsonPath("$.code").isEqualTo("BAD_STATUS")
+                        .jsonPath("$.message").isEqualTo("이미 결제 정보가 있습니다")
+                        .consumeWith(System.out::println);
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(paymentService).should(times(2)).request(orderNumber));
+                    softly.check(() -> BDDMockito.then(paymentService).should().getPaymentResponse(any()));
+                });
+            }
+        }
+
+        private Order createOrder() {
+            Member member = Member.builder()
+                    .name("UserA")
+                    .loginId("id_A")
+                    .password("00000000")
+                    .city("Seoul")
+                    .street("Gangnam")
+                    .zipcode("01234")
+                    .build();
+            Delivery delivery = new Delivery(member);
+
+            Album album1 = createAlbum1("BANG BANG");
+            Album album2 = createAlbum1("BLACKHOLE");
+            OrderProduct orderProduct1 = OrderProduct.createOrderProduct(album1, 3);
+            OrderProduct orderProduct2 = OrderProduct.createOrderProduct(album2, 2);
+            return Order.createOrder(member, delivery, List.of(orderProduct1, orderProduct2));
+        }
+
+        private Album createAlbum1(String name) {
+            return Album.builder()
+                    .name(name)
+                    .price(15000)
+                    .stockQuantity(10)
+                    .artist("IVE")
+                    .studio("STARSHIP")
+                    .build();
+        }
+
+        private static OrderResponse getOrderResponse() {
+            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 3, 45000);
+            OrderProductDto orderProductDto2 = new OrderProductDto("BLACKHOLE", 15000, 4, 60000);
+            return new OrderResponse(List.of(orderProductDto1, orderProductDto2), 105000, OrderStatus.CREATED, LocalDateTime.now(),
+                    PaymentStatus.PENDING, null, DeliveryStatus.WAITING, null, null);
+        }
+    }
 
     @Nested
     class GetOrder {

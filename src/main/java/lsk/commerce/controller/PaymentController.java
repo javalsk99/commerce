@@ -8,10 +8,14 @@ import lombok.RequiredArgsConstructor;
 import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.SyncPaymentException;
 import lsk.commerce.domain.Order;
+import lsk.commerce.domain.Payment;
 import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.request.PaymentCompleteResponse;
+import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.dto.response.PaymentResponse;
 import lsk.commerce.dto.response.Result;
 import lsk.commerce.service.OrderService;
+import lsk.commerce.service.PaymentService;
 import lsk.commerce.service.PaymentSyncService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,9 +30,18 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final OrderService orderService;
     private final WebhookVerifier portoneWebhook;
+    private final OrderService orderService;
+    private final PaymentService paymentService;
     private final PaymentSyncService paymentSyncService;
+
+    @PostMapping("/payments/orders/{orderNumber}")
+    public ResponseEntity<Result<PaymentResponse>> requestPayment(@PathVariable("orderNumber") String orderNumber) {
+        Payment payment = paymentService.request(orderNumber);
+        PaymentResponse paymentResponse = paymentService.getPaymentResponse(payment);
+        return ResponseEntity.ok(new Result<>(paymentResponse, 1));
+    }
+
 
     @GetMapping("/api/payments/{orderNumber}")
     public ResponseEntity<Result<OrderPaymentResponse>> getOrder(@PathVariable("orderNumber") String orderNumber) {

@@ -95,7 +95,7 @@ class ProductControllerTest {
                         .build();
                 String json = objectMapper.writeValueAsString(request);
 
-                given(productService.register(any(ProductCreateRequest.class), anyList())).willReturn("BANG BANG");
+                given(productService.register(any(ProductCreateRequest.class), anyList())).willReturn(productNumber);
 
                 //when & then
                 mvc.perform(post("/products")

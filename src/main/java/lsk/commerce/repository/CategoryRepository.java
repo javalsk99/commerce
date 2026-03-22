@@ -25,7 +25,8 @@ public class CategoryRepository {
                                 " left join fetch c.children" +
                                 " where c.name = :name", Category.class)
                 .setParameter("name", categoryName)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 

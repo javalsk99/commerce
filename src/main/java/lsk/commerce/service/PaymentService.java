@@ -5,15 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.portone.sdk.server.payment.PaidPayment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.PaymentCustomData;
 import lsk.commerce.api.portone.SyncPaymentException;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.OrderProductDto;
-import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.request.PaymentCompleteResponse;
+import lsk.commerce.dto.response.OrderPaymentResponse;
+import lsk.commerce.dto.response.PaymentResponse;
 import lsk.commerce.event.PaymentCompletedEvent;
 import lsk.commerce.repository.PaymentRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,13 +36,11 @@ public class PaymentService {
     private final ProductService productService;
     private final ApplicationEventPublisher eventPublisher;
 
-    //이후 결제 진행은 다른 비즈니스 로직 다 생성 후 진행
-    public Order request(String orderNumber) {
-        Order order = orderService.findOrderWithAllExceptMember(orderNumber);
+    public Payment request(String orderNumber) {
+        Order order = orderService.findOrderWithDeliveryPayment(orderNumber);
         Payment.requestPayment(order);
-        new CompletePaymentRequest(order.getPayment().getPaymentId());
         paymentRepository.save(order.getPayment());
-        return order;
+        return order.getPayment();
     }
 
     @Transactional(readOnly = true)
@@ -76,6 +74,11 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public PaymentCompleteResponse getPaymentCompleteResponse(Payment payment) {
         return PaymentCompleteResponse.from(payment);
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentResponse getPaymentResponse(Payment payment) {
+        return PaymentResponse.from(payment);
     }
 
     private boolean verifyPayment(PaidPayment paidPayment) {

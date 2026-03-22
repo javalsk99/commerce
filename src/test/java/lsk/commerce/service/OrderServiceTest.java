@@ -235,6 +235,29 @@ class OrderServiceTest {
             }
 
             @Test
+            void exceed() {
+                Map<String, Integer> exceedProductMap = new HashMap<>();
+                exceedProductMap.put(productNumber1, 11);
+                OrderCreateRequest request = new OrderCreateRequest("id_A", exceedProductMap);
+
+                given(memberService.findMemberByLoginId(anyString())).willReturn(member);
+                given(productService.findProducts()).willReturn(List.of(album, book, movie));
+
+                //when & then
+                thenThrownBy(() -> orderService.order(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("재고가 부족합니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(memberService).should().findMemberByLoginId(anyString()));
+                    softly.check(() -> BDDMockito.then(productService).should().findProducts());
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).save(any()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).saveAll(any()));
+                });
+            }
+
+            @Test
             void productMapContainsNullValue() {
                 //given
                 Map<String, Integer> hasNullProductMap = new HashMap<>();

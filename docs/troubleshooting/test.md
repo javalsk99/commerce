@@ -311,3 +311,35 @@
               String message
       ) {
       }
+
+
+## 통합 테스트
+- org.springframework.orm.jpa.JpaSystemException: A problem occurred in the SQL executor : Error advancing (next) ResultSet position [Operation not allowed after ResultSet closed]  
+  원인 추측: 비동기, REQUIRES_NEW 환경 때문에 @Transactional을 사용하지 않아서 발생한 것으로 추측  
+  해결: 리포지토리에서 getResultStream()을 getResultList().stream()으로 변경했다.
+
+      public Optional<Order> findWithAll(String orderNumber) {
+          return em.createQuery(
+                          "select o from Order o" +
+                                  " join fetch o.delivery" +
+                                  " left join fetch o.payment" +
+                                  " left join fetch o.orderProducts op" +
+                                  " join fetch op.product" +
+                                  " join fetch o.member" +
+                                  " where o.orderNumber = :orderNumber", Order.class)
+                  .setParameter("orderNumber", orderNumber)
+                  .getResultList()
+                  .stream()
+                  .findFirst();
+      }
+
+  getResultList().stream()과 getResultStream()의 차이  
+  getResultList().stream()은 DB에서 데이터를 List로 가져와서 Stream으로 변환해서 커넥션을 바로 반납한다.  
+  getResultStream()은 DB에서 데이터를 Stream으로 반환해서 메모리는 적게 차지하지만 커넥션을 오래 가지고 있는다.
+  그래서 @Transactional을 사용하지 않는 해당 테스트와 적은 메모리와 많은 인원이 사용하는 커머스 프로젝트에서는 커넥션을 길게 가지고 있는 getResultStream()이 적합하지 않는다.
+
+
+- 결제 완료 테스트 중 예외 발생 lsk.commerce.api.portone.SyncPaymentException: 결제 정보 조회 중 오류 발생
+  원인: 자바스크립트를 통해 포트원 서버에 주문과 결제 정보를 등록해야 한다.
+  결론: 통합 테스트에서는 결제 완료 테스트를 하지 못하고 E2E 테스트에서 진행한다.
+

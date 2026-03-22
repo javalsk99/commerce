@@ -33,7 +33,7 @@ public class ProductService {
 
         product.connectCategories(categories);
         productRepository.save(product);
-        return product.getName();
+        return product.getProductNumber();
     }
 
     public Product findProduct(String productNumber) {

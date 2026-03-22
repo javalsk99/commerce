@@ -91,7 +91,8 @@
 
       em.clear();
 
-  추가 문제: 중간에 OrderProduct를 지우고 em.clear()를 해서 예상치 못한 select 쿼리가 다수 생겼다. (추후 해결 예정)
+  추가 문제: 중간에 OrderProduct를 지우고 em.clear()를 해서 예상치 못한 select 쿼리가 다수 생겼다.  
+  원인 발견: 컨트롤러의 추가 조회 및 DTO 변환으로 나온 쿼리를 보고 em.clear()로 인한 쿼리로 착각했던 것으로 추측된다.
 
 
 - DELETE /orders/{orderNumber} 주문에서 배송과 결제를 Fetch Join으로 가져오게 변경

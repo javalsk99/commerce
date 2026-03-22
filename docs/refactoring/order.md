@@ -8,7 +8,8 @@
 
 
 - changeOrder  
-  POST에서 멱등성에 더 적합한 PATCH로 변경했다.
+  POST에서 멱등성에 더 적합한 PATCH로 변경했다.  
+  Delivery와 Payment만 가져오는 Fetch Join에 OrderProducts도 Fetch Join으로 추가했다.
 
 
 - cancelOrder  

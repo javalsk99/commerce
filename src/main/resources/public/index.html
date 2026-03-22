@@ -77,8 +77,9 @@
             method: "GET",
             credentials: "include"
           })
+          const result = await response.json()
           if (!response.ok) throw new Error("서버 응답 에러")
-          orderPaymentResponse = await response.json()
+          orderPaymentResponse = result.data
         }
 
         try {
@@ -156,7 +157,8 @@
           })
           this.setWaitingPayment(false)
           if (completeResponse.ok) {
-            const paymentComplete = await completeResponse.json()
+            const result = await completeResponse.json()
+            const paymentComplete = result.data
             switch (paymentComplete.status) {
               case "PAID":
                 this.openSuccessDialog()

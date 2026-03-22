@@ -23,7 +23,8 @@ public class PaymentRepository {
                         " join fetch p.order" +
                         " where p.paymentId = :paymentId", Payment.class)
                 .setParameter("paymentId", paymentId)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 
@@ -34,7 +35,8 @@ public class PaymentRepository {
                                 " join fetch o.delivery" +
                                 " where p.paymentId = :paymentId", Payment.class)
                 .setParameter("paymentId", paymentId)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 }

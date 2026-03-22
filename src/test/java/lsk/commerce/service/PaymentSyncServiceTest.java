@@ -111,8 +111,8 @@ class PaymentSyncServiceTest {
 
                 //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
-                        .assertNext(paymentRequest ->
-                                then(paymentRequest)
+                        .assertNext(response ->
+                                then(response)
                                         .extracting("paymentId", "paymentStatus")
                                         .containsExactly(order.getPayment().getPaymentId(), PaymentStatus.COMPLETED)
                         )
@@ -155,8 +155,8 @@ class PaymentSyncServiceTest {
 
                 //when & then
                 StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
-                        .assertNext(paymentRequest ->
-                                then(paymentRequest)
+                        .assertNext(response ->
+                                then(response)
                                         .extracting("paymentId", "paymentStatus")
                                         .containsExactly(order.getPayment().getPaymentId(), PaymentStatus.FAILED)
                         )

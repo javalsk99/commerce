@@ -2,6 +2,7 @@ package lsk.commerce.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.domain.Order;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
@@ -55,7 +56,7 @@ public class OrderController {
     @PatchMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderResponse>> changeOrder(@PathVariable("orderNumber") String orderNumber, @RequestBody @Valid OrderChangeRequest request) {
         orderService.changeOrder(orderNumber, request);
-        Order order = orderService.findOrderWithDeliveryPayment(orderNumber);
+        Order order = orderService.findOrderWithAllExceptMember(orderNumber);
         OrderResponse orderResponse = orderService.getOrderResponse(order);
         return ResponseEntity.ok(new Result<>(orderResponse, 1));
     }
@@ -64,13 +65,6 @@ public class OrderController {
     public ResponseEntity<Result<String>> delete(@PathVariable("orderNumber") String orderNumber) {
         orderService.deleteOrder(orderNumber);
         return ResponseEntity.ok(new Result<>("delete", 1));
-    }
-
-    @PostMapping("/orders/{orderNumber}/payments")
-    public ResponseEntity<Result<OrderResponse>> requestPayment(@PathVariable("orderNumber") String orderNumber) {
-        Order order = paymentService.request(orderNumber);
-        OrderResponse orderResponse = orderService.getOrderResponse(order);
-        return ResponseEntity.ok(new Result<>(orderResponse, 1));
     }
 
     @PatchMapping("/orders/{orderNumber}/cancel")

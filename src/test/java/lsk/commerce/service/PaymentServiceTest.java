@@ -84,7 +84,7 @@ class PaymentServiceTest {
     Order singleOrder;
     Order multipleOrder;
     String wrongOrderNumber = "lllIIllIO00O";
-    String wrongPaymentId = "dfoijxjfd342987jdfk";
+    String wrongPaymentId = "lllIIIll00OOII1111llO0O0Il1Il100OOlI";
 
     @BeforeEach
     void beforeEach() {
@@ -128,14 +128,14 @@ class PaymentServiceTest {
             @Test
             void basic() {
                 //given
-                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
 
                 //when
                 paymentService.request(multipleOrder.getOrderNumber());
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should().save(multipleOrder.getPayment()));
                 });
                 then(multipleOrder.getPayment())
@@ -150,7 +150,7 @@ class PaymentServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
                 //when & then
                 thenThrownBy(() -> paymentService.request(wrongOrderNumber))
@@ -159,7 +159,7 @@ class PaymentServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).save(any()));
                 });
             }
@@ -167,14 +167,14 @@ class PaymentServiceTest {
             @Test
             void alreadyRequest() {
                 //given
-                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
 
                 //when 첫 번째 호출
                 paymentService.request(multipleOrder.getOrderNumber());
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should().save(multipleOrder.getPayment()));
                 });
                 then(multipleOrder.getPayment())
@@ -188,7 +188,7 @@ class PaymentServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should().save(any()));
                 });
             }
@@ -521,8 +521,7 @@ class PaymentServiceTest {
                 String orderName = givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
                 paidPaymentToString(orderName);
 
-                String paymentId = "jfdioj23489fkjn2";
-                given(paidPayment.getId()).willReturn(paymentId);
+                given(paidPayment.getId()).willReturn(wrongPaymentId);
                 given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.empty());
 
                 //when & then
@@ -643,7 +642,7 @@ class PaymentServiceTest {
                 given(paymentRepository.findWithOrder(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> paymentService.failedPayment("djfioekdd342748"))
+                thenThrownBy(() -> paymentService.failedPayment(wrongPaymentId))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 결제 번호입니다");
 

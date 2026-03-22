@@ -21,7 +21,8 @@ public class ProductRepository {
     public Optional<Product> findByNumber(String productNumber) {
         return em.createQuery("select p from Product p where p.productNumber = :productNumber", Product.class)
                 .setParameter("productNumber", productNumber)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 
@@ -31,7 +32,8 @@ public class ProductRepository {
                                 " left join fetch p.categoryProducts" +
                                 " where p.productNumber = :productNumber", Product.class)
                 .setParameter("productNumber", productNumber)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 
@@ -42,7 +44,8 @@ public class ProductRepository {
                                 " left join fetch cp.category" +
                                 " where p.productNumber = :productNumber", Product.class)
                 .setParameter("productNumber", productNumber)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 
