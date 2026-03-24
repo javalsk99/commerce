@@ -264,7 +264,7 @@ class OrderTest {
     }
 
     @Nested
-    class Update extends Setup {
+    class Change extends Setup {
 
         @Nested
         class SuccessCase {
@@ -278,7 +278,7 @@ class OrderTest {
                 OrderProduct orderProduct4 = OrderProduct.createOrderProduct(album, 2);
 
                 //when
-                order.updateOrder(List.of(orderProduct3, orderProduct4));
+                order.changeOrder(List.of(orderProduct3, orderProduct4));
 
                 //then
                 thenSoftly(softly -> {

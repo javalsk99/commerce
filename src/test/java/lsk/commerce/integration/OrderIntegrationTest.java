@@ -10,6 +10,7 @@ import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
+import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.repository.OrderRepository;
 import lsk.commerce.repository.PaymentRepository;
@@ -110,6 +111,9 @@ public class OrderIntegrationTest {
             @Test
             @DisplayName("재고를 초과해서 주문하면 실패한다")
             void exceed() {
+                em.flush();
+                em.clear();
+
                 System.out.println("================= WHEN START =================");
 
                 //when & then
@@ -126,7 +130,7 @@ public class OrderIntegrationTest {
 
                 //then
                 Product product = productRepository.findByNumber(albumNumber1)
-                        .orElseThrow(() -> new AssertionError("상품이 저장되지 않았습니다."));
+                        .orElseThrow(() -> new AssertionError("상품이 저장되지 않았습니다"));
 
                 then(product.getStockQuantity()).isEqualTo(10);
             }
@@ -167,6 +171,34 @@ public class OrderIntegrationTest {
                         .extracting("name", "stockQuantity")
                         .containsExactlyInAnyOrder(tuple("BANG BANG", 10), tuple("BLACKHOLE", 6));
             }
+
+            @Test
+            @DisplayName("상품 가격이 변해도 기존 주문의 금액은 변하지 않는다")
+            void totalAmountShouldNotChange_WhenProductPriceChange() {
+                //given
+                String orderNumber = orderService.order(new OrderCreateRequest(memberLoginId, Map.of(albumNumber1, 1)));
+
+                em.flush();
+                em.clear();
+
+                ProductChangeRequest request = new ProductChangeRequest(20000, 10);
+
+                System.out.println("================= WHEN START =================");
+
+                //when
+                productService.changePriceAndStock(albumNumber1, request);
+
+                em.flush();
+                em.clear();
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                Order order = orderRepository.findByOrderNumber(orderNumber)
+                        .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다"));
+
+                then(order.getTotalAmount()).isEqualTo(15000);
+            }
         }
     }
 
@@ -179,6 +211,9 @@ public class OrderIntegrationTest {
             @Test
             @DisplayName("주문 시 재고가 감소되고, 주문 취소 시 재고가 복구된다")
             void cancelOrder() {
+                em.flush();
+                em.clear();
+
                 System.out.println("============== FIRST WHEN START ==============");
 
                 //when 주문 생성
@@ -233,7 +268,7 @@ public class OrderIntegrationTest {
                 paymentService.request(orderNumber);
 
                 Order order = orderRepository.findWithAllExceptMember(orderNumber)
-                        .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다."));
+                        .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다"));
                 Long deliveryId = order.getDelivery().getId();
                 List<Long> orderProductsId = order.getOrderProducts().stream()
                         .map(OrderProduct::getId)

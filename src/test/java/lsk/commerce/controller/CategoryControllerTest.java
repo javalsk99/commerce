@@ -555,13 +555,13 @@ class CategoryControllerTest {
             @Test
             void disconnect_Failed_ProductNotFound() throws Exception {
                 //given
-                given(categoryProductService.disconnect(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다."));
+                given(categoryProductService.disconnect(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
 
                 //when & then
                 mvc.perform(delete("/categories/{categoryName}/{productNumber}", "가요", "lllIIIll00OO"))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다."))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
                         .andDo(print());
 
                 //then

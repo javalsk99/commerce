@@ -29,11 +29,17 @@
 
 
 - deleteOrder  
-  멱등성을 위해 조회 후 존재하지 않으면 이후의 로직을 실행하지 않고 끝낸다.
+  멱등성을 위해 조회 후 존재하지 않으면 이후의 로직을 실행하지 않고 끝낸다.  
+  두 번째 조회에서 Delivery만 Fetch Join에서 Payment도 같이 Fetch Join으로 변경했다.  
+  OrderProduct를 Fetch Join하지 않은 이유는 JDBC는 조회를 하지 않아도 추가 쿼리가 나오지 않아서 Fetch Join하지 않았다.
 
 
 ## Order
 - getOrderProductsAsMap  
   productName이 유니크 키가 아니어서 나노 아이디를 사용하는 productNumber로 변경했다.  
   productNumber가 없을 때, 발생하는 예외는 데이터 정합성이 깨져서 발생하는 예외이므로 500번 에러를 반환하기 위해 커스텀 예외를 만들어 500 에러를 반환했다.
+
+
+- changeOrder
+  주문 상품만 변경해서 updateOrder를 changeOrder로 변경했다.
 

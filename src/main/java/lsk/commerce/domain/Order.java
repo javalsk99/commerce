@@ -137,7 +137,7 @@ public class Order {
                         OrderProduct::getCount));
     }
 
-    public void updateOrder(List<OrderProduct> newOrderProducts) {
+    public void changeOrder(List<OrderProduct> newOrderProducts) {
         int calculatedPrice = 0;
         for (OrderProduct newOrderProduct : newOrderProducts) {
             this.addOrderProduct(newOrderProduct);

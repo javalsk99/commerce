@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.request.ProductCreateRequest;
-import lsk.commerce.dto.request.ProductUpdateRequest;
+import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.Result;
@@ -59,8 +59,8 @@ public class ProductController {
     }
 
     @PatchMapping("/products/{productNumber}")
-    public ResponseEntity<Result<ProductResponse>> updateProduct(@PathVariable("productNumber") String productNumber, @RequestBody @Valid ProductUpdateRequest request) {
-        Product product = productService.updateProduct(productNumber, request);
+    public ResponseEntity<Result<ProductResponse>> changeProduct(@PathVariable("productNumber") String productNumber, @RequestBody @Valid ProductChangeRequest request) {
+        Product product = productService.changePriceAndStock(productNumber, request);
         ProductResponse productResponse = productService.getProductDto(product);
         return ResponseEntity.ok(new Result<>(productResponse, 1));
     }

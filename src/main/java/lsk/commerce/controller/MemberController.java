@@ -53,7 +53,7 @@ public class MemberController {
     @PostMapping("/members/{memberLoginId}/password")
     public ResponseEntity<Result<String>> changePassword(@PathVariable("memberLoginId") String memberLoginId, @RequestBody @Valid MemberChangePasswordRequest request) {
         memberService.changePassword(memberLoginId, request);
-        return ResponseEntity.ok(new Result<>("비밀번호가 변경되었습니다.", 1));
+        return ResponseEntity.ok(new Result<>("비밀번호가 변경되었습니다", 1));
     }
 
     @PatchMapping("/members/{memberLoginId}/address")

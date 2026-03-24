@@ -27,7 +27,6 @@ import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static lombok.AccessLevel.PROTECTED;
-import static lombok.AccessLevel.PUBLIC;
 
 @Entity
 @Inheritance(strategy = SINGLE_TABLE)
@@ -73,20 +72,20 @@ public abstract class Product {
         this.stockQuantity = stockQuantity;
     }
 
-    protected void addStock(Integer quantity) {
-        if (quantity == null) {
+    protected void addStock(Integer stock) {
+        if (stock == null) {
             throw new IllegalArgumentException("재고가 추가될 수량이 없습니다");
         }
 
-        this.stockQuantity += quantity;
+        this.stockQuantity += stock;
     }
 
-    protected void removeStock(Integer quantity) {
-        if (quantity == null) {
+    protected void removeStock(Integer stock) {
+        if (stock == null) {
             throw new IllegalArgumentException("재고가 감소될 수량이 없습니다");
         }
 
-        int restStock = this.stockQuantity - quantity;
+        int restStock = this.stockQuantity - stock;
         if (restStock < 0) {
             throw new IllegalArgumentException("재고가 부족합니다");
         }
@@ -94,14 +93,14 @@ public abstract class Product {
         this.stockQuantity = restStock;
     }
 
-    protected void updateStock(Integer quantity, Integer newQuantity) {
-        if (quantity == null) {
+    protected void changeStock(Integer stock, Integer newStock) {
+        if (stock == null) {
             throw new IllegalArgumentException("재고가 추가될 수량이 없습니다");
-        } else if (newQuantity == null) {
+        } else if (newStock == null) {
             throw new IllegalArgumentException("재고가 감소될 수량이 없습니다");
         }
 
-        int restStock = this.stockQuantity + quantity - newQuantity;
+        int restStock = this.stockQuantity + stock - newStock;
         if (restStock < 0) {
             throw new IllegalArgumentException("재고가 부족합니다");
         }
@@ -110,12 +109,12 @@ public abstract class Product {
     }
 
     //가격, 수량만 변경
-    public void updateProduct(Integer newPrice, Integer newStockQuantity) {
+    public void changePriceAndStock(Integer newPrice, Integer newStock) {
         if (newPrice != null && !newPrice.equals(this.price)) {
             this.price = newPrice;
         }
-        if (newStockQuantity != null && !newStockQuantity.equals(this.stockQuantity)) {
-            this.stockQuantity = newStockQuantity;
+        if (newStock != null && !newStock.equals(this.stockQuantity)) {
+            this.stockQuantity = newStock;
         }
     }
 

@@ -102,7 +102,7 @@ class ProductTest {
         class FailureCase {
 
             @Test
-            void quantityNull() {
+            void stockNull() {
                 //given
                 Album album = Album.builder()
                         .stockQuantity(3)
@@ -144,7 +144,7 @@ class ProductTest {
         class FailureCase {
 
             @Test
-            void quantityNull() {
+            void stockNull() {
                 //given
                 Album album = Album.builder()
                         .stockQuantity(3)
@@ -178,7 +178,7 @@ class ProductTest {
     }
 
     @Nested
-    class UpdateStock {
+    class ChangeStock {
 
         @Nested
         class SuccessCase {
@@ -191,7 +191,7 @@ class ProductTest {
                         .build();
 
                 //when
-                album.updateStock(2, 3);
+                album.changeStock(2, 3);
 
                 //then
                 then(album.getStockQuantity()).isEqualTo(2);
@@ -202,7 +202,7 @@ class ProductTest {
         class FailureCase {
 
             @Test
-            void quantityNull() {
+            void stockNull() {
                 //given
                 Album album = Album.builder()
                         .stockQuantity(3)
@@ -210,10 +210,10 @@ class ProductTest {
 
                 //when & then
                 thenSoftly(softly -> {
-                    softly.thenThrownBy(() -> album.updateStock(null, 3))
+                    softly.thenThrownBy(() -> album.changeStock(null, 3))
                             .isInstanceOf(IllegalArgumentException.class)
                             .hasMessage("재고가 추가될 수량이 없습니다");
-                    softly.thenThrownBy(() -> album.updateStock(2, null))
+                    softly.thenThrownBy(() -> album.changeStock(2, null))
                             .isInstanceOf(IllegalArgumentException.class)
                             .hasMessage("재고가 감소될 수량이 없습니다");
                 });
@@ -230,7 +230,7 @@ class ProductTest {
                         .build();
 
                 //when & then
-                thenThrownBy(() -> album.updateStock(1, 5))
+                thenThrownBy(() -> album.changeStock(1, 5))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("재고가 부족합니다");
 
@@ -241,7 +241,7 @@ class ProductTest {
     }
 
     @Nested
-    class Update {
+    class Change {
 
         @Nested
         class SuccessCase {
@@ -255,7 +255,7 @@ class ProductTest {
                         .build();
 
                 //when
-                album.updateProduct(12000, 20);
+                album.changePriceAndStock(12000, 20);
 
                 //then
                 then(album)
@@ -272,7 +272,7 @@ class ProductTest {
                         .build();
 
                 //when
-                album.updateProduct(null, 20);
+                album.changePriceAndStock(null, 20);
 
                 //then
                 then(album)
@@ -281,7 +281,7 @@ class ProductTest {
             }
 
             @Test
-            void stockQuantityNull() {
+            void stockNull() {
                 //given
                 Album album = Album.builder()
                         .price(15000)
@@ -289,7 +289,7 @@ class ProductTest {
                         .build();
 
                 //when
-                album.updateProduct(12000, null);
+                album.changePriceAndStock(12000, null);
 
                 //then
                 then(album)

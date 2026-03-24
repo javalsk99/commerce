@@ -6,7 +6,7 @@ import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.ProductCreateRequest;
-import lsk.commerce.dto.request.ProductUpdateRequest;
+import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
@@ -233,7 +233,7 @@ class ProductServiceTest {
                 given(categoryService.validateAndGetCategories(anyList())).willThrow(new IllegalArgumentException());
 
                 //when & then
-                thenThrownBy(() -> productService.register(request, List.of("가요")))
+                thenThrownBy(() -> productService.register(request, List.of("락")))
                         .isInstanceOf(IllegalArgumentException.class);
 
                 //then
@@ -317,7 +317,7 @@ class ProductServiceTest {
     }
 
     @Nested
-    class Update {
+    class Change {
 
         @Nested
         class SuccessCase {
@@ -332,12 +332,12 @@ class ProductServiceTest {
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
-                ProductUpdateRequest request = new ProductUpdateRequest(12000, 20);
+                ProductChangeRequest request = new ProductChangeRequest(12000, 20);
 
                 given(productRepository.findByNumber(anyString())).willReturn(Optional.of(album));
 
                 //when
-                productService.updateProduct(productNumber, request);
+                productService.changePriceAndStock(productNumber, request);
 
                 //then
                 then(album)

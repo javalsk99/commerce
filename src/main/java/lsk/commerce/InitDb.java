@@ -2,15 +2,19 @@ package lsk.commerce;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
+import lsk.commerce.repository.MemberRepository;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.MemberService;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.ProductService;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +38,9 @@ public class InitDb {
     @RequiredArgsConstructor
     static class InitService {
 
+        private final JdbcTemplate jdbcTemplate;
+        private final PasswordEncoder passwordEncoder;
+        private final MemberRepository memberRepository;
         private final MemberService memberService;
         private final CategoryService categoryService;
         private final ProductService productService;
@@ -44,7 +51,7 @@ public class InitDb {
         }
 
         private void createOrders() {
-            memberService.adminJoin(createMemberRequest("test", "testId", "testPassword"));
+            createAdmin();
             String userAId = memberService.join(createMemberRequest("userA", "userAId", "userAPassword"));
             String userBId = memberService.join(createMemberRequest("userB", "userBId", "userBPassword"));
             memberService.join(createMemberRequest("userC", "userCId", "userCPassword"));
@@ -80,6 +87,21 @@ public class InitDb {
             orderService.order(new OrderCreateRequest(userAId, Map.of(albumNumber1, 3, albumNumber4, 2, albumNumber6, 5)));
             orderService.order(new OrderCreateRequest(userBId, Map.of(bookNumber1, 1, bookNumber2, 4, movieNumber1, 3, movieNumber2, 2)));
             orderService.order(new OrderCreateRequest(userBId, Map.of(movieNumber1, 5)));
+        }
+
+        private void createAdmin() {
+            Member admin = Member.builder()
+                    .name("test")
+                    .loginId("testId")
+                    .password(passwordEncoder.encode("testPassword"))
+                    .city("Seoul")
+                    .street("Gangbuk")
+                    .zipcode("11111")
+                    .build();
+            memberRepository.save(admin);
+
+            String sql = "UPDATE member SET grade = 'ADMIN' WHERE name = ?";
+            jdbcTemplate.update(sql, admin.getName());
         }
 
         private static MemberCreateRequest createMemberRequest(String name, String loginId, String password) {

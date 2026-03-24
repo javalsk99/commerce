@@ -73,28 +73,6 @@ class MemberServiceTest {
                             m.getPassword().equals(encodedPassword) && m.getGrade() == Grade.USER)));
                 });
             }
-
-            @Test
-            void admin() {
-                //given
-                MemberCreateRequest request = MemberCreateRequest.builder()
-                        .loginId(loginId)
-                        .password(rawPassword)
-                        .build();
-
-                given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
-                given(memberRepository.existsByLoginId(anyString())).willReturn(false);
-
-                //when
-                memberService.adminJoin(request);
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
-                    softly.check(() -> BDDMockito.then(memberRepository).should().existsByLoginId(anyString()));
-                    softly.check(() -> BDDMockito.then(memberRepository).should().save(argThat(m -> m.getGrade() == Grade.ADMIN)));
-                });
-            }
         }
 
         @Nested

@@ -122,7 +122,7 @@ public class OrderService {
         List<OrderProduct> newOrderProducts = createOrderProducts(request.productMap(), currentProducts);
 
         //새로운 주문 상품으로 변경
-        currentOrder.updateOrder(newOrderProducts);
+        currentOrder.changeOrder(newOrderProducts);
         em.flush();
 
         //새로운 주문 상품 저장
@@ -150,7 +150,7 @@ public class OrderService {
         orderProductJdbcRepository.softDeleteOrderProductsByOrderId(order.getId());
 
         em.clear();
-        Order currentOrder = findOrderWithDelivery(orderNumber);
+        Order currentOrder = findOrderWithDeliveryPayment(orderNumber);
         orderRepository.delete(currentOrder);
     }
 

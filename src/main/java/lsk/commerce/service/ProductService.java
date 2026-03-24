@@ -6,10 +6,10 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
-import lsk.commerce.dto.request.ProductUpdateRequest;
-import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
+import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -51,9 +51,9 @@ public class ProductService {
     }
 
     @Transactional
-    public Product updateProduct(String productNumber, ProductUpdateRequest request) {
+    public Product changePriceAndStock(String productNumber, ProductChangeRequest request) {
         Product product = findProduct(productNumber);
-        product.updateProduct(request.price(), request.stockQuantity());
+        product.changePriceAndStock(request.price(), request.stockQuantity());
         return product;
     }
 

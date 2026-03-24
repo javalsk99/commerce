@@ -53,21 +53,21 @@
 
 
 - java.util.ConcurrentModificationException 동시 수정이 일어날 때 발생하는 예외  
-  원인 - OrderProduct.deleteOrderProduct를 Order.updateOrder에서 사용하고, OrderService에서 Order.updateOrder 사용해서 발생한 것으로 예상
+  원인 - OrderProduct.deleteOrderProduct를 Order.changeOrder에서 사용하고, OrderService에서 Order.changeOrder 사용해서 발생한 것으로 예상
 
       public static void deleteOrderProduct(Order order, OrderProduct orderProduct) {
           orderProduct.product.addStock(orderProduct.count);
           order.getOrderProducts().remove(orderProduct);
 
-      public static Order updateOrder(Order order, List<OrderProduct> newOrderProducts) {
+      public static Order changeOrder(Order order, List<OrderProduct> newOrderProducts) {
           for (OrderProduct orderProduct : order.getOrderProducts()) {
               OrderProduct.deleteOrderProduct(order, orderProduct);
           }
 
-      public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
-          Order.updateOrder(order, newOrderProducts);
+      public void changeOrder(Order order, Map<Long, Integer> newProductIdsCount) {
+          Order.changeOrder(order, newOrderProducts);
 
-  해결 - OrderProduct.deleteOrderProduct를 Order.updateOrder를 거치지 않고 OrderService에서 사용
+  해결 - OrderProduct.deleteOrderProduct를 Order.changeOrder를 거치지 않고 OrderService에서 사용
 
       public static void deleteOrderProduct(Order order) {
           for (OrderProduct orderProduct : order.getOrderProducts()) {
@@ -76,7 +76,7 @@
           order.getOrderProducts().removeAll(order.getOrderProducts());
       }
 
-      public void updateOrder(Order order, Map<Long, Integer> newProductIdsCount) {
+      public void changeOrder(Order order, Map<Long, Integer> newProductIdsCount) {
           OrderProduct.deleteOrderProduct(order);
 
 
@@ -341,5 +341,5 @@
 
 - 결제 완료 테스트 중 예외 발생 lsk.commerce.api.portone.SyncPaymentException: 결제 정보 조회 중 오류 발생
   원인: 자바스크립트를 통해 포트원 서버에 주문과 결제 정보를 등록해야 한다.
-  결론: 통합 테스트에서는 결제 완료 테스트를 하지 못하고 E2E 테스트에서 진행한다.
+  결론: 통합 테스트에서는 결제 완료 테스트를 진행하려면 포트원 서버를 @MockitoBean으로 가져와야 해서 통합 테스트와 Mocking은 어울리지 않다고 생각해서 E2E 테스트에서 진행한다.
 

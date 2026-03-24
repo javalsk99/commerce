@@ -21,30 +21,18 @@ class MemberTest {
     PasswordEncoder passwordEncoder;
 
     @Nested
-    class SetGrade {
+    class Create {
 
         @Nested
         class SuccessCase {
 
             @Test
-            void user() {
+            void basic() {
                 //when
                 Member member = Member.builder().build();
 
                 //then
                 then(member.getGrade()).isEqualTo(Grade.USER);
-            }
-
-            @Test
-            void admin() {
-                //given
-                Member member = new Member();
-
-                //when
-                member.setAdmin();
-
-                //then
-                then(member.getGrade()).isEqualTo(Grade.ADMIN);
             }
         }
     }
@@ -118,7 +106,7 @@ class MemberTest {
         class SuccessCase {
 
             @Test
-            void shouldIgnoreUpdate_WhenAddressIsSame() {
+            void shouldIgnoreChange_WhenAddressIsSame() {
                 //given
                 Member member = Member.builder()
                         .city("Seoul")
@@ -132,7 +120,7 @@ class MemberTest {
 
             @ParameterizedTest
             @MethodSource("addressProvider")
-            void shouldUpdateSuccess_WhenAddressFieldsAreDifferent(String city, String street, String zipcode) {
+            void shouldChangeSuccess_WhenAddressFieldsAreDifferent(String city, String street, String zipcode) {
                 //given
                 Member member = Member.builder()
                         .city("Seoul")

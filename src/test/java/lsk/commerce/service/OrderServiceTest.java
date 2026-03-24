@@ -391,7 +391,7 @@ class OrderServiceTest {
     }
 
     @Nested
-    class Update extends Setup {
+    class Change extends Setup {
 
         @Nested
         class SuccessCase {

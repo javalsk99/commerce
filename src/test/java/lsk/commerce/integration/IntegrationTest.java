@@ -5,18 +5,15 @@ import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.PaymentStatus;
-import lsk.commerce.domain.Product;
 import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.repository.OrderRepository;
-import lsk.commerce.repository.ProductRepository;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.MemberService;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
-import lsk.commerce.service.PaymentSyncService;
 import lsk.commerce.service.ProductService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,10 +27,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.BDDAssertions.*;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
-import static org.awaitility.Awaitility.await;
-import static org.mockito.BDDMockito.mock;
 
 @SpringBootTest
 public class IntegrationTest {
@@ -132,7 +128,7 @@ public class IntegrationTest {
 
                 //then
                 Order createdOrder = orderRepository.findWithAll(orderNumber)
-                        .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다."));
+                        .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다"));
 
                 thenSoftly(softly -> {
                     softly.then(createdOrder)
@@ -152,7 +148,7 @@ public class IntegrationTest {
 
                 //then
                 Order requestedOrder = orderRepository.findWithAll(orderNumber)
-                        .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다."));
+                        .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다"));
 
                 then(requestedOrder)
                         .extracting("member.loginId", "delivery.deliveryStatus", "payment.paymentStatus", "totalAmount", "orderStatus", "deleted")

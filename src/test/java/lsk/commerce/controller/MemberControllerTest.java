@@ -303,7 +303,7 @@ class MemberControllerTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data").value("비밀번호가 변경되었습니다."))
+                        .andExpect(jsonPath("$.data").value("비밀번호가 변경되었습니다"))
                         .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 

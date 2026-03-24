@@ -148,7 +148,7 @@ class OrderControllerTest {
                 OrderCreateRequest request = new OrderCreateRequest("id_A", Map.of("llIIllII00OO", 4));
                 String json = objectMapper.writeValueAsString(request);
 
-                given(orderService.order(any(OrderCreateRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다."));
+                given(orderService.order(any(OrderCreateRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
 
                 //when & then
                 mvc.perform(post("/orders")
@@ -157,7 +157,7 @@ class OrderControllerTest {
                                 .content(json))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다."))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
                         .andDo(print());
 
                 //then

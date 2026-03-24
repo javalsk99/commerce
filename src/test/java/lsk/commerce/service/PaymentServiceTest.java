@@ -6,9 +6,11 @@ import io.portone.sdk.server.payment.PaidPayment;
 import lsk.commerce.api.portone.PaymentCustomData;
 import lsk.commerce.api.portone.SyncPaymentException;
 import lsk.commerce.domain.Delivery;
+import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
+import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
@@ -274,12 +276,17 @@ class PaymentServiceTest {
                     softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
                 });
-                then(paidPayment)
-                        .extracting("amount.total", "orderName", "id", "paidAt")
-                        .containsExactly(
-                                30000L, orderPaymentResponse.orderProductDtoList().getFirst().name(), singleOrder.getPayment().getPaymentId(),
-                                singleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
-                        );
+                thenSoftly(softly -> {
+                    softly.then(paidPayment)
+                            .extracting("amount.total", "orderName", "id", "paidAt")
+                            .containsExactly(
+                                    30000L, orderPaymentResponse.orderProductDtoList().getFirst().name(), singleOrder.getPayment().getPaymentId(),
+                                    singleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
+                            );
+                    softly.then(singleOrder)
+                            .extracting("orderStatus", "delivery.deliveryStatus")
+                            .containsExactly(OrderStatus.PAID, DeliveryStatus.PREPARING);
+                });
 
                 PaymentCustomData paymentCustomData = objectMapper.readValue(paidPayment.getCustomData(), PaymentCustomData.class);
                 then(paymentCustomData.orderNumber()).isEqualTo(singleOrder.getOrderNumber());
@@ -312,12 +319,17 @@ class PaymentServiceTest {
                     softly.check(() -> BDDMockito.then(paymentRepository).should().findWithOrderDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(PaymentCompletedEvent.class)));
                 });
-                then(paidPayment)
-                        .extracting("amount.total", "orderName", "id", "paidAt")
-                        .containsExactly(
-                                120000L, orderPaymentResponse.orderProductDtoList().getFirst().name() + " 외 " + (orderPaymentResponse.orderProductDtoList().size() - 1) + "건",
-                                multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
-                        );
+                thenSoftly(softly -> {
+                    softly.then(paidPayment)
+                            .extracting("amount.total", "orderName", "id", "paidAt")
+                            .containsExactly(
+                                    120000L, orderPaymentResponse.orderProductDtoList().getFirst().name() + " 외 " + (orderPaymentResponse.orderProductDtoList().size() - 1) + "건",
+                                    multipleOrder.getPayment().getPaymentId(), multipleOrder.getPayment().getPaymentDate().atZone(ZoneId.of("Asia/Seoul")).toInstant()
+                            );
+                    softly.then(multipleOrder)
+                            .extracting("orderStatus", "delivery.deliveryStatus")
+                            .containsExactly(OrderStatus.PAID, DeliveryStatus.PREPARING);
+                });
 
                 PaymentCustomData paymentCustomData = objectMapper.readValue(paidPayment.getCustomData(), PaymentCustomData.class);
                 then(paymentCustomData.orderNumber()).isEqualTo(multipleOrder.getOrderNumber());

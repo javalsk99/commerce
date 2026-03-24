@@ -29,15 +29,6 @@ public class MemberService {
         return member.getLoginId();
     }
 
-    @Transactional
-    public String adminJoin(MemberCreateRequest request) {
-        Member member = getMember(request);
-        validateMember(member);
-        member.setAdmin();
-        memberRepository.save(member);
-        return member.getLoginId();
-    }
-
     public Member findMemberByLoginId(String loginId) {
         return memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다"));

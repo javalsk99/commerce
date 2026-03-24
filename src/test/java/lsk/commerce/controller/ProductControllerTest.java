@@ -6,7 +6,7 @@ import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.dto.request.ProductCreateRequest;
-import lsk.commerce.dto.request.ProductUpdateRequest;
+import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
@@ -408,7 +408,7 @@ class ProductControllerTest {
     }
 
     @Nested
-    class UpdateProduct {
+    class ChangeProduct {
 
         @Nested
         class SuccessCase {
@@ -416,7 +416,7 @@ class ProductControllerTest {
             @Test
             void basic() throws Exception {
                 //given
-                ProductUpdateRequest request = new ProductUpdateRequest(20000, 8);
+                ProductChangeRequest request = new ProductChangeRequest(20000, 8);
                 String json = objectMapper.writeValueAsString(request);
 
                 Album album = Album.builder()
@@ -428,7 +428,7 @@ class ProductControllerTest {
                         .build();
                 ProductResponse productResponse = ProductResponse.from(album);
 
-                given(productService.updateProduct(anyString(), any(ProductUpdateRequest.class))).willReturn(album);
+                given(productService.changePriceAndStock(anyString(), any(ProductChangeRequest.class))).willReturn(album);
                 given(productService.getProductDto(any(Product.class))).willReturn(productResponse);
 
                 //when & then
@@ -445,7 +445,7 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should().updateProduct(productNumber, request));
+                    softly.check(() -> BDDMockito.then(productService).should().changePriceAndStock(productNumber, request));
                     softly.check(() -> BDDMockito.then(productService).should().getProductDto(album));
                 });
             }
@@ -453,7 +453,7 @@ class ProductControllerTest {
             @Test
             void idempotency() throws Exception {
                 //given
-                ProductUpdateRequest request = new ProductUpdateRequest(20000, 8);
+                ProductChangeRequest request = new ProductChangeRequest(20000, 8);
                 String json = objectMapper.writeValueAsString(request);
 
                 Album album = Album.builder()
@@ -465,7 +465,7 @@ class ProductControllerTest {
                         .build();
                 ProductResponse productResponse = ProductResponse.from(album);
 
-                given(productService.updateProduct(anyString(), any(ProductUpdateRequest.class))).willReturn(album);
+                given(productService.changePriceAndStock(anyString(), any(ProductChangeRequest.class))).willReturn(album);
                 given(productService.getProductDto(any(Product.class))).willReturn(productResponse);
 
                 //when & then 첫 번째 요청
@@ -482,7 +482,7 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should().updateProduct(productNumber, request));
+                    softly.check(() -> BDDMockito.then(productService).should().changePriceAndStock(productNumber, request));
                     softly.check(() -> BDDMockito.then(productService).should().getProductDto(album));
                 });
 
@@ -500,7 +500,7 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should(times(2)).updateProduct(productNumber, request));
+                    softly.check(() -> BDDMockito.then(productService).should(times(2)).changePriceAndStock(productNumber, request));
                     softly.check(() -> BDDMockito.then(productService).should(times(2)).getProductDto(album));
                 });
             }
@@ -510,8 +510,8 @@ class ProductControllerTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("invalidUpdateRequestProvider")
-            void invalidInput(ProductUpdateRequest request) throws Exception {
+            @MethodSource("invalidChangeRequestProvider")
+            void invalidInput(ProductChangeRequest request) throws Exception {
                 //given
                 String json = objectMapper.writeValueAsString(request);
 
@@ -525,18 +525,18 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should(never()).updateProduct(any(), any()));
+                    softly.check(() -> BDDMockito.then(productService).should(never()).changePriceAndStock(any(), any()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).getProductDto(any()));
                 });
             }
 
             @Test
-            void updateProduct_Failed_ProductNotFound() throws Exception {
+            void changePriceAndStock_Failed_ProductNotFound() throws Exception {
                 //given
-                ProductUpdateRequest request = new ProductUpdateRequest(20000, 8);
+                ProductChangeRequest request = new ProductChangeRequest(20000, 8);
                 String json = objectMapper.writeValueAsString(request);
 
-                given(productService.updateProduct(anyString(), any(ProductUpdateRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
+                given(productService.changePriceAndStock(anyString(), any(ProductChangeRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
 
                 //when & then
                 mvc.perform(patch("/products/{productNumber}", "lllIIIll00OO")
@@ -550,15 +550,15 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should().updateProduct("lllIIIll00OO", request));
+                    softly.check(() -> BDDMockito.then(productService).should().changePriceAndStock("lllIIIll00OO", request));
                     softly.check(() -> BDDMockito.then(productService).should(never()).getProductDto(any()));
                 });
             }
 
-            static Stream<Arguments> invalidUpdateRequestProvider() {
+            static Stream<Arguments> invalidChangeRequestProvider() {
                 return Stream.of(
-                        argumentSet("price 100원 미만", new ProductUpdateRequest(99, 8)),
-                        argumentSet("price, stockQuantity null", new ProductUpdateRequest(null, null))
+                        argumentSet("price 100원 미만", new ProductChangeRequest(99, 8)),
+                        argumentSet("price, stockQuantity null", new ProductChangeRequest(null, null))
                 );
             }
         }
