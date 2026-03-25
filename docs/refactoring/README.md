@@ -10,3 +10,5 @@
 - [order](order.md)
 - [orderProduct](orderProduct.md)
 - [payment](payment.md)
+- @Login을 Argument Resolver에 등록해서 쿠키에서 loginId를 꺼낸다.
+- [interceptor](interceptor.md)

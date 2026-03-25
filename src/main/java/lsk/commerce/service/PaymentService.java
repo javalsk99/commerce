@@ -36,8 +36,9 @@ public class PaymentService {
     private final ProductService productService;
     private final ApplicationEventPublisher eventPublisher;
 
-    public Payment request(String orderNumber) {
+    public Payment request(String orderNumber, String loginId) {
         Order order = orderService.findOrderWithDeliveryPayment(orderNumber);
+        order.isOwner(loginId);
         Payment.requestPayment(order);
         paymentRepository.save(order.getPayment());
         return order.getPayment();
@@ -55,8 +56,8 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제 번호입니다"));
     }
 
-    protected Payment verifyAndComplete(PaidPayment paidPayment) {
-        if (!this.verifyPayment(paidPayment)) {
+    protected Payment verifyAndComplete(PaidPayment paidPayment, String loginId) {
+        if (!this.verifyPayment(paidPayment, loginId)) {
             throw new SyncPaymentException("결제 정보 검증 중 오류 발생");
         }
 
@@ -81,13 +82,13 @@ public class PaymentService {
         return PaymentResponse.from(payment);
     }
 
-    private boolean verifyPayment(PaidPayment paidPayment) {
+    private boolean verifyPayment(PaidPayment paidPayment, String loginId) {
         PaymentCustomData customDataDecoded = getPaymentCustomData(paidPayment);
         if (customDataDecoded == null) return false;
 
-        OrderPaymentResponse orderRequest = verifyOrderProducts(customDataDecoded.orderNumber());
+        OrderPaymentResponse response = verifyOrderProducts(customDataDecoded.orderNumber(), loginId);
 
-        return verifyPriceAndOrderName(paidPayment, orderRequest);
+        return verifyPriceAndOrderName(paidPayment, response);
     }
 
     private PaymentCustomData getPaymentCustomData(PaidPayment paidPayment) {
@@ -103,8 +104,9 @@ public class PaymentService {
         return customDataDecoded;
     }
 
-    private OrderPaymentResponse verifyOrderProducts(String orderNumber) {
+    private OrderPaymentResponse verifyOrderProducts(String orderNumber, String loginId) {
         Order order = orderService.findOrderWithAllExceptMember(orderNumber);
+        order.isOwner(loginId);
         OrderPaymentResponse orderPaymentResponse = orderService.getOrderPaymentResponse(order);
         List<Product> products = productService.findProducts();
 

@@ -16,6 +16,10 @@
   POST에서 멱등성에 더 적합한 PATCH로 변경했다.
 
 
+- create, changeOrder, delete, cancelOrder  
+  @Login으로 loginId을 쿠키에서 꺼내서 OrderService로 보낸다.
+
+
 ## OrderService
 - order, changeOrder  
   파라미터를 DTO로 변경했다.  
@@ -34,6 +38,10 @@
   OrderProduct를 Fetch Join하지 않은 이유는 JDBC는 조회를 하지 않아도 추가 쿼리가 나오지 않아서 Fetch Join하지 않았다.
 
 
+- changeOrder, cancelOrder, deleteOrder  
+  loginId를 파라미터에 추가해 주문의 주인이 맞는지 검증한다.
+
+
 ## Order
 - getOrderProductsAsMap  
   productName이 유니크 키가 아니어서 나노 아이디를 사용하는 productNumber로 변경했다.  
@@ -42,4 +50,8 @@
 
 - changeOrder
   주문 상품만 변경해서 updateOrder를 changeOrder로 변경했다.
+
+
+- isOwner  
+  주문의 memberLoginId와 서비스에서 받은 loginId가 일치하는지 검증한다.
 

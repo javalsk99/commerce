@@ -19,6 +19,7 @@ import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.OrderProductDto;
 import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.event.PaymentCompletedEvent;
+import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -91,6 +92,7 @@ class PaymentServiceTest {
     @BeforeEach
     void beforeEach() {
         member = Member.builder()
+                .loginId("id_A")
                 .city("Seoul")
                 .street("Gangnam")
                 .zipcode("01234")
@@ -133,7 +135,7 @@ class PaymentServiceTest {
                 given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
 
                 //when
-                paymentService.request(multipleOrder.getOrderNumber());
+                paymentService.request(multipleOrder.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
@@ -155,9 +157,26 @@ class PaymentServiceTest {
                 given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
                 //when & then
-                thenThrownBy(() -> paymentService.request(wrongOrderNumber))
+                thenThrownBy(() -> paymentService.request(wrongOrderNumber, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 주문입니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).save(any()));
+                });
+            }
+
+            @Test
+            void notOwner() {
+                //given
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
+
+                //when & then
+                thenThrownBy(() -> paymentService.request(multipleOrder.getOrderNumber(), "id_D"))
+                        .isInstanceOf(NotResourceOwnerException.class)
+                        .hasMessage("주문의 주인이 아닙니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -172,7 +191,7 @@ class PaymentServiceTest {
                 given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
 
                 //when 첫 번째 호출
-                paymentService.request(multipleOrder.getOrderNumber());
+                paymentService.request(multipleOrder.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
@@ -184,7 +203,7 @@ class PaymentServiceTest {
                         .containsExactly(multipleOrder, multipleOrder.getTotalAmount(), null, PaymentStatus.PENDING);
 
                 //when & then 두 번째 호출
-                thenThrownBy(() -> paymentService.request(multipleOrder.getOrderNumber()))
+                thenThrownBy(() -> paymentService.request(multipleOrder.getOrderNumber(), "id_A"))
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessage("이미 결제 정보가 있습니다");
 
@@ -265,7 +284,7 @@ class PaymentServiceTest {
                 givenCompletePayment(singleOrder);
 
                 //when
-                paymentService.verifyAndComplete(paidPayment);
+                paymentService.verifyAndComplete(paidPayment, "id_A");
 
                 //then
                 thenSoftly(softly -> {
@@ -308,7 +327,7 @@ class PaymentServiceTest {
                 givenCompletePayment(multipleOrder);
 
                 //when
-                paymentService.verifyAndComplete(paidPayment);
+                paymentService.verifyAndComplete(paidPayment, "id_A");
 
                 //then
                 thenSoftly(softly -> {
@@ -354,9 +373,32 @@ class PaymentServiceTest {
                 given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 주문입니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(objectMapper).should().readValue(paidPayment.getCustomData(), PaymentCustomData.class));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should(never()).getOrderPaymentResponse(any()));
+                    softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
+                    softly.check(() -> BDDMockito.then(paymentRepository).should(never()).findWithOrderDelivery(any()));
+                    softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
+                });
+            }
+
+            @Test
+            void notOwner() {
+                //given
+                givenCustomData(multipleOrder.getOrderNumber());
+
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(multipleOrder);
+
+                //when & then
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_D"))
+                        .isInstanceOf(NotResourceOwnerException.class)
+                        .hasMessage("주문의 주인이 아닙니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -381,7 +423,7 @@ class PaymentServiceTest {
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("주문 상품이 비어 있습니다");
 
@@ -411,7 +453,7 @@ class PaymentServiceTest {
                 given(productService.findProducts()).willReturn(List.of(movie));
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("잘못된 상품이 있습니다");
 
@@ -440,7 +482,7 @@ class PaymentServiceTest {
                 given(orderPaymentResponse.totalAmount()).willReturn(120000);
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(SyncPaymentException.class);
 
                 //then
@@ -472,7 +514,7 @@ class PaymentServiceTest {
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(SyncPaymentException.class);
 
                 //then
@@ -504,7 +546,7 @@ class PaymentServiceTest {
                 given(paidPayment.getOrderName()).willReturn(orderName);
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(SyncPaymentException.class);
 
                 //then
@@ -537,7 +579,7 @@ class PaymentServiceTest {
                 given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("존재하지 않는 결제 번호입니다");
 
@@ -573,7 +615,7 @@ class PaymentServiceTest {
                 willThrow(new RuntimeException("Event Publish Failed")).given(eventPublisher).publishEvent(any(PaymentCompletedEvent.class));
 
                 //when & then
-                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment))
+                thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("Event Publish Failed");
 
@@ -602,15 +644,15 @@ class PaymentServiceTest {
             given(productService.findProducts()).willReturn(List.of(album, book, movie));
         }
 
-        private String givenOrderNameAndAmount(Order order, OrderPaymentResponse orderRequest) {
+        private String givenOrderNameAndAmount(Order order, OrderPaymentResponse response) {
             given(paidPayment.getAmount().getTotal()).willReturn(order.getTotalAmount().longValue());
-            given(orderRequest.totalAmount()).willReturn(order.getTotalAmount());
+            given(response.totalAmount()).willReturn(order.getTotalAmount());
 
             String orderName;
-            if (orderRequest.orderProductDtoList().size() == 1) {
-                orderName = orderRequest.orderProductDtoList().getFirst().name();
+            if (response.orderProductDtoList().size() == 1) {
+                orderName = response.orderProductDtoList().getFirst().name();
             } else {
-                orderName = orderRequest.orderProductDtoList().getFirst().name() + " 외 " + (orderRequest.orderProductDtoList().size() - 1) + "건";
+                orderName = response.orderProductDtoList().getFirst().name() + " 외 " + (response.orderProductDtoList().size() - 1) + "건";
             }
 
             given(paidPayment.getOrderName()).willReturn(orderName);

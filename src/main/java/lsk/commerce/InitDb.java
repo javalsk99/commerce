@@ -82,11 +82,11 @@ public class InitDb {
             productService.register(ProductCreateRequest.builder().name("범죄도시3").price(15000).stockQuantity(100).dtype("M").actor("마동석").director("이상용").build(), List.of(movieCategoryName2, movieCategoryName3));
             productService.register(ProductCreateRequest.builder().name("범죄도시4").price(15000).stockQuantity(100).dtype("M").actor("마동석").director("허명행").build(), List.of(movieCategoryName2, movieCategoryName3));
 
-            orderService.order(new OrderCreateRequest(userAId, Map.of(albumNumber1, 3, albumNumber4, 2, albumNumber6, 5)));
-            orderService.order(new OrderCreateRequest(userAId, Map.of(albumNumber1, 2, bookNumber1, 4, movieNumber2, 3)));
-            orderService.order(new OrderCreateRequest(userAId, Map.of(albumNumber1, 3, albumNumber4, 2, albumNumber6, 5)));
-            orderService.order(new OrderCreateRequest(userBId, Map.of(bookNumber1, 1, bookNumber2, 4, movieNumber1, 3, movieNumber2, 2)));
-            orderService.order(new OrderCreateRequest(userBId, Map.of(movieNumber1, 5)));
+            orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber4, 2, albumNumber6, 5)), userAId);
+            orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 2, bookNumber1, 4, movieNumber2, 3)), userAId);
+            orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber4, 2, albumNumber6, 5)), userAId);
+            orderService.order(new OrderCreateRequest(Map.of(bookNumber1, 1, bookNumber2, 4, movieNumber1, 3, movieNumber2, 2)), userBId);
+            orderService.order(new OrderCreateRequest(Map.of(movieNumber1, 5)), userBId);
         }
 
         private void createAdmin() {

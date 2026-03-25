@@ -10,8 +10,6 @@ import jakarta.validation.constraints.Size;
 import java.util.Map;
 
 public record OrderCreateRequest(
-        @NotBlank @Size(min = 4, max = 20)
-        String memberLoginId,
         @NotEmpty
         Map<@NotBlank @Size(min = 12, max = 12) String, @NotNull @Min(0) @Max(100) Integer> productMap
 ) {

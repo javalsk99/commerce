@@ -7,11 +7,11 @@ import kotlin.Unit;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.SyncPaymentException;
+import lsk.commerce.argumentresolver.Login;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.Payment;
-import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.request.PaymentCompleteResponse;
-import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.response.PaymentResponse;
 import lsk.commerce.dto.response.Result;
 import lsk.commerce.service.OrderService;
@@ -36,24 +36,32 @@ public class PaymentController {
     private final PaymentSyncService paymentSyncService;
 
     @PostMapping("/payments/orders/{orderNumber}")
-    public ResponseEntity<Result<PaymentResponse>> requestPayment(@PathVariable("orderNumber") String orderNumber) {
-        Payment payment = paymentService.request(orderNumber);
+    public ResponseEntity<Result<PaymentResponse>> requestPayment(
+            @PathVariable("orderNumber") String orderNumber,
+            @Login String loginId
+    ) {
+        Payment payment = paymentService.request(orderNumber, loginId);
         PaymentResponse paymentResponse = paymentService.getPaymentResponse(payment);
         return ResponseEntity.ok(new Result<>(paymentResponse, 1));
     }
 
-
     @GetMapping("/api/payments/{orderNumber}")
-    public ResponseEntity<Result<OrderPaymentResponse>> getOrder(@PathVariable("orderNumber") String orderNumber) {
+    public ResponseEntity<Result<OrderPaymentResponse>> getOrder(
+            @PathVariable("orderNumber") String orderNumber,
+            @Login String loginId
+    ) {
         Order order = orderService.findOrderWithAll(orderNumber);
+        order.isOwner(loginId);
         OrderPaymentResponse orderPaymentResponse = orderService.getOrderPaymentResponse(order);
         return ResponseEntity.ok(new Result<>(orderPaymentResponse, 1));
     }
 
-    //브라우저에서 결제 완료 후 서버에 결제 완료를 알리는 용도 (결제 정보를 완전히 실시간으로 얻기 위해서는 웹훅 사용 / 수정할 곳 없음)
     @PostMapping("/api/payments/complete")
-    public Mono<ResponseEntity<Result<PaymentCompleteResponse>>> completePayment(@RequestBody CompletePaymentRequest completeRequest) {
-        Mono<PaymentCompleteResponse> paymentCompleteResponseMono = paymentSyncService.syncPayment(completeRequest.paymentId());
+    public Mono<ResponseEntity<Result<PaymentCompleteResponse>>> completePayment(
+            @RequestBody CompletePaymentRequest completeRequest,
+            @Login String loginId
+    ) {
+        Mono<PaymentCompleteResponse> paymentCompleteResponseMono = paymentSyncService.syncPayment(completeRequest.paymentId(), loginId);
         return paymentCompleteResponseMono
                 .map(response -> ResponseEntity.ok(new Result<>(response, 1)));
     }
@@ -64,7 +72,8 @@ public class PaymentController {
             @RequestBody String body,
             @RequestHeader("webhook-id") String webhookId,
             @RequestHeader("webhook-timestamp") String webhookTimestamp,
-            @RequestHeader("webhook-signature") String webhookSignature
+            @RequestHeader("webhook-signature") String webhookSignature,
+            @Login String loginId
     ) throws SyncPaymentException {
         Webhook webhook;
         try {
@@ -73,7 +82,7 @@ public class PaymentController {
             throw new SyncPaymentException("포트원 웹훅 처리 중 오류 발생");
         }
         if (webhook instanceof WebhookTransaction transaction) {
-            return paymentSyncService.syncPayment(transaction.getData().getPaymentId()).map(payment -> Unit.INSTANCE);
+            return paymentSyncService.syncPayment(transaction.getData().getPaymentId(), loginId).map(payment -> Unit.INSTANCE);
         }
         return Mono.empty();
     }

@@ -122,7 +122,7 @@ public class IntegrationTest {
                 System.out.println("============== FIRST WHEN START ==============");
 
                 //when 주문 생성
-                String orderNumber = orderService.order(new OrderCreateRequest(memberLoginId, Map.of(albumNumber1, 3, albumNumber2, 2)));
+                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2)), memberLoginId);
 
                 System.out.println("============== FIRST WHEN END ================");
 
@@ -142,7 +142,7 @@ public class IntegrationTest {
                 System.out.println("============== SECOND WHEN START ==============");
 
                 //when 결제 요청
-                paymentService.request(orderNumber);
+                paymentService.request(orderNumber, "id_A");
 
                 System.out.println("============== SECOND WHEN END ================");
 

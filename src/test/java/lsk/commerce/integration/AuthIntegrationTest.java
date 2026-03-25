@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
 @Transactional
 @SpringBootTest
@@ -39,7 +39,7 @@ public class AuthIntegrationTest {
         class SuccessCase {
 
             @Test
-            @DisplayName("로그인 성공 시, 회원 등급 정보가 포함된 토큰을 반환한다")
+            @DisplayName("로그인 성공 시, 회원의 로그인 아이디와 등급 정보가 포함된 토큰을 반환한다")
             void basic() {
                 //given
                 memberService.join(createRequest());
@@ -59,9 +59,13 @@ public class AuthIntegrationTest {
 
                 //then
                 Claims claims = jwtProvider.extractClaims(token);
+                String loginId = claims.getSubject();
                 String grade = claims.get("grade", String.class);
 
-                then(grade).isEqualTo(Grade.USER.name());
+                thenSoftly(softly -> {
+                    softly.then(loginId).isEqualTo("id_A");
+                    softly.then(grade).isEqualTo(Grade.USER.name());
+                });
             }
 
             private static MemberCreateRequest createRequest() {

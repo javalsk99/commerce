@@ -118,7 +118,7 @@ public class OrderIntegrationTest {
 
                 //when & then
                 thenThrownBy(() -> {
-                    orderService.order(new OrderCreateRequest(memberLoginId, Map.of(albumNumber1, 11)));
+                    orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 11)), memberLoginId);
                     em.flush();
                 })
                         .isInstanceOf(IllegalArgumentException.class)
@@ -147,7 +147,7 @@ public class OrderIntegrationTest {
             @DisplayName("주문을 수정하면 상품의 재고가 변경된다")
             void changeOrder() {
                 //given
-                String orderNumber = orderService.order(new OrderCreateRequest(memberLoginId, Map.of(albumNumber1, 3, albumNumber2, 2)));
+                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2)), memberLoginId);
 
                 em.flush();
                 em.clear();
@@ -157,7 +157,7 @@ public class OrderIntegrationTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                orderService.changeOrder(orderNumber, request);
+                orderService.changeOrder(orderNumber, request, "id_A");
 
                 em.flush();
                 em.clear();
@@ -176,7 +176,7 @@ public class OrderIntegrationTest {
             @DisplayName("상품 가격이 변해도 기존 주문의 금액은 변하지 않는다")
             void totalAmountShouldNotChange_WhenProductPriceChange() {
                 //given
-                String orderNumber = orderService.order(new OrderCreateRequest(memberLoginId, Map.of(albumNumber1, 1)));
+                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 1)), memberLoginId);
 
                 em.flush();
                 em.clear();
@@ -217,7 +217,7 @@ public class OrderIntegrationTest {
                 System.out.println("============== FIRST WHEN START ==============");
 
                 //when 주문 생성
-                String orderNumber = orderService.order(new OrderCreateRequest(memberLoginId, Map.of(albumNumber1, 3, albumNumber2, 2)));
+                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2)), memberLoginId);
 
                 em.flush();
                 em.clear();
@@ -237,7 +237,7 @@ public class OrderIntegrationTest {
                 System.out.println("============== SECOND WHEN START ==============");
 
                 //when 주문 취소
-                orderService.cancelOrder(orderNumber);
+                orderService.cancelOrder(orderNumber, "id_A");
 
                 em.flush();
                 em.clear();
@@ -264,8 +264,8 @@ public class OrderIntegrationTest {
             @DisplayName("주문을 삭제하면 주문 상품, 배송, 결제도 삭제된다")
             void deleteOrder() {
                 //given
-                String orderNumber = orderService.order(new OrderCreateRequest(memberLoginId, Map.of(albumNumber1, 3, albumNumber2, 2)));
-                paymentService.request(orderNumber);
+                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2)), memberLoginId);
+                paymentService.request(orderNumber, "id_A");
 
                 Order order = orderRepository.findWithAllExceptMember(orderNumber)
                         .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다"));
@@ -275,7 +275,7 @@ public class OrderIntegrationTest {
                         .toList();
                 String paymentId = order.getPayment().getPaymentId();
 
-                orderService.cancelOrder(orderNumber);
+                orderService.cancelOrder(orderNumber, "id_A");
 
                 em.flush();
                 em.clear();
@@ -283,7 +283,7 @@ public class OrderIntegrationTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                orderService.deleteOrder(orderNumber);
+                orderService.deleteOrder(orderNumber, "id_A");
 
                 em.flush();
                 em.clear();

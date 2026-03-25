@@ -18,6 +18,7 @@ import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.InvalidDataException;
+import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.repository.OrderProductJdbcRepository;
 import lsk.commerce.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -136,7 +137,7 @@ class OrderServiceTest {
             void basic() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
-                OrderCreateRequest request = new OrderCreateRequest("id_A", productMap);
+                OrderCreateRequest request = new OrderCreateRequest(productMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -144,7 +145,7 @@ class OrderServiceTest {
                 InOrder inOrder = inOrder(em, orderRepository, orderProductJdbcRepository);
 
                 //when
-                orderService.order(request);
+                orderService.order(request, "id_A");
 
                 //then
                 thenSoftly(softly -> {
@@ -192,12 +193,12 @@ class OrderServiceTest {
             void memberNotFound() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
-                OrderCreateRequest request = new OrderCreateRequest("id_B", productMap);
+                OrderCreateRequest request = new OrderCreateRequest(productMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willThrow(new DataNotFoundException("존재하지 않는 아이디입니다"));
 
                 //when & then
-                thenThrownBy(() -> orderService.order(request))
+                thenThrownBy(() -> orderService.order(request, "id_D"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 아이디입니다");
 
@@ -215,13 +216,13 @@ class OrderServiceTest {
                 //given
                 Map<String, Integer> hasNullProductMap = new HashMap<>();
                 hasNullProductMap.put(null, 3);
-                OrderCreateRequest request = new OrderCreateRequest("id_A", hasNullProductMap);
+                OrderCreateRequest request = new OrderCreateRequest(hasNullProductMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.order(request))
+                thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 상품입니다");
 
@@ -238,13 +239,13 @@ class OrderServiceTest {
             void exceed() {
                 Map<String, Integer> exceedProductMap = new HashMap<>();
                 exceedProductMap.put(productNumber1, 11);
-                OrderCreateRequest request = new OrderCreateRequest("id_A", exceedProductMap);
+                OrderCreateRequest request = new OrderCreateRequest(exceedProductMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.order(request))
+                thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("재고가 부족합니다");
 
@@ -262,13 +263,13 @@ class OrderServiceTest {
                 //given
                 Map<String, Integer> hasNullProductMap = new HashMap<>();
                 hasNullProductMap.put(productNumber1, null);
-                OrderCreateRequest request = new OrderCreateRequest("id_A", hasNullProductMap);
+                OrderCreateRequest request = new OrderCreateRequest(hasNullProductMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.order(request))
+                thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("수량이 없습니다");
 
@@ -285,13 +286,13 @@ class OrderServiceTest {
             void productNotFound() {
                 //given
                 Map<String, Integer> notExistsNameProductMap = Map.of("lllIIIll00OO", 3);
-                OrderCreateRequest request = new OrderCreateRequest("id_A", notExistsNameProductMap);
+                OrderCreateRequest request = new OrderCreateRequest(notExistsNameProductMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.order(request))
+                thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 상품입니다");
 
@@ -308,14 +309,14 @@ class OrderServiceTest {
             void failedSaveAll() {
                 //given
                 Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
-                OrderCreateRequest request = new OrderCreateRequest("id_A", productMap);
+                OrderCreateRequest request = new OrderCreateRequest(productMap);
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
                 willThrow(new RuntimeException("JDBC Batch INSERT Failed")).given(orderProductJdbcRepository).saveAll(anyList());
 
                 //when & then
-                thenThrownBy(() -> orderService.order(request))
+                thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC Batch INSERT Failed");
 
@@ -409,7 +410,7 @@ class OrderServiceTest {
                 InOrder inOrder = inOrder(em, orderRepository, orderProductJdbcRepository);
 
                 //when
-                orderService.changeOrder(order.getOrderNumber(), request);
+                orderService.changeOrder(order.getOrderNumber(), request, "id_A");
 
                 //then
                 thenSoftly(softly -> {
@@ -455,7 +456,7 @@ class OrderServiceTest {
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when 첫 번째 호출
-                orderService.changeOrder(order.getOrderNumber(), request);
+                orderService.changeOrder(order.getOrderNumber(), request, "id_A");
 
                 //then
                 thenSoftly(softly -> {
@@ -482,7 +483,7 @@ class OrderServiceTest {
                 });
 
                 //when & then 두 번째 호출
-                thenNoException().isThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request));
+                thenNoException().isThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"));
 
                 //then
                 thenSoftly(softly -> {
@@ -513,9 +514,32 @@ class OrderServiceTest {
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(wrongOrderNumber, request))
+                thenThrownBy(() -> orderService.changeOrder(wrongOrderNumber, request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).deleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
+                    softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).saveAll(any()));
+                });
+            }
+
+            @Test
+            void notOwner() {
+                //given
+                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(productMap);
+
+                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+
+                //when & then
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_D"))
+                        .isInstanceOf(NotResourceOwnerException.class)
+                        .hasMessage("주문의 주인이 아닙니다");
 
                 //then
                 thenSoftly(softly -> {
@@ -537,7 +561,7 @@ class OrderServiceTest {
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(InvalidDataException.class)
                         .hasMessage("식별자가 없는 잘못된 주문입니다");
 
@@ -561,7 +585,7 @@ class OrderServiceTest {
                 willThrow(new RuntimeException("JDBC DELETE Failed")).given(orderProductJdbcRepository).deleteOrderProductsByOrderId(anyLong());
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC DELETE Failed");
 
@@ -587,7 +611,7 @@ class OrderServiceTest {
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 상품입니다");
 
@@ -613,7 +637,7 @@ class OrderServiceTest {
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("수량이 없습니다");
 
@@ -638,7 +662,7 @@ class OrderServiceTest {
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 상품입니다");
 
@@ -664,7 +688,7 @@ class OrderServiceTest {
                 willThrow(new RuntimeException("JDBC Batch INSERT Failed")).given(orderProductJdbcRepository).saveAll(anyList());
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request))
+                thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC Batch INSERT Failed");
 
@@ -702,7 +726,7 @@ class OrderServiceTest {
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
                 //when
-                orderService.cancelOrder(order.getOrderNumber());
+                orderService.cancelOrder(order.getOrderNumber(), "id_A");
 
                 //then
                 BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
@@ -735,7 +759,7 @@ class OrderServiceTest {
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
                 //when
-                orderService.cancelOrder(order.getOrderNumber());
+                orderService.cancelOrder(order.getOrderNumber(), "id_A");
 
                 //then
                 BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
@@ -768,7 +792,7 @@ class OrderServiceTest {
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
                 //when 첫 번째 호출
-                orderService.cancelOrder(order.getOrderNumber());
+                orderService.cancelOrder(order.getOrderNumber(), "id_A");
 
                 //then
                 BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
@@ -784,7 +808,7 @@ class OrderServiceTest {
                 });
 
                 //when & then 두 번째 호출
-                thenNoException().isThrownBy(() -> orderService.cancelOrder(order.getOrderNumber()));
+                thenNoException().isThrownBy(() -> orderService.cancelOrder(order.getOrderNumber(), "id_A"));
 
                 //then
                 BDDMockito.then(orderRepository).should(times(2)).findWithAllExceptMember(anyString());
@@ -819,9 +843,23 @@ class OrderServiceTest {
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.empty());
 
                 //when & then
-                thenThrownBy(() -> orderService.cancelOrder(wrongOrderNumber))
+                thenThrownBy(() -> orderService.cancelOrder(wrongOrderNumber, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
+
+                //then
+                BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
+            }
+
+            @Test
+            void notOwner() {
+                //given
+                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+
+                //when & then
+                thenThrownBy(() -> orderService.cancelOrder(wrongOrderNumber, "id_D"))
+                        .isInstanceOf(NotResourceOwnerException.class)
+                        .hasMessage("주문의 주인이 아닙니다");
 
                 //then
                 BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
@@ -841,16 +879,14 @@ class OrderServiceTest {
                 order.cancel();
 
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
-                given(orderRepository.findWithDelivery(anyString())).willReturn(Optional.of(order));
 
                 //when
-                orderService.deleteOrder(order.getOrderNumber());
+                orderService.deleteOrder(order.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
                 });
             }
@@ -862,16 +898,14 @@ class OrderServiceTest {
                 order.cancel();
 
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
-                given(orderRepository.findWithDelivery(anyString())).willReturn(Optional.of(order));
 
                 //when
-                orderService.deleteOrder(order.getOrderNumber());
+                orderService.deleteOrder(order.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(anyString()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
                 });
             }
@@ -882,13 +916,12 @@ class OrderServiceTest {
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.empty());
 
                 //when
-                orderService.deleteOrder(wrongOrderNumber);
+                orderService.deleteOrder(wrongOrderNumber, "id_A");
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).softDeleteOrderProductsByOrderId(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findWithDelivery(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
                 });
             }
@@ -901,28 +934,26 @@ class OrderServiceTest {
 
                 given(orderRepository.findWithDeliveryPayment(anyString()))
                         .willReturn(Optional.of(order))
+                        .willReturn(Optional.of(order))
                         .willReturn(Optional.empty());
-                given(orderRepository.findWithDelivery(anyString())).willReturn(Optional.of(order));
 
                 //when 첫 번째 호출
-                orderService.deleteOrder(order.getOrderNumber());
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
-                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(anyString()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
-                });
-
-                //when & then 두 번째 호출
-                orderService.deleteOrder(order.getOrderNumber());
+                orderService.deleteOrder(order.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
+                });
+
+                //when & then 두 번째 호출
+                orderService.deleteOrder(order.getOrderNumber(), "id_A");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(3)).findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(any()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDelivery(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(any()));
                 });
             }
@@ -930,6 +961,26 @@ class OrderServiceTest {
 
         @Nested
         class FailureCase {
+
+            @Test
+            void notOwner() {
+                //given
+                order.cancel();
+
+                given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
+
+                //when & then
+                thenThrownBy(() -> orderService.deleteOrder(order.getOrderNumber(), "id_D"))
+                        .isInstanceOf(NotResourceOwnerException.class)
+                        .hasMessage("주문의 주인이 아닙니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).softDeleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
+                });
+            }
 
             @Test
             void failedSoftDeleteOrderProducts() {
@@ -940,7 +991,7 @@ class OrderServiceTest {
                 willThrow(new RuntimeException("JDBC Soft DELETE Failed")).given(orderProductJdbcRepository).softDeleteOrderProductsByOrderId(anyLong());
 
                 //when & then
-                thenThrownBy(() -> orderService.deleteOrder(order.getOrderNumber()))
+                thenThrownBy(() -> orderService.deleteOrder(order.getOrderNumber(), "id_A"))
                         .isInstanceOf(RuntimeException.class)
                         .hasMessage("JDBC Soft DELETE Failed");
 
@@ -948,7 +999,6 @@ class OrderServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
-                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findWithDelivery(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
                 });
             }

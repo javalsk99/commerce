@@ -62,6 +62,7 @@ class PaymentSyncServiceTest {
     @BeforeEach
     void beforeEach() {
         member = Member.builder()
+                .loginId("id_A")
                 .city("Seoul")
                 .street("Gangnam")
                 .zipcode("01234")
@@ -102,7 +103,7 @@ class PaymentSyncServiceTest {
             void basic() {
                 //given
                 given(paymentClient.getPayment(anyString())).willReturn(CompletableFuture.completedFuture(paidPayment));
-                given(paymentService.verifyAndComplete(any(PaidPayment.class))).willAnswer(invocation -> {
+                given(paymentService.verifyAndComplete(any(PaidPayment.class), anyString())).willAnswer(invocation -> {
                     Payment payment = order.getPayment();
                     payment.complete(LocalDateTime.now());
                     return payment;
@@ -110,7 +111,7 @@ class PaymentSyncServiceTest {
                 given(paymentService.getPaymentCompleteResponse(any(Payment.class))).willAnswer(invocation -> new PaymentCompleteResponse(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));
 
                 //when & then
-                StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
+                StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId(), "id_A").log())
                         .assertNext(response ->
                                 then(response)
                                         .extracting("paymentId", "paymentStatus")
@@ -121,7 +122,7 @@ class PaymentSyncServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(paymentClient).should().getPayment(anyString()));
-                    softly.check(() -> BDDMockito.then(paymentService).should().verifyAndComplete(any(PaidPayment.class)));
+                    softly.check(() -> BDDMockito.then(paymentService).should().verifyAndComplete(any(PaidPayment.class), anyString()));
                     softly.check(() -> BDDMockito.then(paymentService).should().getPaymentCompleteResponse(any(Payment.class)));
                 });
             }
@@ -136,7 +137,7 @@ class PaymentSyncServiceTest {
                 given(paymentClient.getPayment(anyString())).willReturn(CompletableFuture.failedFuture(new RuntimeException("Find Failed")));
 
                 //when & then
-                StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()))
+                StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId(), "id_A"))
                         .verifyErrorSatisfies(error -> then(error).isInstanceOf(SyncPaymentException.class));
             }
 
@@ -154,7 +155,7 @@ class PaymentSyncServiceTest {
                 given(paymentService.getPaymentCompleteResponse(any(Payment.class))).willAnswer(invocation -> new PaymentCompleteResponse(order.getPayment().getPaymentId(), order.getPayment().getPaymentStatus()));
 
                 //when & then
-                StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId()).log())
+                StepVerifier.create(paymentSyncService.syncPayment(order.getPayment().getPaymentId(), "id_A").log())
                         .assertNext(response ->
                                 then(response)
                                         .extracting("paymentId", "paymentStatus")

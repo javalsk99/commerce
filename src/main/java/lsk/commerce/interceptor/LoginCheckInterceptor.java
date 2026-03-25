@@ -7,11 +7,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lsk.commerce.exception.NotAdminException;
+import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.util.JwtProvider;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.HandlerMapping;
+
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -43,18 +47,21 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         Claims claims = jwtProvider.extractClaims(token);
         String loginId = claims.getSubject();
         String grade = claims.get("grade", String.class);
+        if (loginId == null || grade == null) {
+            throw new JwtException("잘못된 토큰입니다");
+        }
+
+        isMemberPath(request, requestURI, loginId);
 
         if (isAdminPath(requestURI, method)) {
             if (!"ADMIN".equals(grade)) {
-                throw new RuntimeException("관리자만 접근할 수 있습니다");
+                throw new NotAdminException("관리자만 접근할 수 있습니다");
             }
         }
 
-        request.setAttribute("loginId", loginId);
         return true;
     }
 
-    @NotNull
     private static String getToken(HttpServletRequest request, String authorization) {
         String token = null;
 
@@ -72,13 +79,26 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         }
 
         if (token == null) {
-            throw new RuntimeException("로그인을 해야 접근할 수 있습니다");
+            throw new JwtException("로그인을 해야 접근할 수 있습니다");
         }
         return token;
     }
 
+    private static void isMemberPath(HttpServletRequest request, String requestURI, String loginId) {
+        if (requestURI.startsWith("/members/")) {
+            Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+            if (pathVariables != null && pathVariables.containsKey("memberLoginId")) {
+                String memberLoginId = pathVariables.get("memberLoginId");
+
+                if (memberLoginId == null || !memberLoginId.equals(loginId)) {
+                    throw new NotResourceOwnerException("아이디의 주인이 아닙니다");
+                }
+            }
+        }
+    }
+
     private static boolean isAdminPath(String requestURI, String method) {
-        if ("/members".equals(requestURI)) {
+        if ("/members".equals(requestURI) && "GET".equalsIgnoreCase(method)) {
             return true;
         }
 
@@ -86,6 +106,6 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        return false;
+        return requestURI.startsWith("/orders") && "GET".equalsIgnoreCase(method);
     }
 }

@@ -18,12 +18,12 @@ public class PaymentSyncService {
     private final PaymentService paymentService;
     private final PaymentClient portone;
 
-    public Mono<PaymentCompleteResponse> syncPayment(String paymentId) {
+    public Mono<PaymentCompleteResponse> syncPayment(String paymentId, String loginId) {
         return Mono.fromFuture(portone.getPayment(paymentId))
                 .onErrorMap(e -> new SyncPaymentException("결제 정보 조회 중 오류 발생"))
                 .flatMap(actualPayment -> {
                     if (actualPayment instanceof PaidPayment paidPayment) {
-                        return Mono.fromCallable(() -> paymentService.verifyAndComplete(paidPayment))
+                        return Mono.fromCallable(() -> paymentService.verifyAndComplete(paidPayment, loginId))
                                 .subscribeOn(Schedulers.boundedElastic());
 
                     } else {

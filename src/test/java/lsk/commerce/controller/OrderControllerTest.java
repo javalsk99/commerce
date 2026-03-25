@@ -15,18 +15,18 @@ import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.GlobalExceptionHandler;
 import lsk.commerce.query.OrderQueryService;
 import lsk.commerce.query.dto.OrderProductQueryDto;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
 import lsk.commerce.service.OrderService;
-import lsk.commerce.service.PaymentService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,8 +35,10 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -52,7 +54,9 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.mock;
 import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -80,13 +84,25 @@ class OrderControllerTest {
     OrderService orderService;
 
     @MockitoBean
-    PaymentService paymentService;
-
-    @MockitoBean
     OrderQueryService orderQueryService;
 
+    private abstract class SetUp {
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            HandlerMethodArgumentResolver resolver = mock(HandlerMethodArgumentResolver.class);
+            given(resolver.supportsParameter(any())).willReturn(true);
+            given(resolver.resolveArgument(any(), any(), any(), any())).willReturn("id_A");
+
+            mvc = MockMvcBuilders.standaloneSetup(new OrderController(orderService, orderQueryService))
+                    .setControllerAdvice(new GlobalExceptionHandler())
+                    .setCustomArgumentResolvers(resolver)
+                    .build();
+        }
+    }
+
     @Nested
-    class Create {
+    class Create extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -99,12 +115,12 @@ class OrderControllerTest {
                 String productNumber1 = album1.getProductNumber();
                 String productNumber2 = album2.getProductNumber();
 
-                OrderCreateRequest request = new OrderCreateRequest("id_A", Map.of(productNumber1, 3, productNumber2, 2));
+                OrderCreateRequest request = new OrderCreateRequest(Map.of(productNumber1, 3, productNumber2, 2));
                 String json = objectMapper.writeValueAsString(request);
 
                 String orderNumber = "dn39chfus9cu";
 
-                given(orderService.order(any(OrderCreateRequest.class))).willReturn(orderNumber);
+                given(orderService.order(any(OrderCreateRequest.class), anyString())).willReturn(orderNumber);
 
                 //when & then
                 mvc.perform(post("/orders")
@@ -117,7 +133,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderService).should().order(request);
+                then(orderService).should().order(request, "id_A");
             }
         }
 
@@ -139,16 +155,16 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderService).should(never()).order(any());
+                then(orderService).should(never()).order(any(), any());
             }
 
             @Test
             void order_Failed_ProductNotFound() throws Exception {
                 //given
-                OrderCreateRequest request = new OrderCreateRequest("id_A", Map.of("llIIllII00OO", 4));
+                OrderCreateRequest request = new OrderCreateRequest(Map.of("llIIllII00OO", 4));
                 String json = objectMapper.writeValueAsString(request);
 
-                given(orderService.order(any(OrderCreateRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
+                given(orderService.order(any(OrderCreateRequest.class), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
 
                 //when & then
                 mvc.perform(post("/orders")
@@ -161,7 +177,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderService).should().order(request);
+                then(orderService).should().order(request, "id_A");
             }
 
             static Stream<Arguments> invalidCreateRequestProvider() {
@@ -170,18 +186,14 @@ class OrderControllerTest {
                 nullValueMap.put(productNumber, null);
 
                 return Stream.of(
-                        argumentSet("memberLoginId null", new OrderCreateRequest(null, Map.of(productNumber, 3))),
-                        argumentSet("productMap null", new OrderCreateRequest("id_A", null)),
-                        argumentSet("productMap empty", new OrderCreateRequest("id_A", Collections.emptyMap())),
-                        argumentSet("productMap key 빈 문자열", new OrderCreateRequest("id_A", Map.of("", 3))),
-                        argumentSet("productMap key 공백", new OrderCreateRequest("id_A", Map.of(" ".repeat(12), 3))),
-                        argumentSet("productMap key 12자 미만", new OrderCreateRequest("id_A", Map.of("l".repeat(11), 3))),
-                        argumentSet("productMap key 12자 초과", new OrderCreateRequest("id_A", Map.of("l".repeat(13), 3))),
-                        argumentSet("productMap value null", new OrderCreateRequest("id_A", nullValueMap)),
-                        argumentSet("productMap value 100 초과", new OrderCreateRequest("id_A", Map.of(productNumber, 101))),
-                        argumentSet("memberLoginId 공백", new OrderCreateRequest(" ", Map.of(productNumber, 3))),
-                        argumentSet("memberLoginId 4자 미만", new OrderCreateRequest("a".repeat(3), Map.of(productNumber, 3))),
-                        argumentSet("memberLoginId 20자 초과", new OrderCreateRequest("a".repeat(21), Map.of(productNumber, 3)))
+                        argumentSet("productMap null", new OrderCreateRequest(null)),
+                        argumentSet("productMap empty", new OrderCreateRequest(Collections.emptyMap())),
+                        argumentSet("productMap key 빈 문자열", new OrderCreateRequest(Map.of("", 3))),
+                        argumentSet("productMap key 공백", new OrderCreateRequest(Map.of(" ".repeat(12), 3))),
+                        argumentSet("productMap key 12자 미만", new OrderCreateRequest(Map.of("l".repeat(11), 3))),
+                        argumentSet("productMap key 12자 초과", new OrderCreateRequest(Map.of("l".repeat(13), 3))),
+                        argumentSet("productMap value null", new OrderCreateRequest(nullValueMap)),
+                        argumentSet("productMap value 100 초과", new OrderCreateRequest(Map.of(productNumber, 101)))
                 );
             }
         }
@@ -228,7 +240,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderQueryService).should().searchOrders(any(OrderSearchCond.class));
+                then(orderQueryService).should().searchOrders(any(OrderSearchCond.class));
             }
 
             private static List<OrderQueryDto> getOrderQueryDtoList(String orderNumber1, String orderNumber2) {
@@ -273,7 +285,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderQueryService).should().searchOrders(any(OrderSearchCond.class));
+                then(orderQueryService).should().searchOrders(any(OrderSearchCond.class));
             }
         }
     }
@@ -306,7 +318,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderQueryService).should().findOrder(orderNumber);
+                then(orderQueryService).should().findOrder(orderNumber);
             }
 
             private static OrderQueryDto getOrderQueryDto(String orderNumber) {
@@ -340,13 +352,13 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderQueryService).should().findOrder("lllIIIll00OO");
+                then(orderQueryService).should().findOrder("lllIIIll00OO");
             }
         }
     }
 
     @Nested
-    class ChangeOrder {
+    class ChangeOrder extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -364,7 +376,7 @@ class OrderControllerTest {
                 String orderNumber = order.getOrderNumber();
                 OrderResponse orderResponse = OrderResponse.from(order);
 
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(order);
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
                 given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
 
                 //when & then
@@ -382,9 +394,9 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().changeOrder(orderNumber, request));
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(orderNumber));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().changeOrder(orderNumber, request, "id_A"));
+                    softly.check(() -> then(orderService).should().findOrderWithAllExceptMember(orderNumber));
+                    softly.check(() -> then(orderService).should().getOrderResponse(order));
                 });
             }
 
@@ -401,7 +413,7 @@ class OrderControllerTest {
                 String orderNumber = order.getOrderNumber();
                 OrderResponse orderResponse = OrderResponse.from(order);
 
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(order);
+                given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
                 given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
 
                 //when & then 첫 번째 요청
@@ -419,9 +431,9 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().changeOrder(orderNumber, request));
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(orderNumber));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().changeOrder(orderNumber, request, "id_A"));
+                    softly.check(() -> then(orderService).should().findOrderWithAllExceptMember(orderNumber));
+                    softly.check(() -> then(orderService).should().getOrderResponse(order));
                 });
 
                 //when & then 두 번째 요청
@@ -439,9 +451,9 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).changeOrder(orderNumber, request));
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithDeliveryPayment(orderNumber));
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).getOrderResponse(order));
+                    softly.check(() -> then(orderService).should(times(2)).changeOrder(orderNumber, request, "id_A"));
+                    softly.check(() -> then(orderService).should(times(2)).findOrderWithAllExceptMember(orderNumber));
+                    softly.check(() -> then(orderService).should(times(2)).getOrderResponse(order));
                 });
             }
         }
@@ -468,9 +480,9 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should(never()).changeOrder(any(), any()));
-                    softly.check(() -> BDDMockito.then(orderService).should(never()).findOrderWithDeliveryPayment(any()));
-                    softly.check(() -> BDDMockito.then(orderService).should(never()).getOrderResponse(any()));
+                    softly.check(() -> then(orderService).should(never()).changeOrder(any(), any(), any()));
+                    softly.check(() -> then(orderService).should(never()).findOrderWithAllExceptMember(any()));
+                    softly.check(() -> then(orderService).should(never()).getOrderResponse(any()));
                 });
             }
 
@@ -483,7 +495,7 @@ class OrderControllerTest {
                 OrderChangeRequest request = new OrderChangeRequest(Map.of("lllIIIll00OO", 3));
                 String json = objectMapper.writeValueAsString(request);
 
-                willThrow(new DataNotFoundException("존재하지 않는 상품입니다")).given(orderService).changeOrder(anyString(), any(OrderChangeRequest.class));
+                willThrow(new DataNotFoundException("존재하지 않는 상품입니다")).given(orderService).changeOrder(anyString(), any(OrderChangeRequest.class), anyString());
 
                 //when & then
                 mvc.perform(patch("/orders/{orderNumber}", orderNumber)
@@ -497,9 +509,9 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().changeOrder(orderNumber, request));
-                    softly.check(() -> BDDMockito.then(orderService).should(never()).findOrderWithDeliveryPayment(any()));
-                    softly.check(() -> BDDMockito.then(orderService).should(never()).getOrderResponse(any()));
+                    softly.check(() -> then(orderService).should().changeOrder(orderNumber, request, "id_A"));
+                    softly.check(() -> then(orderService).should(never()).findOrderWithAllExceptMember(any()));
+                    softly.check(() -> then(orderService).should(never()).getOrderResponse(any()));
                 });
             }
 
@@ -523,7 +535,7 @@ class OrderControllerTest {
     }
 
     @Nested
-    class Delete {
+    class Delete extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -542,7 +554,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderService).should().deleteOrder(orderNumber);
+                then(orderService).should().deleteOrder(orderNumber, "id_A");
             }
 
             @Test
@@ -559,7 +571,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderService).should().deleteOrder(orderNumber);
+                then(orderService).should().deleteOrder(orderNumber, "id_A");
 
                 //when & then 두 번째 요청
                 mvc.perform(delete("/orders/{orderNumber}", orderNumber))
@@ -569,13 +581,13 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                BDDMockito.then(orderService).should(times(2)).deleteOrder(orderNumber);
+                then(orderService).should(times(2)).deleteOrder(orderNumber, "id_A");
             }
         }
     }
 
     @Nested
-    class CancelOrder {
+    class CancelOrder extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -588,7 +600,7 @@ class OrderControllerTest {
 
                 OrderResponse orderResponse = getOrderResponseHasNoPayment();
 
-                given(orderService.cancelOrder(anyString())).willReturn(order);
+                given(orderService.cancelOrder(anyString(), anyString())).willReturn(order);
                 given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
 
                 //when & then
@@ -602,8 +614,8 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().cancelOrder(orderNumber));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().cancelOrder(orderNumber, "id_A"));
+                    softly.check(() -> then(orderService).should().getOrderResponse(order));
                 });
             }
 
@@ -615,7 +627,7 @@ class OrderControllerTest {
 
                 OrderResponse orderResponse = getOrderResponseHasPayment();
 
-                given(orderService.cancelOrder(anyString())).willReturn(order);
+                given(orderService.cancelOrder(anyString(), anyString())).willReturn(order);
                 given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
 
                 //when & then
@@ -629,8 +641,8 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().cancelOrder(orderNumber));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().cancelOrder(orderNumber, "id_A"));
+                    softly.check(() -> then(orderService).should().getOrderResponse(order));
                 });
             }
 
@@ -642,7 +654,7 @@ class OrderControllerTest {
 
                 OrderResponse orderResponse = getOrderResponseHasPayment();
 
-                given(orderService.cancelOrder(anyString())).willReturn(order);
+                given(orderService.cancelOrder(anyString(), anyString())).willReturn(order);
                 given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
 
                 //when & then 첫 번째 요청
@@ -656,8 +668,8 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().cancelOrder(orderNumber));
-                    softly.check(() -> BDDMockito.then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().cancelOrder(orderNumber, "id_A"));
+                    softly.check(() -> then(orderService).should().getOrderResponse(order));
                 });
 
                 //when & then 두 번째 요청
@@ -671,8 +683,8 @@ class OrderControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).cancelOrder(orderNumber));
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).getOrderResponse(order));
+                    softly.check(() -> then(orderService).should(times(2)).cancelOrder(orderNumber, "id_A"));
+                    softly.check(() -> then(orderService).should(times(2)).getOrderResponse(order));
                 });
             }
         }

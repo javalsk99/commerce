@@ -64,7 +64,8 @@
 
 
 - OrderCreateRequest  
-  컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.
+  컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.  
+  memberLoginId를 제거했다.
 
 
 - OrderQueryDto  

@@ -16,6 +16,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.util.NanoIdProvider;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -170,6 +171,12 @@ public class Order {
 
         this.orderStatus = OrderStatus.PAID;
         this.delivery.setDeliveryStatus(DeliveryStatus.PREPARING);
+    }
+
+    public void isOwner(String loginId) {
+        if (!this.getMember().getLoginId().equals(loginId)) {
+            throw new NotResourceOwnerException("주문의 주인이 아닙니다");
+        }
     }
 
     public void validateDeletable() {

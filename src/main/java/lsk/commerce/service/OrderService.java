@@ -36,9 +36,9 @@ public class OrderService {
 
     private final OrderProductJdbcRepository orderProductJdbcRepository;
 
-    public String order(OrderCreateRequest request) {
+    public String order(OrderCreateRequest request, String loginId) {
         //엔티티 조회
-        Member member = memberService.findMemberByLoginId(request.memberLoginId());
+        Member member = memberService.findMemberByLoginId(loginId);
         List<Product> products = productService.findProducts();
 
         //배송 정보 생성
@@ -93,8 +93,10 @@ public class OrderService {
                 .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
     }
 
-    public void changeOrder(String orderNumber, OrderChangeRequest request) {
+    public void changeOrder(String orderNumber, OrderChangeRequest request, String loginId) {
         Order order = findOrderWithAllExceptMember(orderNumber);
+
+        order.isOwner(loginId);
 
         if (order.getId() == null) {
             throw new InvalidDataException("식별자가 없는 잘못된 주문입니다");
@@ -131,13 +133,14 @@ public class OrderService {
         em.clear();
     }
 
-    public Order cancelOrder(String orderNumber) {
+    public Order cancelOrder(String orderNumber, String loginId) {
         Order order = findOrderWithAllExceptMember(orderNumber);
+        order.isOwner(loginId);
         order.cancel();
         return order;
     }
 
-    public void deleteOrder(String orderNumber) {
+    public void deleteOrder(String orderNumber, String loginId) {
         Optional<Order> optionalOrder = orderRepository.findWithDeliveryPayment(orderNumber);
         if (optionalOrder.isEmpty()) {
             return;
@@ -145,6 +148,7 @@ public class OrderService {
 
         Order order = optionalOrder.get();
 
+        order.isOwner(loginId);
         order.validateDeletable();
 
         orderProductJdbcRepository.softDeleteOrderProductsByOrderId(order.getId());

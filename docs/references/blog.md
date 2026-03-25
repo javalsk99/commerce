@@ -32,3 +32,5 @@
 - [ResponseEntity List를 객체에 담아서 반환](https://hyeonic.tistory.com/197)
 - [WebTestClient](https://caporatang.tistory.com/32)
 - [WebTestClient](https://codefarm0.medium.com/webtestclient-vs-mockmvc-in-spring-boot-4e7354e1d1ab)
+- [Argument Resolver가 있는 테스트](https://dadadamarine.github.io/java/spring/2019/04/26/spring-controller-test3.html)
+- [Interceptor에 @PathVariable 가져오기](https://velog.io/@yune_/Back-end-Spring-InterceptorServlet%EC%97%90%EC%84%9C-PathVariable%EA%B0%92-%EA%B0%80%EC%A0%B8%EC%98%A4%EA%B8%B0)

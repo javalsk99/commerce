@@ -1,9 +1,9 @@
 package lsk.commerce.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.portone.sdk.server.webhook.WebhookVerifier;
 import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.SyncPaymentException;
+import lsk.commerce.api.portone.SyncPaymentExceptionHandler;
 import lsk.commerce.config.WebConfig;
 import lsk.commerce.domain.Delivery;
 import lsk.commerce.domain.DeliveryStatus;
@@ -19,9 +19,11 @@ import lsk.commerce.dto.request.PaymentCompleteResponse;
 import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.dto.response.PaymentResponse;
+import lsk.commerce.exception.GlobalExceptionHandler;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
 import lsk.commerce.service.PaymentSyncService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
@@ -34,18 +36,18 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
-import static org.mockito.BDDMockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.times;
+import static org.mockito.Mockito.mock;
 
 @WebMvcTest(
         controllers = PaymentController.class,
@@ -57,9 +59,6 @@ class PaymentControllerTest {
 
     @Autowired
     WebTestClient client;
-
-    @Autowired
-    ObjectMapper objectMapper;
 
     @MockitoBean
     OrderService orderService;
@@ -73,8 +72,23 @@ class PaymentControllerTest {
     @MockitoBean
     PaymentSyncService paymentSyncService;
 
+    private abstract class SetUp {
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            HandlerMethodArgumentResolver resolver = mock(HandlerMethodArgumentResolver.class);
+            given(resolver.supportsParameter(any())).willReturn(true);
+            given(resolver.resolveArgument(any(), any(), any())).willReturn(Mono.just("id_A"));
+
+            client = WebTestClient.bindToController(new PaymentController(portoneWebhook, orderService, paymentService, paymentSyncService))
+                    .argumentResolvers(configurer -> configurer.addCustomResolver(resolver))
+                    .controllerAdvice(new GlobalExceptionHandler(), new SyncPaymentExceptionHandler())
+                    .build();
+        }
+    }
+
     @Nested
-    class RequestPayment {
+    class RequestPayment extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -88,7 +102,7 @@ class PaymentControllerTest {
                 Payment.requestPayment(order);
                 PaymentResponse paymentResponse = new PaymentResponse(order.getPayment().getPaymentAmount(), order.getPayment().getPaymentStatus(), order.getOrderStatus(), order.getOrderDate(), order.getDelivery().getDeliveryStatus());
 
-                given(paymentService.request(anyString())).willReturn(order.getPayment());
+                given(paymentService.request(anyString(), anyString())).willReturn(order.getPayment());
                 given(paymentService.getPaymentResponse(any(Payment.class))).willReturn(paymentResponse);
 
                 //when & then
@@ -105,7 +119,7 @@ class PaymentControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(paymentService).should().request(orderNumber));
+                    softly.check(() -> BDDMockito.then(paymentService).should().request(orderNumber, "id_A"));
                     softly.check(() -> BDDMockito.then(paymentService).should().getPaymentResponse(order.getPayment()));
                 });
             }
@@ -123,7 +137,7 @@ class PaymentControllerTest {
                 Payment.requestPayment(order);
                 PaymentResponse paymentResponse = new PaymentResponse(order.getPayment().getPaymentAmount(), order.getPayment().getPaymentStatus(), order.getOrderStatus(), order.getOrderDate(), order.getDelivery().getDeliveryStatus());
 
-                given(paymentService.request(anyString()))
+                given(paymentService.request(anyString(), anyString()))
                         .willReturn(order.getPayment())
                         .willThrow(new IllegalStateException("이미 결제 정보가 있습니다"));
                 given(paymentService.getPaymentResponse(any(Payment.class))).willReturn(paymentResponse);
@@ -142,7 +156,7 @@ class PaymentControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(paymentService).should().request(orderNumber));
+                    softly.check(() -> BDDMockito.then(paymentService).should().request(orderNumber, "id_A"));
                     softly.check(() -> BDDMockito.then(paymentService).should().getPaymentResponse(order.getPayment()));
                 });
 
@@ -157,7 +171,7 @@ class PaymentControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(paymentService).should(times(2)).request(orderNumber));
+                    softly.check(() -> BDDMockito.then(paymentService).should(times(2)).request(orderNumber, "id_A"));
                     softly.check(() -> BDDMockito.then(paymentService).should().getPaymentResponse(any()));
                 });
             }
@@ -200,7 +214,7 @@ class PaymentControllerTest {
     }
 
     @Nested
-    class GetOrder {
+    class GetOrder extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -246,7 +260,7 @@ class PaymentControllerTest {
     }
 
     @Nested
-    class CompletePayment {
+    class CompletePayment extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -259,7 +273,7 @@ class PaymentControllerTest {
 
                 PaymentCompleteResponse paymentCompleteResponse = new PaymentCompleteResponse(paymentId, PaymentStatus.COMPLETED);
 
-                given(paymentSyncService.syncPayment(anyString())).willReturn(Mono.just(paymentCompleteResponse));
+                given(paymentSyncService.syncPayment(anyString(), anyString())).willReturn(Mono.just(paymentCompleteResponse));
 
                 //when & then
                 client.post().uri("/api/payments/complete")
@@ -273,7 +287,7 @@ class PaymentControllerTest {
                         .consumeWith(System.out::println);
 
                 //then
-                BDDMockito.then(paymentSyncService).should().syncPayment(paymentId);
+                BDDMockito.then(paymentSyncService).should().syncPayment(paymentId, "id_A");
             }
         }
 
@@ -286,7 +300,7 @@ class PaymentControllerTest {
                 String paymentId = "lllIIIll00OO";
                 CompletePaymentRequest request = new CompletePaymentRequest(paymentId);
 
-                given(paymentSyncService.syncPayment(anyString())).willThrow(new SyncPaymentException("결제 정보 조회 중 오류 발생"));
+                given(paymentSyncService.syncPayment(anyString(), anyString())).willThrow(new SyncPaymentException("결제 정보 조회 중 오류 발생"));
 
                 //when & then
                 client.post().uri("/api/payments/complete")
@@ -301,7 +315,7 @@ class PaymentControllerTest {
                         .consumeWith(System.out::println);
 
                 //then
-                BDDMockito.then(paymentSyncService).should().syncPayment(paymentId);
+                BDDMockito.then(paymentSyncService).should().syncPayment(paymentId, "id_A");
             }
         }
     }

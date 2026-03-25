@@ -1,5 +1,6 @@
 package lsk.commerce.exception;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResult> illegalStatusExHandle(IllegalStateException e) {
         return ResponseEntity.badRequest().body(new ErrorResult("BAD_STATUS", e.getMessage()));
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResult> jwtExHandle(JwtException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResult("UNAUTHORIZED", e.getMessage()));
+    }
+
+    @ExceptionHandler(NotResourceOwnerException.class)
+    public ResponseEntity<ErrorResult> notResourceExHandle(NotResourceOwnerException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResult("NOT_RESOURCE_OWNER", e.getMessage()));
+    }
+
+    @ExceptionHandler(NotAdminException.class)
+    public ResponseEntity<ErrorResult> forbiddenExHandle(NotAdminException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResult("FORBIDDEN", e.getMessage()));
     }
 
     @ExceptionHandler(DataNotFoundException.class)
