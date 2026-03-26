@@ -2,10 +2,8 @@ package lsk.commerce.argumentresolver;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.exception.InvalidDataException;
 import lsk.commerce.util.JwtProvider;
 import org.springframework.core.MethodParameter;
-import org.springframework.http.HttpCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.reactive.BindingContext;
 import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
@@ -27,15 +25,9 @@ public class LoginReactiveArgumentResolver implements HandlerMethodArgumentResol
     @Override
     public Mono<Object> resolveArgument(MethodParameter parameter, BindingContext bindingContext, ServerWebExchange exchange) {
         ServerHttpRequest request = exchange.getRequest();
-        HttpCookie cookie = request.getCookies().getFirst("jjwt");
-
-        if (cookie == null) {
-            throw new InvalidDataException("");
-        }
-
-        String token = cookie.getValue();
+        String token = jwtProvider.getTokenForReactive(request);
         Claims claims = jwtProvider.extractClaims(token);
-        String loginId = claims.get("loginId", String.class);
+        String loginId = claims.getSubject();
         return Mono.just(loginId);
     }
 }

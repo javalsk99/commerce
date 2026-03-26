@@ -21,7 +21,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<Result<String>> login(@RequestBody @Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<Result<String>> login(
+            @RequestBody @Valid MemberLoginRequest loginRequest,
+            HttpServletResponse response
+    ) {
         String token = authService.login(loginRequest.loginId(), loginRequest.password());
 
         Cookie cookie = new Cookie("jjwt", token);
@@ -44,9 +47,12 @@ public class AuthController {
         return ResponseEntity.ok(new Result<>("logout", 1));
     }
 
-    //결제하기 위한 로그인 (인터셉터 통과)
+    //결제하기 위한 로그인
     @GetMapping("/web/login")
-    public ResponseEntity<Result<String>> webLogin(@ModelAttribute @Valid MemberLoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<Result<String>> webLogin(
+            @ModelAttribute @Valid MemberLoginRequest loginRequest,
+            HttpServletResponse response
+    ) {
         String token = authService.login(loginRequest.loginId(), loginRequest.password());
 
         Cookie cookie = new Cookie("jjwt", token);

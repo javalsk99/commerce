@@ -2,7 +2,6 @@ package lsk.commerce.interceptor;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import lsk.commerce.exception.NotAdminException;
 import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.util.JwtProvider;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
@@ -37,8 +35,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        String token = getToken(request, authorization);
+        String token = jwtProvider.getToken(request);
 
         if (!jwtProvider.validateToken(token)) {
             throw new JwtException("유효하지 않은 토큰입니다");
@@ -60,28 +57,6 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         }
 
         return true;
-    }
-
-    private static String getToken(HttpServletRequest request, String authorization) {
-        String token = null;
-
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            token = authorization.substring(7);
-        }
-
-        if (token == null && request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("jjwt".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        if (token == null) {
-            throw new JwtException("로그인을 해야 접근할 수 있습니다");
-        }
-        return token;
     }
 
     private static void isMemberPath(HttpServletRequest request, String requestURI, String loginId) {
