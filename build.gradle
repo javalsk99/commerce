@@ -55,6 +55,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation 'com.microsoft.playwright:playwright:1.58.0'
 	mockitoAgent('org.mockito:mockito-core') {transitive = false}
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

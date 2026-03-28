@@ -102,14 +102,14 @@ class DeliveryServiceTest {
             @Test
             void basic() {
                 //given
-                given(orderService.findOrderWithDelivery(anyString())).willReturn(order);
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(order);
 
                 //when
                 deliveryService.startDelivery(order.getOrderNumber());
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class)));
                 });
                 thenSoftly(softly -> {
@@ -125,7 +125,7 @@ class DeliveryServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderService.findOrderWithDelivery(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
                 //when & then
                 thenThrownBy(() -> deliveryService.startDelivery(wrongOrderNumber))
@@ -134,7 +134,7 @@ class DeliveryServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should(never()).publishEvent(any()));
                 });
             }
@@ -142,7 +142,7 @@ class DeliveryServiceTest {
             @Test
             void failedEventPublisher() {
                 //given
-                given(orderService.findOrderWithDelivery(anyString())).willReturn(order);
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(order);
                 willThrow(new RuntimeException("Event Publish Failed")).given(eventPublisher).publishEvent(any(DeliveryStartedEvent.class));
 
                 //when & then
@@ -152,7 +152,7 @@ class DeliveryServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class)));
                 });
             }
@@ -160,14 +160,14 @@ class DeliveryServiceTest {
             @Test
             void alreadyShipped() {
                 //given
-                given(orderService.findOrderWithDelivery(anyString())).willReturn(order);
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(order);
 
                 //when 첫 번째 호출
                 deliveryService.startDelivery(order.getOrderNumber());
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(DeliveryStartedEvent.class)));
                 });
                 thenSoftly(softly -> {
@@ -182,7 +182,7 @@ class DeliveryServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithDelivery(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(eventPublisher).should().publishEvent(any(Object.class)));
                 });
             }
@@ -200,13 +200,13 @@ class DeliveryServiceTest {
                 //given
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", DeliveryStatus.SHIPPED);
 
-                given(orderService.findOrderWithDelivery(anyString())).willReturn(order);
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(order);
 
                 //when
                 deliveryService.completeDelivery(order.getOrderNumber());
 
                 //then
-                BDDMockito.then(orderService).should().findOrderWithDelivery(anyString());
+                BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.DELIVERED);
                     softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
@@ -220,7 +220,7 @@ class DeliveryServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderService.findOrderWithDelivery(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
 
                 //when & then
                 thenThrownBy(() -> deliveryService.completeDelivery(wrongOrderNumber))
@@ -228,7 +228,7 @@ class DeliveryServiceTest {
                         .hasMessage("존재하지 않는 주문입니다");
 
                 //then
-                BDDMockito.then(orderService).should().findOrderWithDelivery(anyString());
+                BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString());
             }
 
             @Test
@@ -236,13 +236,13 @@ class DeliveryServiceTest {
                 //given
                 ReflectionTestUtils.setField(delivery, "deliveryStatus", DeliveryStatus.SHIPPED);
 
-                given(orderService.findOrderWithDelivery(anyString())).willReturn(order);
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(order);
 
                 //when 첫 번째 호출
                 deliveryService.completeDelivery(order.getOrderNumber());
 
                 //then
-                BDDMockito.then(orderService).should().findOrderWithDelivery(anyString());
+                BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.DELIVERED);
                     softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);

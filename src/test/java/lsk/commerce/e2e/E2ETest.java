@@ -1,28 +1,41 @@
 package lsk.commerce.e2e;
 
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.FrameLocator;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.assertions.PlaywrightAssertions;
+import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.Cookie;
 import io.jsonwebtoken.Claims;
+import io.portone.sdk.server.common.Currency;
+import io.portone.sdk.server.common.Customer;
+import io.portone.sdk.server.common.PgProvider;
+import io.portone.sdk.server.common.PortOneVersion;
+import io.portone.sdk.server.common.SelectedChannel;
+import io.portone.sdk.server.common.SelectedChannelType;
+import io.portone.sdk.server.payment.PaidPayment;
+import io.portone.sdk.server.payment.PaymentAmount;
+import io.portone.sdk.server.payment.PaymentClient;
 import jakarta.persistence.EntityManager;
 import lsk.commerce.api.portone.CompletePaymentRequest;
-import lsk.commerce.domain.Category;
 import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderStatus;
+import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.PaymentStatus;
-import lsk.commerce.domain.Product;
-import lsk.commerce.domain.product.Album;
-import lsk.commerce.domain.product.Book;
-import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.request.MemberLoginRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.response.Result;
-import lsk.commerce.repository.CategoryRepository;
 import lsk.commerce.repository.OrderRepository;
-import lsk.commerce.repository.ProductRepository;
+import lsk.commerce.repository.PaymentRepository;
 import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
 import lsk.commerce.util.JwtProvider;
@@ -30,24 +43,37 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
-import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.BDDMockito.anyString;
+import static org.mockito.BDDMockito.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class E2ETest {
+
+    @LocalServerPort
+    int port;
 
     @Autowired
     WebTestClient client;
@@ -56,22 +82,34 @@ public class E2ETest {
     JdbcTemplate jdbcTemplate;
 
     @Autowired
+    EntityManager em;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     @Autowired
     JwtProvider jwtProvider;
 
     @Autowired
-    EntityManager em;
+    OrderRepository orderRepository;
 
     @Autowired
-    OrderRepository orderRepository;
+    PaymentRepository paymentRepository;
 
     @Autowired
     CategoryService categoryService;
 
     @Autowired
     ProductService productService;
+
+    @MockitoBean
+    PaymentClient portone;
+
+    @Value("${phoneNumber}")
+    String phoneNumber;
+
+    @Value("${birth}")
+    String birth;
 
     @AfterEach
     void afterEach() {
@@ -89,7 +127,7 @@ public class E2ETest {
     }
 
     @Test
-    @DisplayName("회원 가입부터 결제 완료까지의 흐름")
+    @DisplayName("회원 가입부터 결제 완료 후 배송 시작까지의 흐름")
     void mvp() {
         //given
         MemberCreateRequest memberCreateRequest = MemberCreateRequest.builder()
@@ -246,6 +284,120 @@ public class E2ETest {
         then(requestedOrder)
                 .extracting("orderStatus", "delivery.deliveryStatus", "payment.paymentStatus")
                 .containsExactly(OrderStatus.CREATED, DeliveryStatus.WAITING, PaymentStatus.PENDING);
+
+        //given
+        try (Playwright playwright = Playwright.create()) {
+            Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+            BrowserContext context = browser.newContext();
+            context.addCookies(Arrays.asList(new Cookie("jjwt", token)
+                    .setDomain("localhost")
+                    .setPath("/")
+            ));
+            Page page = context.newPage();
+
+            System.out.println("============== FIFTH WHEN START ==============");
+
+            //when 포트원 서버에 결제 정보 등록
+            page.navigate("http://localhost:" + port + "/payments/" + orderNumber);
+
+            System.out.println("============== FIFTH WHEN END ================");
+
+            //then
+            thenSoftly(softly -> {
+                softly.check(() -> PlaywrightAssertions.assertThat(page).hasTitle("포트원 결제연동"));
+                softly.check(() -> PlaywrightAssertions.assertThat(page).hasURL(Pattern.compile("payments/" + orderNumber)));
+                softly.check(() -> PlaywrightAssertions.assertThat(page.locator(".orderProductDtoList-product")).hasCount(4));
+                softly.check(() -> PlaywrightAssertions.assertThat(page.locator("#totalPriceDisplay")).hasText("139,000원"));
+                softly.check(() -> PlaywrightAssertions.assertThat(page.locator("#checkoutButton")).isVisible());
+                softly.check(() -> PlaywrightAssertions.assertThat(page.locator("#checkoutButton")).isEnabled());
+            });
+
+            String orderName = page.locator("#orderNameDisplay").textContent();
+
+            //given
+            FrameLocator paymentLocator = page.locator("#imp-iframe").contentFrame();
+            FrameLocator tossLocator = paymentLocator.locator("iframe[name=\"토스페이먼츠 전자결제\"]").contentFrame();
+
+            System.out.println("============== SIXTH WHEN START ==============");
+
+            //when 결제 버튼 클릭
+            page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("결제")).click();
+
+            paymentLocator.getByRole(AriaRole.LINK, new FrameLocator.GetByRoleOptions().setName("토스페이")).click();
+            paymentLocator.getByRole(AriaRole.CHECKBOX, new FrameLocator.GetByRoleOptions().setName("[필수] 서비스 이용 약관, 개인정보 처리 동의")).check();
+            paymentLocator.getByRole(AriaRole.BUTTON, new FrameLocator.GetByRoleOptions().setName("다음-토스페이 결제")).click();
+
+            tossLocator.getByText("휴대폰번호").click();
+            tossLocator.getByRole(AriaRole.TEXTBOX, new FrameLocator.GetByRoleOptions().setName("휴대폰번호")).fill(phoneNumber);
+            tossLocator.getByRole(AriaRole.TEXTBOX, new FrameLocator.GetByRoleOptions().setName("생년월일 6자리")).fill(birth);
+
+            System.out.println("============== SIXTH WHEN END ================");
+
+            //then
+            thenSoftly(softly -> {
+                softly.check(() -> PlaywrightAssertions.assertThat(tossLocator.getByRole(AriaRole.HEADING, new FrameLocator.GetByRoleOptions().setName("토스 앱으로 온 알림을 눌러 결제를 진행해주세요"))).isVisible());
+                softly.check(() -> PlaywrightAssertions.assertThat(tossLocator.getByRole(AriaRole.BUTTON, new FrameLocator.GetByRoleOptions().setName("혹시, 알림이 안 왔나요?"))).isVisible());
+                softly.check(() -> PlaywrightAssertions.assertThat(tossLocator.getByRole(AriaRole.BUTTON, new FrameLocator.GetByRoleOptions().setName("결제 취소하기"))).isVisible());
+            });
+
+            //given
+            String paymentId = requestedOrder.getPayment().getPaymentId();
+            CompletePaymentRequest completePaymentRequest = new CompletePaymentRequest(paymentId);
+
+            PaidPayment paidPayment = new PaidPayment(paymentId, "transactionId", "merchantId", "storeId", null, new SelectedChannel(SelectedChannelType.Test.INSTANCE, null, null, null, PgProvider.Tosspayments.INSTANCE, "iamporttest_3"), null, PortOneVersion.V2.INSTANCE, null, null, null, Instant.now(), Instant.now(), Instant.now(), orderName, new PaymentAmount(139000L, 0L, null, null, 0L, 139000L, 0L, 0L), Currency.Krw.INSTANCE, new Customer(null, null, null, null, null, null, null, null), null, null, null, null, null, "{\"orderNumber\":\"" + orderNumber + "\"}", null, Instant.now(), null, null, null, null);
+            given(portone.getPayment(anyString())).willReturn(CompletableFuture.completedFuture(paidPayment));
+
+            System.out.println("============= SEVENTH WHEN START =============");
+
+            //when 결제 완료
+            page.evaluate("""
+                    async (id) => {
+                              await fetch("/api/payments/complete", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json",},
+                                credentials: "include",
+                                body: JSON.stringify({paymentId: id,}),
+                              })
+                            }
+                    """, paymentId
+            );
+
+            System.out.println("============= SEVENTH WHEN END ===============");
+
+            //then 결제 완료 검증
+            await()
+                    .atMost(5, TimeUnit.SECONDS)
+                    .pollInterval(1, TimeUnit.SECONDS)
+                    .untilAsserted(() -> {
+                        Payment completedPayment = paymentRepository.findWithOrderDelivery(paymentId)
+                                .orElseThrow();
+
+                        thenSoftly(softly -> {
+                            softly.then(completedPayment)
+                                    .extracting("id", "paymentDate")
+                                    .isNotNull();
+                            softly.then(completedPayment)
+                                    .extracting("paymentId", "paymentAmount", "order.orderStatus", "paymentStatus", "order.delivery.deliveryStatus", "deleted")
+                                    .containsExactly(paymentId, 139000, OrderStatus.PAID, PaymentStatus.COMPLETED, DeliveryStatus.PREPARING, false);
+                        });
+                    });
+
+            System.out.println("============== EIGHTH WHEN START ==============");
+
+            //then 배송 시작 검증
+            await()
+                    .pollDelay(4,TimeUnit.SECONDS)
+                    .atMost(7, TimeUnit.SECONDS)
+                    .pollInterval(1, TimeUnit.SECONDS)
+                    .untilAsserted(() -> {
+                        System.out.println("============== EIGHTH WHEN END ================");
+
+                        Order shippedOrder = orderRepository.findWithDelivery(orderNumber)
+                                .orElseThrow();
+
+                        then(shippedOrder.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.SHIPPED);
+                    });
+        }
     }
 
     private Map<String, Integer> createProductMap() {

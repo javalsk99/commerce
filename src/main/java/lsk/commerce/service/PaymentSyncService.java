@@ -27,6 +27,7 @@ public class PaymentSyncService {
                                 .subscribeOn(Schedulers.boundedElastic());
 
                     } else {
+                        log.error("결제 실패 {}", actualPayment);
                         return Mono.fromCallable(() -> paymentService.failedPayment(paymentId))
                                 .subscribeOn(Schedulers.boundedElastic());
                     }

@@ -339,7 +339,29 @@
   그래서 @Transactional을 사용하지 않는 해당 테스트와 적은 메모리와 많은 인원이 사용하는 커머스 프로젝트에서는 커넥션을 길게 가지고 있는 getResultStream()이 적합하지 않는다.
 
 
-- 결제 완료 테스트 중 예외 발생 lsk.commerce.api.portone.SyncPaymentException: 결제 정보 조회 중 오류 발생
-  원인: 자바스크립트를 통해 포트원 서버에 주문과 결제 정보를 등록해야 한다.
-  결론: 결제 완료 테스트를 진행하려면 자바스크립트를 통해 포트원 서버에 결제 정보를 등록해야 하는데, 통합 테스트에는 자바스크립트가 작동하지 않아서 통합 테스트에서 진행할 수 없다.
+- 결제 완료 테스트 중 예외 발생 lsk.commerce.api.portone.SyncPaymentException: 결제 정보 조회 중 오류 발생  
+  원인: 자바스크립트를 통해 포트원 서버에 주문과 결제 정보를 등록해야 한다.  
+  결론: 결제 완료 테스트를 진행하려면 자바스크립트를 통해 포트원 서버에 결제 정보를 등록해야 하는데, 통합 테스트에는 자바스크립트가 작동하지 않아서 통합 테스트에서 진행할 수 없다.  
+  해결: E2E 테스트에서 Playwright를 통해 자바스크립트를 작동시켰다.
 
+      try (Playwright playwright = Playwright.create()) {
+          Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+          BrowserContext context = browser.newContext();
+          context.addCookies(Arrays.asList(new Cookie("jjwt", token)
+                  .setDomain("localhost")
+                  .setPath("/")
+          ));
+          Page page = context.newPage();
+
+          page.navigate("http://localhost:" + port + "/payments/" + orderNumber);
+
+  추가 문제: 결제를 진행하지 않고, PaymentController의 completePayment를 요청해서 결제가 실패된다.  
+  2026-03-27T23:27:25.366+09:00 ERROR 7692 --- [-1 @coroutine#6] l.commerce.service.PaymentSyncService    : 결제 실패 ReadyPayment(id=e9fca02d-1572-4bc1-acfe-219c69d8bf62,
+
+  시도한 방법: 자바스크립트로 결제 완료 시 작동하는 로직을 실행 - 이 방법도 위의 방법과 같이 결제를 진행하지 않고 completePayment를 요청하는 것이므로 실패했다.  
+  시도한 방법: Playwright의 테스트 자동화 기능인 page.pause();로 잠시 멈추고 결제를 진행 - 테스트는 성공했지만, 테스트를 진행할 때마다 직접 결제를 진행해야 한다.  
+  시도한 방법: 결제대행사를 카카오페이에서 토스페이먼츠로 변경 - 둘 다 테스트 모드지만 실제로 결제하는 과정이 필요해서 실패했다.  
+  임시 해결: E2E 테스트에서 Mocking하면 실제 API가 잘 작동하는지 확인할 수 없지만, 결제 완료에서는 필요한 상황이라 생각해서 PaidPayment를 직접 생성하고, PaymentClient를 Mocking해서 진행한다.
+
+      PaidPayment paidPayment = new PaidPayment(paymentId, "transactionId", "merchantId", "storeId", null, new SelectedChannel(SelectedChannelType.Test.INSTANCE, null, null, null, PgProvider.Tosspayments.INSTANCE, "iamporttest_3"), null, PortOneVersion.V2.INSTANCE, null, null, null, Instant.now(), Instant.now(), Instant.now(), orderName, new PaymentAmount(139000L, 0L, null, null, 0L, 139000L, 0L, 0L), Currency.Krw.INSTANCE, new Customer(null, null, null, null, null, null, null, null), null, null, null, null, null, "{\"orderNumber\":\"" + orderNumber + "\"}", null, Instant.now(), null, null, null, null);
+      given(portone.getPayment(anyString())).willReturn(CompletableFuture.completedFuture(paidPayment));

@@ -43,6 +43,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/api/payments").setViewName("forward:/index.html");
+        registry.addViewController("/payments/**").setViewName("forward:/index.html");
     }
 }

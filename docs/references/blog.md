@@ -35,3 +35,4 @@
 - [Interceptor에 @PathVariable 가져오기](https://velog.io/@yune_/Back-end-Spring-InterceptorServlet%EC%97%90%EC%84%9C-PathVariable%EA%B0%92-%EA%B0%80%EC%A0%B8%EC%98%A4%EA%B8%B0)
 - [WebTestClient @RequestParam, @ModelAttribute](https://ms727.tistory.com/53)
 - [제네릭 타입 정보 주입](https://soft-dino.tistory.com/62)
+- [딜레이 테스트](https://silvergoni.tistory.com/entry/use-awaitility%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%98%EC%97%AC-%EB%94%9C%EB%A0%88%EC%9D%B4-%ED%85%8C%EC%8A%A4%ED%8A%B8%ED%95%98%EA%B8%B0)

@@ -9,7 +9,8 @@
 - Official Docs  
   [Spring Data JPA 에서 null 파라미터 담는 법](https://www.baeldung.com/spring-data-jpa-null-parameters) (jpql로 적용)  
   [JUnit Parameterized Test](https://docs.junit.org/5.14.2/writing-tests/parameterized-classes-and-tests.html#tests-consuming-arguments-methods)  
-  [Spring TestTransaction](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/context/transaction/TestTransaction.html)
+  [Spring TestTransaction](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/context/transaction/TestTransaction.html)  
+  [Playwright](https://playwright.dev/java/docs/intro)
 
 
 - 도구 - AI  
