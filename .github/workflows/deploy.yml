@@ -29,8 +29,8 @@ jobs:
       - name: Docker build & push
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} .
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
 
       - name: Get GitHub IP
         id: ip
@@ -48,7 +48,8 @@ jobs:
           aws ec2 authorize-security-group-ingress \
             --group-id ${{ secrets.AWS_SG_ID }} \
             --protocol tcp --port 22 \
-            --cidr ${{ steps.ip.outputs.ipv4 }}/32
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32 \
+            --region ${{ secrets.AWS_REGION }}
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -57,13 +58,13 @@ jobs:
           username: ${{ secrets.EC2_USER_NAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
             sudo docker rm -f ${{ secrets.SPRING_BOOT_CONTAINER }} || true
             sudo docker run -d --name ${{ secrets.SPRING_BOOT_CONTAINER }} \
               --restart always \
               -p 8080:8080 \
               --env-file ${{ secrets.ENV_PATH }} \
-              ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
+              ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
             sudo docker image prune -f
 
       - name: Revoke GitHub IP from Security Group
@@ -72,4 +73,5 @@ jobs:
           aws ec2 revoke-security-group-ingress \
             --group-id ${{ secrets.AWS_SG_ID }} \
             --protocol tcp --port 22 \
-            --cidr ${{ steps.ip.outputs.ipv4 }}/32
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32 \
+            --region ${{ secrets.AWS_REGION }}
