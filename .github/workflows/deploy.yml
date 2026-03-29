@@ -1,0 +1,75 @@
+name: Java CI/CD with Docker
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
+
+      - name: Docker build & push
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
+
+      - name: Get GitHub IP
+        id: ip
+        run: echo "ipv4=$(curl -s https://ifconfig.me)" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Allow GitHub IP in Security Group
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.AWS_SG_ID }} \
+            --protocol tcp --port 22 \
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER_NAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
+            sudo docker rm -f ${{ secrets.SPRING_BOOT_CONTAINER }} || true
+            sudo docker run -d --name ${{ secrets.SPRING_BOOT_CONTAINER }} \
+              --restart always \
+              -p 8080:8080 \
+              --env-file ${{ secrets.ENV_PATH }} \
+              ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}
+            sudo docker image prune -f
+
+      - name: Revoke GitHub IP from Security Group
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.AWS_SG_ID }} \
+            --protocol tcp --port 22 \
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32

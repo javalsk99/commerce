@@ -179,6 +179,16 @@ public class Order {
         }
     }
 
+    public void validateReadyToPay() {
+        if (this.orderStatus == OrderStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문이어서 결제할 수 없습니다");
+        }
+
+        if (this.orderStatus != OrderStatus.CREATED) {
+            throw new IllegalStateException("이미 결제 완료된 주문입니다");
+        }
+    }
+
     public void validateDeletable() {
         if (this.getOrderStatus() == OrderStatus.CREATED) {
             throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다");

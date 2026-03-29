@@ -107,6 +107,7 @@ public class PaymentService {
     private OrderPaymentResponse verifyOrderProducts(String orderNumber, String loginId) {
         Order order = orderService.findOrderWithAllExceptMember(orderNumber);
         order.isOwner(loginId);
+        order.validateReadyToPay();
         OrderPaymentResponse orderPaymentResponse = orderService.getOrderPaymentResponse(order);
         List<Product> products = productService.findProducts();
 
