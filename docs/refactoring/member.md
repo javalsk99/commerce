@@ -54,3 +54,7 @@
 ## Member
 - changeAddress  
   멱등성을 위해 주소가 기존과 같으면 이후 로직을 실행하지 않고 반환했다.
+
+
+- loginId, MemberCreateRequest loginId  
+  @Pattern(regexp = "^[A-Za-z0-9]+$")를 추가해서 특수문자로 가입하는 것을 막았다.

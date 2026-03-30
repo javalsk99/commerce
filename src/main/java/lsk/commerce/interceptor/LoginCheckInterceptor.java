@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import lsk.commerce.exception.NotAdminException;
 import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.util.JwtProvider;
+import lsk.commerce.util.NanoIdProvider;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
@@ -28,7 +29,20 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         log.info("인증 체크 인터셉터 실행 [{}]{}", method, requestURI);
 
         if (!(handler instanceof HandlerMethod)) {
-            return true;
+            if (requestURI.equals("/payments.html")) {
+                return true;
+            }
+
+            if (requestURI.startsWith("/payments/")) {
+                String pathVariable = requestURI.substring("/payments/".length());
+
+                if (NanoIdProvider.validateNanoId(pathVariable)) {
+                    return true;
+                }
+            }
+
+            log.warn("미등록 경로 접근 차단: [{}] {}", method, requestURI);
+            return false;
         }
 
         if (("/members".equals(requestURI) && "POST".equalsIgnoreCase(method)) || "OPTIONS".equalsIgnoreCase(method)) {
@@ -61,6 +75,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
 
     private static void isMemberPath(HttpServletRequest request, String requestURI, String loginId) {
         if (requestURI.startsWith("/members/")) {
+
             Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             if (pathVariables != null && pathVariables.containsKey("memberLoginId")) {
                 String memberLoginId = pathVariables.get("memberLoginId");

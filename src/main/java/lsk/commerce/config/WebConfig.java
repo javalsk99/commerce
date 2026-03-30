@@ -24,7 +24,10 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoginCheckInterceptor(jwtProvider))
                 .order(1)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/login", "/logout", "/web/login", "/css/**", "/*.ico", "/*.png", "/error");
+                .excludePathPatterns(
+                        "/login", "/logout", "/web/login",
+                        "/", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
+                        "/css/**", "/*.ico", "/*.png", "/error");
     }
 
     @Override
@@ -43,6 +46,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/payments/**").setViewName("forward:/index.html");
+        registry.addViewController("/payments/**").setViewName("forward:/payments.html");
     }
 }

@@ -59,12 +59,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
-            sudo docker rm -f ${{ secrets.SPRING_BOOT_CONTAINER }} || true
-            sudo docker run -d --name ${{ secrets.SPRING_BOOT_CONTAINER }} \
-              --restart always \
-              -p 8080:8080 \
-              --env-file ${{ secrets.ENV_PATH }} \
-              ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
+            export TAG=v${{ github.run_number }}
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
+            sudo -E docker-compose up -d
             sudo docker image prune -f
 
       - name: Revoke GitHub IP from Security Group
