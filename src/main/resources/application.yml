@@ -2,7 +2,7 @@ spring:
   application:
     name: commerce
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: local
 
 # portone
 portone:
