@@ -21,7 +21,15 @@ spring:
 # log
 logging:
   level:
-    root: info
-    org.springframework.web.servlet:
-      DispatcherServlet: DEBUG
-      mvc.method.annotation.RequestMappingHandlerMapping: DEBUG
+    org:
+      hibernate:
+        SQL: debug
+        resource:
+          transaction: debug
+      springframework:
+        jdbc:
+          core:
+            JdbcTemplate: debug
+        orm:
+          jpa:
+            JpaTransactionManager: debug

@@ -41,7 +41,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
                 }
             }
 
-            log.warn("미등록 경로 접근 차단: [{}] {}", method, requestURI);
+            log.warn("미등록 경로 접근 차단: [{}]{}", method, requestURI);
             return false;
         }
 
