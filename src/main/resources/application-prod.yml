@@ -21,15 +21,4 @@ spring:
 # log
 logging:
   level:
-    org:
-      hibernate:
-        SQL: debug
-        resource:
-          transaction: debug
-      springframework:
-        jdbc:
-          core:
-            JdbcTemplate: debug
-        orm:
-          jpa:
-            JpaTransactionManager: debug
+    root: info

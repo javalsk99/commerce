@@ -58,6 +58,7 @@ jobs:
           username: ${{ secrets.EC2_USER_NAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            cd /home/ubuntu
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
             export TAG=v${{ github.run_number }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
