@@ -1,0 +1,24 @@
+# MySQL
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${RDS_ENDPOINT}:3306/commerce?useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    username: ${USER_NAME}
+    password: ${USER_PASSWORD}
+
+# JPA
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        jdbc:
+          batch_size: 100
+        order_updates: true
+
+# log
+logging:
+  level:
+    root: info

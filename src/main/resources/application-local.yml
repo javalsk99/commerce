@@ -1,0 +1,36 @@
+# MySQL
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/commerce_test?rewriteBatchedStatements=true
+    username: ${USER_NAME}
+    password: ${USER_PASSWORD}
+
+# JPA
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        default_batch_fetch_size: 100
+        jdbc:
+          batch_size: 100
+        order_updates: true
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+        resource:
+          transaction: debug
+      springframework:
+        jdbc:
+          core:
+            JdbcTemplate: debug
+        orm:
+          jpa:
+            JpaTransactionManager: debug
