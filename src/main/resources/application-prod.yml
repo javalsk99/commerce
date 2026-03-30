@@ -22,3 +22,6 @@ spring:
 logging:
   level:
     root: info
+    org.springframework.web.servlet:
+      DispatcherServlet: DEBUG
+      mvc.method.annotation.RequestMappingHandlerMapping: DEBUG
