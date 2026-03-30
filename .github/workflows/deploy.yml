@@ -62,6 +62,7 @@ jobs:
             export TAG=v${{ github.run_number }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
+            sudo -E docker-compose down
             sudo -E docker-compose up -d
             sudo docker image prune -f
 
