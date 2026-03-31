@@ -22,3 +22,8 @@ spring:
 logging:
   level:
     root: info
+
+# Cookie
+cookie:
+  secure: true
+  same-site: None
