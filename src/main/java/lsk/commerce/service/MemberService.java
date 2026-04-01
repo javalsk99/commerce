@@ -1,6 +1,7 @@
 package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
@@ -55,8 +56,17 @@ public class MemberService {
 
     @Transactional
     public void deleteMember(String memberLoginId) {
-        Optional<Member> member = memberRepository.findByLoginId(memberLoginId);
-        member.ifPresent(memberRepository::delete);
+        Optional<Member> optionalMember = memberRepository.findByLoginId(memberLoginId);
+        if (optionalMember.isEmpty()) {
+            return;
+        }
+
+        Member member = optionalMember.get();
+        if (member.getGrade() == Grade.ADMIN) {
+            return;
+        }
+
+        memberRepository.delete(member);
     }
 
     public MemberResponse getMemberDto(Member member) {

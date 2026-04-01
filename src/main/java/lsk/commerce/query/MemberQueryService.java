@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.stream.Collectors.toList;
-
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -22,26 +20,26 @@ public class MemberQueryService {
     private final OrderQueryService orderQueryService;
 
     public MemberQueryDto findMember(String loginId) {
-        MemberQueryDto member = memberQueryRepository.findMember(loginId)
+        MemberQueryDto memberQueryDto = memberQueryRepository.findMember(loginId)
                 .orElseThrow(() -> new DataNotFoundException("존재하지 않는 아이디입니다"));
 
         Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginId(loginId);
 
-        return member.toBuilder()
-                .orderQueryDtoList(orderMap.get(member.loginId()))
+        return memberQueryDto.toBuilder()
+                .orderQueryDtoList(orderMap.get(memberQueryDto.loginId()))
                 .build();
     }
 
     public List<MemberQueryDto> searchMembers(MemberSearchCond cond) {
-        List<MemberQueryDto> members = memberQueryRepository.search(cond);
-        List<String> loginIds = memberQueryRepository.extractLoginIds(members);
+        List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
+        List<String> loginIds = memberQueryRepository.extractLoginIds(memberQueryDtoList);
 
         Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginIds(loginIds);
 
-        return members.stream()
+        return memberQueryDtoList.stream()
                 .map(m -> m.toBuilder()
                         .orderQueryDtoList(orderMap.get(m.loginId()))
                         .build())
-                .collect(toList());
+                .toList();
     }
 }

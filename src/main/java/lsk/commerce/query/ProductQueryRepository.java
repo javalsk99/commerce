@@ -5,7 +5,6 @@ import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
@@ -36,7 +35,7 @@ public class ProductQueryRepository {
     private final QMovie movie = product.as(QMovie.class);
 
     protected List<ProductResponse> search(ProductSearchCond cond) {
-        return query.select(new QProductResponse(product.name, product.price, product.stockQuantity,
+        return query.select(new QProductResponse(product.name, product.productNumber, product.price, product.stockQuantity,
                         new CaseBuilder()
                                 .when(product.instanceOf(Album.class)).then("A")
                                 .when(product.instanceOf(Book.class)).then("B")

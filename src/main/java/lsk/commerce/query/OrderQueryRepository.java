@@ -52,7 +52,8 @@ public class OrderQueryRepository {
                                 " join o.delivery d" +
                                 " where o.orderNumber = :orderNumber", OrderQueryDto.class)
                 .setParameter("orderNumber", orderNumber)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 

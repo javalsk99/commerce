@@ -9,6 +9,7 @@ import org.hibernate.Hibernate;
 
 public record ProductResponse(
         String name,
+        String productNumber,
         Integer price,
         Integer stockQuantity,
 
@@ -30,11 +31,11 @@ public record ProductResponse(
     public static ProductResponse from(Product product) {
         Object actualProduct = Hibernate.unproxy(product);
         if (actualProduct instanceof Album album) {
-            return new ProductResponse(album.getName(), album.getPrice(), album.getStockQuantity(), "A", album.getArtist(), album.getStudio(), null, null, null, null);
+            return new ProductResponse(album.getName(), album.getProductNumber(), album.getPrice(), album.getStockQuantity(), "A", album.getArtist(), album.getStudio(), null, null, null, null);
         } else if (actualProduct instanceof Book book) {
-            return new ProductResponse(book.getName(), book.getPrice(), book.getStockQuantity(), "B", null, null, book.getAuthor(), book.getIsbn(), null, null);
+            return new ProductResponse(book.getName(), book.getProductNumber(), book.getPrice(), book.getStockQuantity(), "B", null, null, book.getAuthor(), book.getIsbn(), null, null);
         } else if (actualProduct instanceof Movie movie) {
-            return new ProductResponse(movie.getName(), movie.getPrice(), movie.getStockQuantity(), "M", null, null, null, null, movie.getActor(), movie.getDirector());
+            return new ProductResponse(movie.getName(), movie.getProductNumber(), movie.getPrice(), movie.getStockQuantity(), "M", null, null, null, null, movie.getActor(), movie.getDirector());
         } else {
             throw new IllegalArgumentException("잘못된 상품입니다. product: " + actualProduct.getClass().getName());
         }

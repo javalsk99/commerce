@@ -60,10 +60,8 @@ jobs:
           script: |
             cd /home/ubuntu
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
-            TAG=v${{ github.run_number }} \
-            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} \
-            DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }} \
-            sudo -E docker-compose up -d
+            grep -q "TAG=" .env && sed -i "s/^TAG=.*/TAG=${{ github.run_number }}/" .env || echo "TAG=${{ github.run_number }}" >> .env
+            sudo docker-compose up -d --force-recreate
             sudo docker image prune -f
 
       - name: Revoke GitHub IP from Security Group

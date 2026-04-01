@@ -23,27 +23,27 @@ public class OrderQueryService {
     private final OrderProductQueryRepository orderProductQueryRepository;
 
     public OrderQueryDto findOrder(String orderNumber) {
-        OrderQueryDto order = orderQueryRepository.findOrderByOrderNumber(orderNumber)
+        OrderQueryDto orderQueryDto = orderQueryRepository.findOrderByOrderNumber(orderNumber)
                 .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
 
-        List<OrderProductQueryDto> orderProductList = orderProductQueryRepository.findOrderProductListByOrderNumber(orderNumber);
+        List<OrderProductQueryDto> orderProductQueryDtoList = orderProductQueryRepository.findOrderProductListByOrderNumber(orderNumber);
 
-        return order.toBuilder()
-                .orderProductQueryDtoList(orderProductList)
+        return orderQueryDto.toBuilder()
+                .orderProductQueryDtoList(orderProductQueryDtoList)
                 .build();
     }
 
     public List<OrderQueryDto> searchOrders(OrderSearchCond cond) {
-        List<OrderQueryDto> orders = orderQueryRepository.search(cond);
-        if (orders.isEmpty()) {
-            return orders;
+        List<OrderQueryDto> orderQueryDtoList = orderQueryRepository.search(cond);
+        if (orderQueryDtoList.isEmpty()) {
+            return orderQueryDtoList;
         }
 
-        List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orders);
+        List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orderQueryDtoList);
 
         Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductListByOrderNumbers(orderNumbers);
 
-        return orders.stream()
+        return orderQueryDtoList.stream()
                 .map(orderQueryDto -> orderQueryDto.toBuilder()
                         .orderProductQueryDtoList(orderProductMap.get(orderQueryDto.orderNumber()))
                         .build())
@@ -51,28 +51,27 @@ public class OrderQueryService {
     }
 
     protected Map<String, List<OrderQueryDto>> findOrderMapByLoginId(String loginId) {
-        List<OrderQueryDto> orders = orderQueryRepository.findOrdersByLoginId(loginId);
-        return assembleOrders(orders);
+        List<OrderQueryDto> orderQueryDtoList = orderQueryRepository.findOrdersByLoginId(loginId);
+        return assembleOrders(orderQueryDtoList);
     }
 
     protected Map<String, List<OrderQueryDto>> findOrderMapByLoginIds(List<String> loginIds) {
-        List<OrderQueryDto> orders = orderQueryRepository.findOrdersByLoginIds(loginIds);
-        return assembleOrders(orders);
+        List<OrderQueryDto> orderQueryDtoList = orderQueryRepository.findOrdersByLoginIds(loginIds);
+        return assembleOrders(orderQueryDtoList);
     }
 
     @NotNull
-    private Map<String, List<OrderQueryDto>> assembleOrders(List<OrderQueryDto> orders) {
-        List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orders);
+    private Map<String, List<OrderQueryDto>> assembleOrders(List<OrderQueryDto> orderQueryDtoList) {
+        List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orderQueryDtoList);
 
         Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductListByOrderNumbers(orderNumbers);
 
-        List<OrderQueryDto> orderQueryDtoList = orders.stream()
+        return orderQueryDtoList.stream()
                 .map(orderQueryDto -> orderQueryDto.toBuilder()
                         .orderProductQueryDtoList(orderProductMap.get(orderQueryDto.orderNumber()))
                         .build())
-                .toList();
-
-        return orderQueryDtoList.stream()
+                .toList()
+                .stream()
                 .collect(groupingBy(OrderQueryDto::loginId));
     }
 }

@@ -11,6 +11,7 @@
   [JUnit Parameterized Test](https://docs.junit.org/5.14.2/writing-tests/parameterized-classes-and-tests.html#tests-consuming-arguments-methods)  
   [Spring TestTransaction](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/context/transaction/TestTransaction.html)  
   [Playwright](https://playwright.dev/java/docs/intro)
+  [Linux sed](https://www.ibm.com/docs/ko/aix/7.2.0?topic=s-sed-command)
 
 
 - 도구 - AI  

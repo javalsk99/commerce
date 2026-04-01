@@ -233,7 +233,7 @@ class ProductServiceTest {
                 given(categoryService.validateAndGetCategories(anyList())).willThrow(new IllegalArgumentException());
 
                 //when & then
-                thenThrownBy(() -> productService.register(request, List.of("락")))
+                thenThrownBy(() -> productService.register(request, List.of("록")))
                         .isInstanceOf(IllegalArgumentException.class);
 
                 //then

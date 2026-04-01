@@ -27,7 +27,6 @@ springdoc:
   default-produces-media-type: application/json
   swagger-ui:
     path: /swagger-ui.html
-    with-credentials: true
     disable-swagger-default-url: true
     display-request-duration: true
     operations-sorter: alpha

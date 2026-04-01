@@ -26,8 +26,6 @@ import java.util.List;
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
-import static lsk.commerce.domain.Grade.ADMIN;
-import static lsk.commerce.domain.Grade.USER;
 
 @Entity
 @Getter
@@ -70,15 +68,15 @@ public class Member {
         this.name = name;
         this.loginId = loginId;
         this.password = password;
-        this.grade = USER;
+        this.grade = Grade.USER;
         this.address = new Address(city, street, zipcode);
     }
 
-    public void setAdmin() {
-        this.grade = ADMIN;
-    }
-
     public void changePassword(String newPassword, PasswordEncoder passwordEncoder) {
+        if (this.getGrade() == Grade.ADMIN) {
+            return;
+        }
+
         if (newPassword == null || newPassword.isBlank()) {
             throw new IllegalArgumentException("비밀번호가 비어있습니다");
         } else if (passwordEncoder.matches(newPassword, this.password)) {

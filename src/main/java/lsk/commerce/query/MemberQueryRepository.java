@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
@@ -25,8 +26,8 @@ public class MemberQueryRepository {
 
     protected List<String> extractLoginIds(List<MemberQueryDto> result) {
         return result.stream()
-                .map(m -> m.loginId())
-                .filter(loginId -> loginId != null)
+                .map(MemberQueryDto::loginId)
+                .filter(Objects::nonNull)
                 .collect(toList());
     }
 
@@ -36,7 +37,8 @@ public class MemberQueryRepository {
                                 " from Member m" +
                                 " where m.loginId = :loginId", MemberQueryDto.class)
                 .setParameter("loginId", loginId)
-                .getResultStream()
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 

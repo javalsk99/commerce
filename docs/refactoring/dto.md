@@ -49,7 +49,8 @@
 
 
 - ProductResponse  
-  DTO를 QClass로 생성해 주는 @QueryProjection를 사용하기 위해 컴팩트 생성자로 변경했다.
+  DTO를 QClass로 생성해 주는 @QueryProjection를 사용하기 위해 컴팩트 생성자로 변경했다.  
+  주문에 사용할 productNumber를 확인하기 위해 추가했다.
 
 
 - ProductSearchCond
@@ -95,4 +96,8 @@
 
 - PaymentCompleteResponse  
   요청을 검증 후 결제 완료 응답하는 DTO이므로 PaymentRequest에서 이름을 변경했다.
+
+
+- CategoryQueryDto, CategoryProductQueryDto  
+  카테고리와 상품을 같이 조회하기 위해 쿼리 DTO를 생성했다.
 

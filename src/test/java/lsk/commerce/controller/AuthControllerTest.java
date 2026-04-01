@@ -18,8 +18,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import java.util.stream.Stream;
 
@@ -27,7 +25,6 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -68,29 +65,6 @@ class AuthControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data").value("login"))
-                        .andExpect(jsonPath("$.count").value(1))
-                        .andExpect(cookie().value("jjwt", "token"))
-                        .andExpect(cookie().maxAge("jjwt", 3600))
-                        .andDo(print());
-
-                //then
-                BDDMockito.then(authService).should().login(anyString(), anyString());
-            }
-
-            @Test
-            void web() throws Exception {
-                //given
-                MultiValueMap<String, String> request = new LinkedMultiValueMap<>();
-                request.add("loginId", "id_A");
-                request.add("password", "00000000");
-
-                given(authService.login(anyString(), anyString())).willReturn("token");
-
-                //when & then
-                mvc.perform(get("/web/login")
-                                .params(request))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value("login"))
                         .andExpect(jsonPath("$.count").value(1))

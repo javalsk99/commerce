@@ -10,6 +10,9 @@ import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.query.CategoryQueryService;
+import lsk.commerce.query.dto.CategoryProductQueryDto;
+import lsk.commerce.query.dto.CategoryQueryDto;
 import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.CategoryService;
 import org.junit.jupiter.api.Nested;
@@ -66,6 +69,9 @@ class CategoryControllerTest {
 
     @MockitoBean
     CategoryProductService categoryProductService;
+
+    @MockitoBean
+    CategoryQueryService categoryQueryService;
 
     String productNumber = "ngf7x89dbbh3";
 
@@ -199,25 +205,21 @@ class CategoryControllerTest {
             @Test
             void basic() throws Exception {
                 //given
-                Category category = Category.createCategory(null, "가요");
-                CategoryResponse categoryResponse = CategoryResponse.from(category);
+                CategoryQueryDto categoryQueryDto = new CategoryQueryDto("가요", List.of(new CategoryProductQueryDto("가요", "BANG BANG", productNumber)));
 
-                given(categoryService.findCategoryByName(anyString())).willReturn(category);
-                given(categoryService.getCategoryDto(any(Category.class))).willReturn(categoryResponse);
+                given(categoryQueryService.findCategory(anyString())).willReturn(categoryQueryDto);
 
                 //when & then
                 mvc.perform(get("/categories/{categoryName}", "가요"))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data.name").value("가요"))
-                        .andExpect(jsonPath("$.data.children").isEmpty())
+                        .andExpect(jsonPath("$.data.categoryName").value("가요"))
+                        .andExpect(jsonPath("$.data.categoryProductQueryDtoList[0].productName").value("BANG BANG"))
+                        .andExpect(jsonPath("$.data.categoryProductQueryDtoList[0].productNumber").value(productNumber))
                         .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName("가요"));
-                    softly.check(() -> BDDMockito.then(categoryService).should().getCategoryDto(category));
-                });
+                BDDMockito.then(categoryQueryService).should().findCategory("가요");
             }
         }
 
@@ -227,7 +229,7 @@ class CategoryControllerTest {
             @Test
             void findCategoryName_Failed_categoryNotFound() throws Exception {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + "록"));
+                given(categoryQueryService.findCategory(anyString())).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + "록"));
 
                 //when & then
                 mvc.perform(get("/categories/{categoryName}", "록"))
@@ -237,10 +239,7 @@ class CategoryControllerTest {
                         .andDo(print());
 
                 //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName("록"));
-                    softly.check(() -> BDDMockito.then(categoryService).should(never()).getCategoryDto(any(Category.class)));
-                });
+                BDDMockito.then(categoryQueryService).should().findCategory("록");
             }
         }
     }

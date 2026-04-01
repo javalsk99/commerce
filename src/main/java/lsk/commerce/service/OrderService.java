@@ -70,12 +70,6 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Order findOrderWithDelivery(String orderNumber) {
-        return orderRepository.findWithDelivery(orderNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
-    }
-
-    @Transactional(readOnly = true)
     public Order findOrderWithDeliveryPayment(String orderNumber) {
         return orderRepository.findWithDeliveryPayment(orderNumber)
                 .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
