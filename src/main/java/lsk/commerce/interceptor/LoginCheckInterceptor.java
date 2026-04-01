@@ -41,7 +41,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
                 }
             }
 
-            log.warn("미등록 경로 접근 차단: [{}]{}", method, requestURI);
+            log.warn("미등록 경로 접근 차단: [{}][{}]{}", getClientIp(request), method, requestURI);
             return false;
         }
 
@@ -71,6 +71,16 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         }
 
         return true;
+    }
+
+    private static String getClientIp(HttpServletRequest request) {
+        String clientIp = request.getHeader("X-Forwarded-For");
+
+        if (clientIp == null || clientIp.isEmpty() || "unknown".equalsIgnoreCase(clientIp)) {
+            clientIp = request.getRemoteAddr();
+        }
+
+        return clientIp;
     }
 
     private static void isMemberPath(HttpServletRequest request, String requestURI, String loginId) {

@@ -1,5 +1,6 @@
 package lsk.commerce.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -52,7 +53,10 @@ public class ProductController {
     }
 
     @GetMapping("/products/{productNumber}")
-    public ResponseEntity<Result<ProductResponse>> findProduct(@PathVariable("productNumber") String productNumber) {
+    public ResponseEntity<Result<ProductResponse>> findProduct(
+            @Parameter(example = "WxgG3CzGZhAZ")
+            @PathVariable("productNumber") String productNumber
+    ) {
         Product product = productService.findProduct(productNumber);
         ProductResponse productResponse = productService.getProductDto(product);
         return ResponseEntity.ok(new Result<>(productResponse, 1));

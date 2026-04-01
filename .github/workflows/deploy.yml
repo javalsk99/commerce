@@ -60,7 +60,7 @@ jobs:
           script: |
             cd /home/ubuntu
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:v${{ github.run_number }}
-            grep -q "TAG=" .env && sed -i "s/^TAG=.*/TAG=${{ github.run_number }}/" .env || echo "TAG=${{ github.run_number }}" >> .env
+            grep -q "TAG=" .env && sed -i "s/^TAG=.*/TAG=v${{ github.run_number }}/" .env || echo "TAG=v${{ github.run_number }}" >> .env
             sudo docker-compose up -d --force-recreate
             sudo docker image prune -f
 

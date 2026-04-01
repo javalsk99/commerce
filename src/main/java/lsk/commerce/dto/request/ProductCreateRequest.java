@@ -1,5 +1,6 @@
 package lsk.commerce.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -9,17 +10,23 @@ import lombok.Builder;
 
 @Builder
 public record ProductCreateRequest(
+        @Schema(example = "음악_001")
         @NotBlank @Size(max = 50)
         String name,
+        @Schema(example = "15000")
         @NotNull @Min(100)
         Integer price,
+        @Schema(example = "100")
         @NotNull @Min(0)
         Integer stockQuantity,
 
+        @Schema(example = "A")
         @NotBlank @Size(min = 1, max = 1)
         String dtype,
 
+        @Schema(example = "artist")
         String artist,
+        @Schema(example = "studio")
         String studio,
 
         String author,
@@ -28,6 +35,7 @@ public record ProductCreateRequest(
         String actor,
         String director
 ) {
+    @Schema(hidden = true)
     @AssertTrue
     public boolean isValidFields() {
         if ("A".equals(dtype)) {

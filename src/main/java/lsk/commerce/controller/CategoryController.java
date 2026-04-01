@@ -101,18 +101,22 @@ public class CategoryController {
 
     @Operation(
             summary = "상품과 연결 해제",
-            description = "**관리자**만 연결 해제할 수 있습니다."
+            description = "**관리자**만 연결 해제할 수 있습니다. \n\n" +
+                    "**카테고리 상세 조회**를 통해 연결된 상품이 있는 지 확인하고 **상품 번호**를 입력해 주세요. \n\n" +
+                    "**상품 번호**는 **12**자리입니다."
     )
     @DeleteMapping("/categories/{categoryName}/{productNumber}")
     public ResponseEntity<Result<CategoryDisconnectResponse>> disconnectProduct(
             @Parameter(example = "가요_001")
             @PathVariable("categoryName") String categoryName,
+            @Parameter(example = "9fyd3T9RxFPZ")
             @PathVariable("productNumber") String productNumber) {
         Category category = categoryProductService.disconnect(categoryName, productNumber);
         CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category);
         return ResponseEntity.ok(new Result<>(categoryDisconnectResponse, 1));
     }
 
+    @Operation()
     @DeleteMapping("/categories/{categoryName}/products")
     public ResponseEntity<Result<CategoryDisconnectResponse>> disconnectProducts(@PathVariable("categoryName") String categoryName) {
         Category category = categoryProductService.disconnectAll(categoryName);
