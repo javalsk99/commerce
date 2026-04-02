@@ -8,7 +8,7 @@ import lsk.commerce.dto.request.CategoryChangeParentRequest;
 import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
-import lsk.commerce.dto.response.ProductResponse;
+import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.CategoryQueryService;
 import lsk.commerce.query.dto.CategoryProductQueryDto;
@@ -479,7 +479,7 @@ class CategoryControllerTest {
                 album1.connectCategory(category);
                 album2.connectCategory(category);
 
-                ProductResponse productResponse = ProductResponse.from(album1);
+                ProductDetailResponse productResponse = ProductDetailResponse.from(album1);
                 CategoryDisconnectResponse categoryDisconnectResponse = new CategoryDisconnectResponse("가요", List.of(productResponse));
 
                 given(categoryProductService.disconnect(anyString(), anyString())).willReturn(category);
@@ -512,7 +512,7 @@ class CategoryControllerTest {
                 album1.connectCategory(category);
                 album2.connectCategory(category);
 
-                ProductResponse productResponse = ProductResponse.from(album1);
+                ProductDetailResponse productResponse = ProductDetailResponse.from(album1);
                 CategoryDisconnectResponse categoryDisconnectResponse = new CategoryDisconnectResponse("가요", List.of(productResponse));
 
                 given(categoryProductService.disconnect(anyString(), anyString())).willReturn(category);

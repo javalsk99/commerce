@@ -1,14 +1,9 @@
 package lsk.commerce.query;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.domain.product.Album;
-import lsk.commerce.domain.product.Book;
-import lsk.commerce.domain.product.Movie;
 import lsk.commerce.domain.product.QAlbum;
 import lsk.commerce.domain.product.QBook;
 import lsk.commerce.domain.product.QMovie;
@@ -35,13 +30,7 @@ public class ProductQueryRepository {
     private final QMovie movie = product.as(QMovie.class);
 
     protected List<ProductResponse> search(ProductSearchCond cond) {
-        return query.select(new QProductResponse(product.name, product.productNumber, product.price, product.stockQuantity,
-                        new CaseBuilder()
-                                .when(product.instanceOf(Album.class)).then("A")
-                                .when(product.instanceOf(Book.class)).then("B")
-                                .when(product.instanceOf(Movie.class)).then("M")
-                                .otherwise(Expressions.nullExpression(String.class)),
-                        album.artist, album.studio, book.author, book.isbn, movie.actor, movie.director))
+        return query.select(new QProductResponse(product.name, product.productNumber, product.price, product.stockQuantity))
                 .from(product)
                 .where(
                         eqCategoryName(cond.categoryName()),

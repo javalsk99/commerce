@@ -8,8 +8,8 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
+import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
-import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -73,8 +73,8 @@ public class ProductService {
         productRepository.delete(product);
     }
 
-    public ProductResponse getProductDto(Product product) {
-        return ProductResponse.from(product);
+    public ProductDetailResponse getProductDto(Product product) {
+        return ProductDetailResponse.from(product);
     }
 
     public ProductNameWithCategoryNameResponse getProductWithCategoryDto(Product product) {

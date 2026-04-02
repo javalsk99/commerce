@@ -48,9 +48,10 @@
   다른 dtype의 필드가 있는지 검증을 추가했다.
 
 
-- ProductResponse  
+- ProductDetailResponse  
   DTO를 QClass로 생성해 주는 @QueryProjection를 사용하기 위해 컴팩트 생성자로 변경했다.  
-  주문에 사용할 productNumber를 확인하기 위해 추가했다.
+  주문에 사용할 productNumber를 확인하기 위해 추가했다.  
+  상세 조회에서 사용해서 ProductResponse에서 변경했다.
 
 
 - ProductSearchCond
@@ -100,4 +101,8 @@
 
 - CategoryQueryDto, CategoryProductQueryDto  
   카테고리와 상품을 같이 조회하기 위해 쿼리 DTO를 생성했다.
+
+
+- ProductResponse  
+  검색 결과를 간략하게 반환하기 위해 생성했다.
 

@@ -66,3 +66,8 @@
 ## ProductRepository
 - findByNumber, findWithCategoryProduct, findWithCategoryProductCategory  
   productName이 유니크 키가 아니어서 나노 아이디를 사용하는 productNumber로 변경했다.
+
+
+## ProductQueryRepository
+- search
+  검색 결과를 간략하게 변경했다.

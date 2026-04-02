@@ -7,8 +7,8 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.request.ProductChangeRequest;
+import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
-import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -445,7 +445,7 @@ class ProductServiceTest {
                         .build();
 
                 //when
-                ProductResponse productDto = productService.getProductDto(album);
+                ProductDetailResponse productDto = productService.getProductDto(album);
 
                 //then
                 then(productDto)

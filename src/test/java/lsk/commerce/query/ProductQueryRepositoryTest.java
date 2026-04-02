@@ -5,6 +5,7 @@ import lsk.commerce.domain.Category;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.query.dto.ProductSearchCond;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,39 +69,14 @@ class ProductQueryRepositoryTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                thenSoftly(softly -> {
-                    softly.then(productResponseList)
-                            .filteredOn(p -> "A".equals(p.dtype()))
-                            .hasSize(6)
-                            .extracting("name", "artist", "studio")
-                            .containsExactlyInAnyOrder(
-                                    tuple("BANG BANG", "IVE", "STARSHIP"),
-                                    tuple("Blue Valentine", "NMIXX", "JYP"),
-                                    tuple("404", "KiiiKiii", "STARSHIP"),
-                                    tuple("타임 캡슐", "다비치", "씨에이엠위더스"),
-                                    tuple("너의 모든 순간", "성시경", "에스케이재원"),
-                                    tuple("천상연", "이창섭", "판타지오")
-                            );
-                    softly.then(productResponseList)
-                            .filteredOn(p -> "B".equals(p.dtype()))
-                            .hasSize(3)
-                            .extracting("name", "author", "isbn")
-                            .containsExactlyInAnyOrder(
-                                    tuple("자바 ORM 표준 JPA 프로그래밍", "김영한", "9788960777330"),
-                                    tuple("면접을 위한 CS 전공지식 노트", "주홍철", "9791165219529"),
-                                    tuple("Do it! 점프 투 파이썬", "박응용", "9791163034735")
-                            );
-                    softly.then(productResponseList)
-                            .filteredOn(p -> "M".equals(p.dtype()))
-                            .hasSize(4)
-                            .extracting("name", "actor", "director")
-                            .containsExactlyInAnyOrder(
-                                    tuple("범죄도시", "마동석", "강윤성"),
-                                    tuple("범죄도시2", "마동석", "이상용"),
-                                    tuple("범죄도시3", "마동석", "이상용"),
-                                    tuple("범죄도시4", "마동석", "허명행")
-                            );
-                });
+                then(productResponseList)
+                        .hasSize(13)
+                        .extracting("name")
+                        .containsExactlyInAnyOrder(
+                                "BANG BANG", "Blue Valentine", "404", "타임 캡슐", "너의 모든 순간", "천상연",
+                                "자바 ORM 표준 JPA 프로그래밍", "면접을 위한 CS 전공지식 노트", "Do it! 점프 투 파이썬",
+                                "범죄도시", "범죄도시2", "범죄도시3", "범죄도시4"
+                        );
             }
 
             @ParameterizedTest

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "인증", description = "관리자 계정 testId, testPassword")
+@Tag(name = "01. 인증", description = "관리자 계정 testId, testPassword")
 @RestController
 @RequiredArgsConstructor
 public class AuthController {

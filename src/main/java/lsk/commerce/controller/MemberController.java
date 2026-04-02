@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "회원", description = "회원 가입, 검색, 수정, 삭제")
+@Tag(name = "02. 회원", description = "가입, 검색, 수정, 삭제")
 @RestController
 @RequiredArgsConstructor
 public class MemberController {
@@ -48,11 +48,7 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new Result<>(loginId, 1));
     }
 
-    @Operation(
-            summary = "회원 검색",
-            description = "**관리자**만 검색할 수 있습니다. \n\n" +
-                    "이름은 초성으로도 검색할 수 있습니다."
-    )
+    @Operation(summary = "회원 검색", description = "**관리자**만 검색할 수 있습니다. \n\n")
     @GetMapping("/members")
     public ResponseEntity<Result<List<MemberQueryDto>>> memberList(@ParameterObject @ModelAttribute MemberSearchCond cond) {
         List<MemberQueryDto> memberQueryDtoList = memberQueryService.searchMembers(cond);
@@ -72,7 +68,7 @@ public class MemberController {
     @Operation(
             summary = "비밀번호 변경",
             description = "**본인**만 변경할 수 있습니다. \n\n" +
-                    "**관리자**는 변경할 수 없습니다."
+                    "**관리자 계정**은 변경할 수 없습니다."
     )
     @PostMapping("/members/{memberLoginId}/password")
     public ResponseEntity<Result<String>> changePassword(
@@ -99,7 +95,7 @@ public class MemberController {
     @Operation(
             summary = "회원 삭제",
             description = "**본인**만 삭제할 수 있습니다. \n\n" +
-                    "**관리자**는 삭제할 수 없습니다."
+                    "**관리자 계정**은 삭제할 수 없습니다."
     )
     @DeleteMapping("/members/{memberLoginId}")
     public ResponseEntity<Result<String>> delete(

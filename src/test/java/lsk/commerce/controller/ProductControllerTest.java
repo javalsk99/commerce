@@ -7,6 +7,7 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.request.ProductChangeRequest;
+import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
@@ -299,8 +300,8 @@ class ProductControllerTest {
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
-                ProductResponse productResponse1 = ProductResponse.from(album1);
-                ProductResponse productResponse2 = ProductResponse.from(album2);
+                ProductResponse productResponse1 = new ProductResponse("BANG BANG", album1.getProductNumber(), 15000, 10);
+                ProductResponse productResponse2 = new ProductResponse("BLACKHOLE", album2.getProductNumber(), 15000, 10);
 
                 MultiValueMap<String, String> cond = new LinkedMultiValueMap<>();
                 cond.add("productName", "b");
@@ -360,7 +361,7 @@ class ProductControllerTest {
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
-                ProductResponse productResponse = ProductResponse.from(album);
+                ProductDetailResponse productResponse = ProductDetailResponse.from(album);
 
                 given(productService.findProduct(anyString())).willReturn(album);
                 given(productService.getProductDto(any(Product.class))).willReturn(productResponse);
@@ -426,7 +427,7 @@ class ProductControllerTest {
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
-                ProductResponse productResponse = ProductResponse.from(album);
+                ProductDetailResponse productResponse = ProductDetailResponse.from(album);
 
                 given(productService.changePriceAndStock(anyString(), any(ProductChangeRequest.class))).willReturn(album);
                 given(productService.getProductDto(any(Product.class))).willReturn(productResponse);
@@ -463,7 +464,7 @@ class ProductControllerTest {
                         .artist("IVE")
                         .studio("STARSHIP")
                         .build();
-                ProductResponse productResponse = ProductResponse.from(album);
+                ProductDetailResponse productResponse = ProductDetailResponse.from(album);
 
                 given(productService.changePriceAndStock(anyString(), any(ProductChangeRequest.class))).willReturn(album);
                 given(productService.getProductDto(any(Product.class))).willReturn(productResponse);

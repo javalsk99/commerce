@@ -29,6 +29,7 @@ springdoc:
     path: /swagger-ui.html
     disable-swagger-default-url: true
     display-request-duration: true
+    tags-sorter: alpha
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs

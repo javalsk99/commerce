@@ -6,14 +6,14 @@ import java.util.List;
 
 public record CategoryDisconnectResponse(
         String name,
-        List<ProductResponse> productResponseList
+        List<ProductDetailResponse> productResponseList
 ) {
 
     public static CategoryDisconnectResponse from(Category category) {
         return new CategoryDisconnectResponse(
                 category.getName(),
                 category.getCategoryProducts().stream()
-                        .map(categoryProduct -> ProductResponse.from(categoryProduct.getProduct()))
+                        .map(categoryProduct -> ProductDetailResponse.from(categoryProduct.getProduct()))
                         .toList()
         );
     }

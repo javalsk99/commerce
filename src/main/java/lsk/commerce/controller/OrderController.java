@@ -1,5 +1,8 @@
 package lsk.commerce.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.argumentresolver.Login;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "05. 주문", description = "생성, 검색, 수정, 삭제, 취소")
 @RestController
 @RequiredArgsConstructor
 public class OrderController {
@@ -32,9 +36,11 @@ public class OrderController {
     private final OrderService orderService;
     private final OrderQueryService orderQueryService;
 
+    @Operation(summary = "주문 생성", description = "**상품 번호**와 주문할 **수량**을 입력해 주세요.")
     @PostMapping("/orders")
     public ResponseEntity<Result<String>> create(
             @RequestBody @Valid OrderCreateRequest request,
+            @Parameter(hidden = true)
             @Login String loginId
     ) {
         String orderNumber = orderService.order(request, loginId);

@@ -36,7 +36,7 @@
   Dto 반환으로 변경
 
 
-- java.lang.IllegalArgumentException: 잘못된 상품입니다. product.name: 자바 ORM 표준 JPA 프로그래밍 at lsk.commerce.dto.response.ProductResponse.productChangeDto(ProductResponse.java:54) ~[main/:na]  
+- java.lang.IllegalArgumentException: 잘못된 상품입니다. product.name: 자바 ORM 표준 JPA 프로그래밍 at lsk.commerce.dto.response.ProductDetailResponse.productChangeDto(ProductResponse.java:54) ~[main/:na]  
   상품이 instanceof로 구분되지 않는 문제
 
       if (product instanceof Album album) {
