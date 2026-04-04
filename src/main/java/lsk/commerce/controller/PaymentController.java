@@ -50,7 +50,7 @@ public class PaymentController {
     )
     @PostMapping("/payments/orders/{orderNumber}")
     public ResponseEntity<Result<PaymentResponse>> requestPayment(
-            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.")
+            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
             @PathVariable("orderNumber") String orderNumber,
             @Parameter(hidden = true)
             @Login String loginId

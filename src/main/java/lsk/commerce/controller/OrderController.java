@@ -75,7 +75,7 @@ public class OrderController {
     )
     @GetMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderQueryDto>> findOrder(
-            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.")
+            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
             @PathVariable("orderNumber") String orderNumber
     ) {
         OrderQueryDto orderQueryDto = orderQueryService.findOrder(orderNumber);
@@ -92,7 +92,7 @@ public class OrderController {
     )
     @PatchMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderChangeResponse>> changeOrder(
-            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.")
+            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
             @PathVariable("orderNumber") String orderNumber,
             @RequestBody @Valid OrderChangeRequest request,
             @Parameter(hidden = true)
@@ -115,7 +115,7 @@ public class OrderController {
     )
     @DeleteMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<String>> delete(
-            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.")
+            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
             @PathVariable("orderNumber") String orderNumber,
             @Parameter(hidden = true)
             @Login String loginId
@@ -134,7 +134,7 @@ public class OrderController {
     )
     @PatchMapping("/orders/{orderNumber}/cancel")
     public ResponseEntity<Result<OrderCancelResponse>> cancelOrder(
-            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.")
+            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
             @PathVariable("orderNumber") String orderNumber,
             @Parameter(hidden = true)
             @Login String loginId
