@@ -527,7 +527,6 @@ class ProductRepositoryTest {
                     "자바 ORM 표준 JPA 프로그래밍, 주홍철, 9788960777330",
                     "자바 ORM 표준 JPA 프로그래밍, 김영한, 9791165219529"
             })
-
             void book_ShouldReturnFalse_WhenUniqueKeysMismatch(String name, String author, String isbn) {
                 System.out.println("================= WHEN START =================");
 

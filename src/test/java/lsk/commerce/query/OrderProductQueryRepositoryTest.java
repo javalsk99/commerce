@@ -66,12 +66,12 @@ class OrderProductQueryRepositoryTest {
 
                 //then
                 then(orderProductQueryDtoList)
-                            .hasSize(2)
-                            .extracting("name", "price", "count", "orderPrice")
-                            .containsExactlyInAnyOrder(
-                                    tuple("BANG BANG", 15000, 3, 45000),
-                                    tuple("404", 15000, 4, 60000)
-                            );
+                        .hasSize(2)
+                        .extracting("name", "price", "quantity", "orderPrice")
+                        .containsExactlyInAnyOrder(
+                                tuple("BANG BANG", 15000, 3, 45000),
+                                tuple("404", 15000, 4, 60000)
+                        );
             }
 
             @Test
@@ -103,14 +103,14 @@ class OrderProductQueryRepositoryTest {
                             .extractingByKey(orderNumber2)
                             .asInstanceOf(list(OrderProductQueryDto.class))
                             .hasSize(1)
-                            .extracting("name", "price", "count", "orderPrice")
+                            .extracting("name", "price", "quantity", "orderPrice")
                             .containsExactly(tuple("Blue Valentine", 15000, 2, 30000));
                     softly.then(orderProductQueryDtoMap)
                             .hasSize(2)
                             .extractingByKey(orderNumber3)
                             .asInstanceOf(list(OrderProductQueryDto.class))
                             .hasSize(2)
-                            .extracting("name", "price", "count", "orderPrice")
+                            .extracting("name", "price", "quantity", "orderPrice")
                             .containsExactly(
                                     tuple("자바 ORM 표준 JPA 프로그래밍", 15000, 1, 15000),
                                     tuple("범죄도시2", 15000, 3, 45000)
@@ -134,7 +134,7 @@ class OrderProductQueryRepositoryTest {
                             .extractingByKey(orderNumber4)
                             .asInstanceOf(list(OrderProductQueryDto.class))
                             .hasSize(3)
-                            .extracting("name", "price", "count", "orderPrice")
+                            .extracting("name", "price", "quantity", "orderPrice")
                             .containsExactly(
                                     tuple("면접을 위한 CS 전공지식 노트", 15000, 4, 60000),
                                     tuple("범죄도시", 15000, 3, 45000),

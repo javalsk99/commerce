@@ -34,6 +34,13 @@
               }
           }
 
-          log.warn("미등록 경로 접근 차단: [{}] {}", method, requestURI);
+          log.warn("미등록 경로 접근 차단: [{}][{}]{}",  method, requestURI);
           return false;
       }
+
+  추가 해결: 인터셉터로 접근하는 것도 자원 소모가 있으니, Nginx로 GeoIP가 한국이 아닌 지역을 차단했다.
+
+  172.71.xxx.xxx - - [03/Apr/2026:02:53:22 +0900] "GET /wordpress/wp-admin/setup-config.php HTTP/1.1" 444 0 "-" "http://lsk-commerce.shop/wordpress/wp-admin/setup-config.php"  
+  185.16.xxx.xxx - - [03/Apr/2026:02:53:56 +0900] "GET / HTTP/1.1" 444 0 "-" "Wget"  
+  104.23.xxx.xxx - - [03/Apr/2026:02:54:00 +0900] "GET /wordpress/wp-admin/setup-config.php HTTP/1.1" 444 0 "-" "https://lsk-commerce.shop/wordpress/wp-admin/setup-config.php"  
+  172.71.xxx.xxx - - [03/Apr/2026:02:54:00 +0900] "GET /wp-admin/setup-config.php HTTP/1.1" 444 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"

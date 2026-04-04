@@ -49,7 +49,10 @@ public class ProductController {
                     "**dtype**필드에 앨범은 **A**, 책은 **B**, 영화는 **M**을 적어주세요. \n\n" +
                     "**A**타입 선택 시 author, isbn, actor, director를 지워주세요. \n\n" +
                     "**B**타입 선택 시 artist, studio, actor, director를 지워주세요. \n\n" +
-                    "**M**타입 선택 시 artist, studio, author, isbn을 지워주세요."
+                    "**M**타입 선택 시 artist, studio, author, isbn을 지워주세요. \n\n" +
+                    "**상품 이름**, **artist**, **studio**의 조합은 유일해야 합니다. \n\n" +
+                    "**상품 이름**, **author**, **isbn**의 조합은 유일해야 합니다. \n\n" +
+                    "**상품 이름**, **actor**, **director**의 조합은 유일해야 합니다."
     )
     @PostMapping("/products")
     public ResponseEntity<Result<String>> create(
@@ -75,7 +78,7 @@ public class ProductController {
     @Operation(summary = "상품 상세 조회", description = "상품의 상세 정보를 조회합니다.")
     @GetMapping("/products/{productNumber}")
     public ResponseEntity<Result<ProductDetailResponse>> findProduct(
-            @Parameter(description = "**12**자리의 상품 번호를 입력해주세요.", example = "WxgG3CzGZhAZ")
+            @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
             @PathVariable("productNumber") String productNumber
     ) {
         Product product = productService.findProduct(productNumber);
@@ -90,7 +93,7 @@ public class ProductController {
     )
     @PatchMapping("/products/{productNumber}")
     public ResponseEntity<Result<ProductDetailResponse>> changeProduct(
-            @Parameter(description = "**12**자리의 상품 번호를 입력해주세요.", example = "WxgG3CzGZhAZ")
+            @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
             @PathVariable("productNumber") String productNumber,
             @RequestBody @Valid ProductChangeRequest request
     ) {
@@ -99,10 +102,14 @@ public class ProductController {
         return ResponseEntity.ok(new Result<>(productResponse, 1));
     }
 
-    @Operation(summary = "상품 삭제", description = "**관리자**만 삭제할 수 있습니다.")
+    @Operation(
+            summary = "상품 삭제",
+            description = "**관리자**만 삭제할 수 있습니다. \n\n" +
+                    "예시 상품은 삭제되지 않고 성공합니다."
+    )
     @DeleteMapping("/products/{productNumber}")
     public ResponseEntity<Result<String>> delete(
-            @Parameter(description = "**12**자리의 상품 번호를 입력해주세요.", example = "WxgG3CzGZhAZ")
+            @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
             @PathVariable("productNumber") String productNumber
     ) {
         productService.deleteProduct(productNumber);
@@ -112,7 +119,7 @@ public class ProductController {
     @Operation(summary = "카테고리와 연결", description = "**관리자**만 연결할 수 있습니다.")
     @PatchMapping("/products/{productNumber}/{categoryName}")
     public ResponseEntity<Result<ProductNameWithCategoryNameResponse>> connectCategory(
-            @Parameter(description = "**12**자리의 상품 번호를 입력해주세요.", example = "WxgG3CzGZhAZ")
+            @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
             @PathVariable("productNumber") String productNumber,
             @Parameter(example = "Java")
             @PathVariable("categoryName") String categoryName

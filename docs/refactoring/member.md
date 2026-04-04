@@ -58,3 +58,8 @@
 
 - loginId, MemberCreateRequest loginId  
   @Pattern(regexp = "^[A-Za-z0-9]+$")를 추가해서 특수문자로 가입하는 것을 막았다.
+
+
+## MemberQueryRepository
+- search  
+  검색으로는 간략한 정보만 나오게 하기 위해 반환을 List<MemberResponse>로 변경했다

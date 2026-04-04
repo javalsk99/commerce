@@ -29,7 +29,8 @@ import static lombok.AccessLevel.PROTECTED;
 @SQLDelete(sql = "UPDATE delivery SET deleted = true WHERE delivery_id = ?")
 public class Delivery {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "delivery_id")
     private Long id;
 

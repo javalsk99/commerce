@@ -16,6 +16,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lsk.commerce.dto.request.OrderProductRequest;
 import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.util.NanoIdProvider;
 import org.hibernate.annotations.SQLDelete;
@@ -23,9 +24,8 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.EnumType.STRING;
@@ -42,11 +42,13 @@ import static lsk.commerce.domain.OrderStatus.CREATED;
 @SQLDelete(sql = "UPDATE orders SET deleted = true WHERE order_id = ?")
 public class Order {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "order_id")
     private Long id;
 
-    @NotBlank @Size(min = 12, max = 12)
+    @NotBlank
+    @Size(min = 12, max = 12)
     @Column(unique = true, length = 12)
     private String orderNumber;
 
@@ -68,7 +70,8 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
-    @NotNull @Min(0)
+    @NotNull
+    @Min(0)
     private Integer totalAmount;
 
     @NotNull
@@ -124,18 +127,27 @@ public class Order {
         validateStatusForClear();
 
         for (OrderProduct orderProduct : this.orderProducts) {
-            orderProduct.getProduct().addStock(orderProduct.getCount());
+            orderProduct.getProduct().addStock(orderProduct.getQuantity());
         }
 
         this.totalAmount = 0;
         this.orderProducts.clear();
     }
 
-    public Map<String, Integer> getOrderProductsAsMap() {
-        return this.orderProducts.stream()
-                .collect(Collectors.toMap(
-                        OrderProduct::getProductNumber,
-                        OrderProduct::getCount));
+    public boolean isSameOrderProducts(List<OrderProductRequest> orderProductRequestList) {
+        if (this.getOrderProducts().size() != orderProductRequestList.size()) {
+            return false;
+        }
+
+        List<OrderProductRequest> currentOrderProductRequestList = this.orderProducts.stream()
+                .map(orderProduct -> new OrderProductRequest(orderProduct.getProductNumber(), orderProduct.getQuantity()))
+                .sorted(Comparator.comparing(OrderProductRequest::productNumber))
+                .toList();
+        List<OrderProductRequest> requestOrderProductRequestList = orderProductRequestList.stream()
+                .sorted(Comparator.comparing(OrderProductRequest::productNumber))
+                .toList();
+
+        return currentOrderProductRequestList.equals(requestOrderProductRequestList);
     }
 
     public void changeOrder(List<OrderProduct> newOrderProducts) {
@@ -155,7 +167,7 @@ public class Order {
         validateStatusForCancel();
 
         for (OrderProduct orderProduct : this.orderProducts) {
-            orderProduct.getProduct().addStock(orderProduct.getCount());
+            orderProduct.getProduct().addStock(orderProduct.getQuantity());
         }
 
         this.getDelivery().canceled();

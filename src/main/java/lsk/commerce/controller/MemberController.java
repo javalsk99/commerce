@@ -48,11 +48,16 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new Result<>(loginId, 1));
     }
 
-    @Operation(summary = "회원 검색", description = "**관리자**만 검색할 수 있습니다. \n\n")
+    @Operation(
+            summary = "회원 검색",
+            description = "**관리자**만 검색할 수 있습니다. \n\n" +
+                    "검색 조건에 맞춰 조회합니다. \n\n" +
+                    "원하지 않는 검색 조건은 비워주세요."
+    )
     @GetMapping("/members")
-    public ResponseEntity<Result<List<MemberQueryDto>>> memberList(@ParameterObject @ModelAttribute MemberSearchCond cond) {
-        List<MemberQueryDto> memberQueryDtoList = memberQueryService.searchMembers(cond);
-        return ResponseEntity.ok(new Result<>(memberQueryDtoList, memberQueryDtoList.size()));
+    public ResponseEntity<Result<List<MemberResponse>>> memberList(@ParameterObject @ModelAttribute MemberSearchCond cond) {
+        List<MemberResponse> memberResponseList = memberQueryService.searchMembers(cond);
+        return ResponseEntity.ok(new Result<>(memberResponseList, memberResponseList.size()));
     }
 
     @Operation(summary = "회원 상세 조회", description = "**본인**만 조회할 수 있습니다.")
@@ -68,11 +73,11 @@ public class MemberController {
     @Operation(
             summary = "비밀번호 변경",
             description = "**본인**만 변경할 수 있습니다. \n\n" +
-                    "**관리자 계정**은 변경할 수 없습니다."
+                    "**관리자 계정**은 변경되지 않고 성공합니다."
     )
     @PostMapping("/members/{memberLoginId}/password")
     public ResponseEntity<Result<String>> changePassword(
-            @Parameter(example = "test_id_001")
+            @Parameter(example = "testId")
             @PathVariable("memberLoginId") String memberLoginId,
             @RequestBody @Valid MemberChangePasswordRequest request
     ) {
@@ -95,11 +100,11 @@ public class MemberController {
     @Operation(
             summary = "회원 삭제",
             description = "**본인**만 삭제할 수 있습니다. \n\n" +
-                    "**관리자 계정**은 삭제할 수 없습니다."
+                    "**관리자 계정**은 삭제되지 않고 성공합니다."
     )
     @DeleteMapping("/members/{memberLoginId}")
     public ResponseEntity<Result<String>> delete(
-            @Parameter(example = "test_id_001")
+            @Parameter(example = "testId")
             @PathVariable("memberLoginId") String memberLoginId
     ) {
         memberService.deleteMember(memberLoginId);

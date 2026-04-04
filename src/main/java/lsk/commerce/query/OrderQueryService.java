@@ -1,6 +1,7 @@
 package lsk.commerce.query;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.dto.response.OrderSearchResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.OrderProductQueryDto;
 import lsk.commerce.query.dto.OrderQueryDto;
@@ -33,21 +34,8 @@ public class OrderQueryService {
                 .build();
     }
 
-    public List<OrderQueryDto> searchOrders(OrderSearchCond cond) {
-        List<OrderQueryDto> orderQueryDtoList = orderQueryRepository.search(cond);
-        if (orderQueryDtoList.isEmpty()) {
-            return orderQueryDtoList;
-        }
-
-        List<String> orderNumbers = orderQueryRepository.extractOrderNumbers(orderQueryDtoList);
-
-        Map<String, List<OrderProductQueryDto>> orderProductMap = orderProductQueryRepository.findOrderProductListByOrderNumbers(orderNumbers);
-
-        return orderQueryDtoList.stream()
-                .map(orderQueryDto -> orderQueryDto.toBuilder()
-                        .orderProductQueryDtoList(orderProductMap.get(orderQueryDto.orderNumber()))
-                        .build())
-                .toList();
+    public List<OrderSearchResponse> searchOrders(OrderSearchCond cond) {
+        return orderQueryRepository.search(cond);
     }
 
     protected Map<String, List<OrderQueryDto>> findOrderMapByLoginId(String loginId) {

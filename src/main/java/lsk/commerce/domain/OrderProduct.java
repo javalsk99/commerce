@@ -28,7 +28,8 @@ import static lombok.AccessLevel.PROTECTED;
 @SQLDelete(sql = "UPDATE order_product SET deleted = true WHERE order_product_id = ?")
 public class OrderProduct {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "order_product_id")
     private Long id;
 
@@ -42,26 +43,28 @@ public class OrderProduct {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @NotNull @Min(100)
+    @NotNull
+    @Min(100)
     private Integer orderPrice;
 
-    @NotNull @Min(1)
-    private Integer count;
+    @NotNull
+    @Min(1)
+    private Integer quantity;
 
     @Column(nullable = false)
     private boolean deleted = false;
 
-    public static OrderProduct createOrderProduct(Product product, Integer count) {
-        if (count == null) {
+    public static OrderProduct createOrderProduct(Product product, Integer quantity) {
+        if (quantity == null) {
             throw new IllegalArgumentException("수량이 없습니다");
         }
 
         OrderProduct orderProduct = new OrderProduct();
         orderProduct.product = product;
-        orderProduct.orderPrice = product.getPrice() * count;
-        orderProduct.count = count;
+        orderProduct.orderPrice = product.getPrice() * quantity;
+        orderProduct.quantity = quantity;
 
-        product.removeStock(count);
+        product.removeStock(quantity);
         return orderProduct;
     }
 

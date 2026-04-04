@@ -24,7 +24,8 @@ import static lombok.AccessLevel.PROTECTED;
 @NoArgsConstructor(access = PROTECTED)
 public class Category {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "category_id")
     private Long id;
 
@@ -32,7 +33,8 @@ public class Category {
     @OneToMany(mappedBy = "category")
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
 
-    @NotBlank @Size(max = 20)
+    @NotBlank
+    @Size(max = 20)
     @Column(unique = true, length = 20)
     private String name;
 

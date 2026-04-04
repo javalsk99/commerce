@@ -30,18 +30,21 @@ import static lombok.AccessLevel.PROTECTED;
 @SQLDelete(sql = "UPDATE payment SET deleted = true WHERE payment_id = ?")
 public class Payment {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "payment_id")
     private Long id;
 
-    @NotBlank @Size(min = 36, max = 36)
-    @Column(name = "payment_number",unique = true, length = 36)
+    @NotBlank
+    @Size(min = 36, max = 36)
+    @Column(name = "payment_number", unique = true, length = 36)
     private String paymentId;
 
     @OneToOne(mappedBy = "payment", fetch = LAZY)
     private Order order;
 
-    @NotNull @Min(100)
+    @NotNull
+    @Min(100)
     private Integer paymentAmount;
 
     @Column(name = "paid_at")

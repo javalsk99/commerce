@@ -17,7 +17,6 @@ import lsk.commerce.domain.product.Album;
 import lsk.commerce.dto.OrderProductDto;
 import lsk.commerce.dto.request.PaymentCompleteResponse;
 import lsk.commerce.dto.response.OrderPaymentResponse;
-import lsk.commerce.dto.response.OrderResponse;
 import lsk.commerce.dto.response.PaymentResponse;
 import lsk.commerce.exception.GlobalExceptionHandler;
 import lsk.commerce.service.OrderService;
@@ -203,13 +202,6 @@ class PaymentControllerTest {
                     .artist("IVE")
                     .studio("STARSHIP")
                     .build();
-        }
-
-        private static OrderResponse getOrderResponse() {
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 3, 45000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("BLACKHOLE", 15000, 4, 60000);
-            return new OrderResponse(List.of(orderProductDto1, orderProductDto2), 105000, OrderStatus.CREATED, LocalDateTime.now(),
-                    PaymentStatus.PENDING, null, DeliveryStatus.WAITING, null, null);
         }
     }
 

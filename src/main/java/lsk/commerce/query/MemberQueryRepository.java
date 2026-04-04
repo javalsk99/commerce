@@ -1,10 +1,11 @@
 package lsk.commerce.query;
 
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.dto.response.MemberResponse;
+import lsk.commerce.dto.response.QMemberResponse;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
 import org.springframework.stereotype.Repository;
@@ -42,10 +43,8 @@ public class MemberQueryRepository {
                 .findFirst();
     }
 
-    protected List<MemberQueryDto> search(MemberSearchCond cond) {
-        return query.select(Projections.constructor(MemberQueryDto.class,
-                        member.loginId,
-                        member.grade))
+    protected List<MemberResponse> search(MemberSearchCond cond) {
+        return query.select(new QMemberResponse(member.loginId, member.address.city, member.address.street, member.address.zipcode))
                 .from(member)
                 .where(
                         containsMemberName(cond.name()),

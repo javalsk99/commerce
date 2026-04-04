@@ -32,26 +32,30 @@ import static lombok.AccessLevel.PROTECTED;
 @NoArgsConstructor(access = PROTECTED)
 public class Member {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "member_id")
     private Long id;
 
     @OneToMany(mappedBy = "member")
     private List<Order> orders = new ArrayList<>();
 
-    @NotBlank @Size(min = 2, max = 50)
+    @NotBlank
+    @Size(min = 2, max = 50)
     @Column(length = 50)
     private String name;
 
     @Column(nullable = false, length = 50)
     private String initial;
 
-    @NotBlank @Size(min = 4, max = 20)
+    @NotBlank
+    @Size(min = 4, max = 20)
     @Pattern(regexp = "^[A-Za-z0-9_]{4,20}$")
     @Column(unique = true, length = 20)
     private String loginId;
 
-    @NotBlank @Size(min = 8)
+    @NotBlank
+    @Size(min = 8)
     private String password;
 
     @NotNull
@@ -73,10 +77,6 @@ public class Member {
     }
 
     public void changePassword(String newPassword, PasswordEncoder passwordEncoder) {
-        if (this.getGrade() == Grade.ADMIN) {
-            return;
-        }
-
         if (newPassword == null || newPassword.isBlank()) {
             throw new IllegalArgumentException("비밀번호가 비어있습니다");
         } else if (passwordEncoder.matches(newPassword, this.password)) {
@@ -94,7 +94,8 @@ public class Member {
         this.address = new Address(newCity, newStreet, newZipcode);
     }
 
-    @PrePersist @PreUpdate
+    @PrePersist
+    @PreUpdate
     private void preHandler() {
         this.initial = InitialExtractor.extract(this.name);
     }

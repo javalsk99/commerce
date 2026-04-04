@@ -108,7 +108,7 @@ public class CategoryController {
     public ResponseEntity<Result<CategoryDisconnectResponse>> disconnectProduct(
             @Parameter(example = "가요_001")
             @PathVariable("categoryName") String categoryName,
-            @Parameter(description = "**12**자리의 상품 번호를 입력해주세요.", example = "9fyd3T9RxFPZ")
+            @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "9fyd3T9RxFPZ")
             @PathVariable("productNumber") String productNumber) {
         Category category = categoryProductService.disconnect(categoryName, productNumber);
         CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category);

@@ -1,6 +1,7 @@
 package lsk.commerce.query;
 
 import lombok.RequiredArgsConstructor;
+import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
@@ -30,16 +31,7 @@ public class MemberQueryService {
                 .build();
     }
 
-    public List<MemberQueryDto> searchMembers(MemberSearchCond cond) {
-        List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
-        List<String> loginIds = memberQueryRepository.extractLoginIds(memberQueryDtoList);
-
-        Map<String, List<OrderQueryDto>> orderMap = orderQueryService.findOrderMapByLoginIds(loginIds);
-
-        return memberQueryDtoList.stream()
-                .map(m -> m.toBuilder()
-                        .orderQueryDtoList(orderMap.get(m.loginId()))
-                        .build())
-                .toList();
+    public List<MemberResponse> searchMembers(MemberSearchCond cond) {
+        return memberQueryRepository.search(cond);
     }
 }

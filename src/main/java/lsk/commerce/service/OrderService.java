@@ -6,11 +6,14 @@ import lsk.commerce.domain.Delivery;
 import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
+import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
+import lsk.commerce.dto.request.OrderProductRequest;
+import lsk.commerce.dto.response.OrderCancelResponse;
 import lsk.commerce.dto.response.OrderPaymentResponse;
-import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.dto.response.OrderChangeResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.InvalidDataException;
 import lsk.commerce.repository.OrderProductJdbcRepository;
@@ -20,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -45,7 +47,7 @@ public class OrderService {
         Delivery delivery = new Delivery(member);
 
         //주문 상품 생성
-        List<OrderProduct> orderProducts = createOrderProducts(request.productMap(), products);
+        List<OrderProduct> orderProducts = createOrderProducts(request.orderProductRequestList(), products);
 
         //주문 생성
         Order order = Order.createOrder(member, delivery, orderProducts);
@@ -92,12 +94,15 @@ public class OrderService {
 
         order.isOwner(loginId);
 
+        if (order.getOrderStatus() == OrderStatus.CANCELED) {
+            throw new IllegalStateException("취소된 주문은 수정할 수 없습니다");
+        }
+
         if (order.getId() == null) {
             throw new InvalidDataException("식별자가 없는 잘못된 주문입니다");
         }
 
-        Map<String, Integer> currentProductMap = order.getOrderProductsAsMap();
-        if (currentProductMap.equals(request.productMap())) {
+        if (order.isSameOrderProducts(request.orderProductRequestList())) {
             return;
         }
 
@@ -115,7 +120,7 @@ public class OrderService {
         List<Product> currentProducts = productService.findProducts();
 
         //주문 상품 생성
-        List<OrderProduct> newOrderProducts = createOrderProducts(request.productMap(), currentProducts);
+        List<OrderProduct> newOrderProducts = createOrderProducts(request.orderProductRequestList(), currentProducts);
 
         //새로운 주문 상품으로 변경
         currentOrder.changeOrder(newOrderProducts);
@@ -158,24 +163,30 @@ public class OrderService {
         return OrderPaymentResponse.from(order);
     }
 
-    //주문 리턴용
+    //주문 수정 리턴용
     @Transactional(readOnly = true)
-    public OrderResponse getOrderResponse(Order order) {
-        return OrderResponse.from(order);
+    public OrderChangeResponse getOrderChangeResponse(Order order) {
+        return OrderChangeResponse.from(order);
     }
 
-    private static List<OrderProduct> createOrderProducts(Map<String, Integer> productMap, List<Product> products) {
+    //주문 취소 리턴용
+    @Transactional(readOnly = true)
+    public OrderCancelResponse getOrderCancelResponse(Order order) {
+        return OrderCancelResponse.from(order);
+    }
+
+    private static List<OrderProduct> createOrderProducts(List<OrderProductRequest> orderProductRequestList, List<Product> products) {
         List<OrderProduct> orderProducts = new ArrayList<>();
 
-        for (Map.Entry<String, Integer> productMapEntry : productMap.entrySet()) {
-            String productNumber = productMapEntry.getKey();
-            Integer count = productMapEntry.getValue();
+        for (OrderProductRequest orderProductRequest : orderProductRequestList) {
+            String productNumber = orderProductRequest.productNumber();
+            Integer quantity = orderProductRequest.quantity();
 
             Product product = products.stream()
                     .filter(p -> p.getProductNumber().equals(productNumber))
                     .findFirst()
                     .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
-            orderProducts.add(OrderProduct.createOrderProduct(product, count));
+            orderProducts.add(OrderProduct.createOrderProduct(product, quantity));
         }
 
         return orderProducts;

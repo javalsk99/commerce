@@ -1,7 +1,9 @@
 package lsk.commerce.dto.response;
 
+import com.querydsl.core.annotations.QueryProjection;
 import lsk.commerce.domain.Member;
 
+@QueryProjection
 public record MemberResponse(
         String loginId,
         String city,

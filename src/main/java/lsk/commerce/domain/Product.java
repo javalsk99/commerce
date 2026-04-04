@@ -40,11 +40,13 @@ import static lombok.AccessLevel.PROTECTED;
 @NoArgsConstructor(access = PROTECTED)
 public abstract class Product {
 
-    @Id @GeneratedValue(strategy = IDENTITY)
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "product_id")
     private Long id;
 
-    @NotBlank @Size(min = 12, max = 12)
+    @NotBlank
+    @Size(min = 12, max = 12)
     @Column(unique = true, length = 12)
     private String productNumber;
 
@@ -52,17 +54,20 @@ public abstract class Product {
     @OneToMany(mappedBy = "product", cascade = ALL)
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
 
-    @NotBlank @Size(max = 50)
+    @NotBlank
+    @Size(max = 50)
     @Column(length = 50)
     private String name;
 
     @Column(nullable = false, length = 50)
     private String nameInitial;
 
-    @NotNull @Min(100)
+    @NotNull
+    @Min(100)
     private Integer price;
 
-    @NotNull @Min(0)
+    @NotNull
+    @Min(0)
     private Integer stockQuantity;
 
     protected Product(String name, Integer price, Integer stockQuantity) {
@@ -177,7 +182,8 @@ public abstract class Product {
         throw new IllegalArgumentException("상품이 해당 카테고리에 없습니다");
     }
 
-    @PrePersist @PreUpdate
+    @PrePersist
+    @PreUpdate
     protected void preHandler() {
         this.nameInitial = InitialExtractor.extract(this.name);
     }

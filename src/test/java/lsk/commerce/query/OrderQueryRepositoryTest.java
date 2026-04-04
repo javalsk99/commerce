@@ -12,6 +12,7 @@ import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.response.OrderSearchResponse;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
 import org.junit.jupiter.api.BeforeEach;
@@ -215,9 +216,9 @@ class OrderQueryRepositoryTest {
 
                 //then
                 then(orderQueryDtoList)
-                            .hasSize(5)
-                            .extracting("loginId")
-                            .containsOnly("id_A");
+                        .hasSize(5)
+                        .extracting("loginId")
+                        .containsOnly("id_A");
             }
         }
     }
@@ -236,20 +237,14 @@ class OrderQueryRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<OrderQueryDto> orderQueryDtoList = orderQueryRepository.search(cond);
+                List<OrderSearchResponse> orderSearchResponseList = orderQueryRepository.search(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                thenSoftly(softly -> {
-                    softly.then(orderQueryDtoList)
-                            .extracting("orderProductQueryDtoList")
-                            .containsOnly(Collections.emptyList());
-                    softly.then(orderQueryDtoList)
-                            .hasSize(8)
-                            .extracting("loginId", "totalAmount")
-                            .containsExactlyInAnyOrder(tuple("id_A", 105000), tuple("id_B", 30000), tuple("id_A", 60000), tuple("id_C", 180000), tuple("id_C", 45000), tuple("id_A", 90000), tuple("id_A", 30000), tuple("id_A", 165000));
-                });
+                then(orderSearchResponseList)
+                        .extracting("totalAmount")
+                        .containsExactlyInAnyOrder(105000, 30000, 60000, 180000, 45000, 90000, 30000, 165000);
             }
 
             @ParameterizedTest
@@ -382,12 +377,12 @@ class OrderQueryRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<OrderQueryDto> orderQueryDtoList = orderQueryRepository.search(cond);
+                List<OrderSearchResponse> orderSearchResponseList = orderQueryRepository.search(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                then(orderQueryDtoList)
+                then(orderSearchResponseList)
                         .hasSize(size)
                         .extracting("totalAmount")
                         .containsExactlyInAnyOrderElementsOf(amounts);

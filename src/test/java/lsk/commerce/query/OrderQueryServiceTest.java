@@ -6,11 +6,13 @@ import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
+import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.response.OrderSearchResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
@@ -53,6 +55,11 @@ class OrderQueryServiceTest {
     String orderNumber1;
     String orderNumber2;
     String orderNumber3;
+    String orderNumber4;
+    String orderNumber5;
+    String orderNumber6;
+    String orderNumber7;
+    String orderNumber8;
 
     @BeforeEach
     void beforeEach() {
@@ -82,7 +89,7 @@ class OrderQueryServiceTest {
                     softly.then(Hibernate.isInitialized(orderQueryDto.orderProductQueryDtoList())).isTrue();
                     softly.then(orderQueryDto.orderProductQueryDtoList())
                             .hasSize(2)
-                            .extracting("name", "price", "count", "orderPrice")
+                            .extracting("name", "price", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(tuple("BANG BANG", 15000, 3, 45000), tuple("404", 15000, 4, 60000));
                     softly.then(orderQueryDto.totalAmount()).isEqualTo(105000);
                 });
@@ -120,24 +127,19 @@ class OrderQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<OrderQueryDto> orderQueryDtoList = orderQueryService.searchOrders(cond);
+                List<OrderSearchResponse> orderSearchResponseList = orderQueryService.searchOrders(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                thenSoftly(softly -> {
-                    softly.then(Hibernate.isInitialized(orderQueryDtoList.getFirst().orderProductQueryDtoList())).isTrue();
-                    softly.then(orderQueryDtoList)
-                            .hasSize(8)
-                            .flatExtracting("orderProductQueryDtoList")
-                            .hasSize(16)
-                            .extracting("name")
-                            .containsExactlyInAnyOrder(
-                                    "BANG BANG", "Blue Valentine", "404", "타임 캡슐", "너의 모든 순간", "천상연",
-                                    "자바 ORM 표준 JPA 프로그래밍", "면접을 위한 CS 전공지식 노트", "Do it! 점프 투 파이썬", "범죄도시",
-                                    "범죄도시2", "범죄도시3", "범죄도시4", "BANG BANG", "Blue Valentine", "자바 ORM 표준 JPA 프로그래밍"
-                            );
-                });
+                then(orderSearchResponseList)
+                        .extracting("orderNumber", "totalAmount", "orderStatus")
+                        .containsExactlyInAnyOrder(
+                                tuple(orderNumber1, 105000, OrderStatus.CREATED), tuple(orderNumber2, 30000, OrderStatus.CREATED),
+                                tuple(orderNumber3, 60000, OrderStatus.CANCELED), tuple(orderNumber4, 180000, OrderStatus.DELIVERED),
+                                tuple(orderNumber5, 45000, OrderStatus.DELIVERED), tuple(orderNumber6, 90000, OrderStatus.PAID),
+                                tuple(orderNumber7, 30000, OrderStatus.PAID), tuple(orderNumber8, 165000, OrderStatus.PAID)
+                        );
             }
 
             @Test
@@ -152,17 +154,14 @@ class OrderQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<OrderQueryDto> orderQueryDtoList = orderQueryService.searchOrders(cond);
+                List<OrderSearchResponse> orderSearchResponseList = orderQueryService.searchOrders(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                then(orderQueryDtoList)
-                        .hasSize(2)
-                        .flatExtracting("orderProductQueryDtoList")
-                        .hasSize(5)
-                        .extracting("name")
-                        .containsExactlyInAnyOrder("너의 모든 순간", "천상연", "면접을 위한 CS 전공지식 노트", "Do it! 점프 투 파이썬", "범죄도시");
+                then(orderSearchResponseList)
+                        .extracting("orderNumber", "totalAmount", "orderStatus")
+                        .containsExactlyInAnyOrder(tuple(orderNumber4, 180000, OrderStatus.DELIVERED), tuple(orderNumber5, 45000, OrderStatus.DELIVERED));
             }
 
             @Test
@@ -176,12 +175,12 @@ class OrderQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<OrderQueryDto> orderQueryDtoList = orderQueryService.searchOrders(cond);
+                List<OrderSearchResponse> orderSearchResponseList = orderQueryService.searchOrders(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                then(orderQueryDtoList).isEmpty();
+                then(orderSearchResponseList).isEmpty();
             }
         }
     }
@@ -243,6 +242,11 @@ class OrderQueryServiceTest {
         orderNumber1 = order1.getOrderNumber();
         orderNumber2 = order2.getOrderNumber();
         orderNumber3 = order3.getOrderNumber();
+        orderNumber4 = order4.getOrderNumber();
+        orderNumber5 = order5.getOrderNumber();
+        orderNumber6 = order6.getOrderNumber();
+        orderNumber7 = order7.getOrderNumber();
+        orderNumber8 = order8.getOrderNumber();
 
         persistOrderProducts(orderProduct1, orderProduct2, orderProduct3, orderProduct4, orderProduct5, orderProduct6, orderProduct7, orderProduct8, orderProduct9, orderProduct10, orderProduct11, orderProduct12, orderProduct13, orderProduct14, orderProduct15, orderProduct16);
 

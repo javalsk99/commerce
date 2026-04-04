@@ -97,7 +97,7 @@ class OrderProductJdbcRepositoryTest {
                 //then
                 Order findOrder = em.find(Order.class, orderId);
                 then(findOrder.getOrderProducts())
-                        .extracting("product.name", "orderPrice", "count")
+                        .extracting("product.name", "orderPrice", "quantity")
                         .containsExactlyInAnyOrder(tuple("BANG BANG", 75000, 5), tuple("타임 캡슐", 60000, 4));
             }
         }

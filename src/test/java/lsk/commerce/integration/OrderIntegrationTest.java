@@ -10,6 +10,7 @@ import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
+import lsk.commerce.dto.request.OrderProductRequest;
 import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.repository.OrderRepository;
@@ -29,7 +30,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -114,11 +114,13 @@ public class OrderIntegrationTest {
                 em.flush();
                 em.clear();
 
+                OrderProductRequest orderProductRequest = new OrderProductRequest(albumNumber1, 11);
+
                 System.out.println("================= WHEN START =================");
 
                 //when & then
                 thenThrownBy(() -> {
-                    orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 11)), memberLoginId);
+                    orderService.order(new OrderCreateRequest(List.of(orderProductRequest)), memberLoginId);
                     em.flush();
                 })
                         .isInstanceOf(IllegalArgumentException.class)
@@ -147,12 +149,15 @@ public class OrderIntegrationTest {
             @DisplayName("주문을 수정하면 상품의 재고가 변경된다")
             void changeOrder() {
                 //given
-                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2)), memberLoginId);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(albumNumber1, 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(albumNumber2, 2);
+                String orderNumber = orderService.order(new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2)), memberLoginId);
 
                 em.flush();
                 em.clear();
 
-                OrderChangeRequest request = new OrderChangeRequest(Map.of(albumNumber2, 4));
+                OrderProductRequest orderProductRequest3 = new OrderProductRequest(albumNumber2, 4);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest3));
 
                 System.out.println("================= WHEN START =================");
 
@@ -176,7 +181,8 @@ public class OrderIntegrationTest {
             @DisplayName("상품 가격이 변해도 기존 주문의 금액은 변하지 않는다")
             void totalAmountShouldNotChange_WhenProductPriceChange() {
                 //given
-                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 1)), memberLoginId);
+                OrderProductRequest orderProductRequest = new OrderProductRequest(albumNumber1, 1);
+                String orderNumber = orderService.order(new OrderCreateRequest(List.of(orderProductRequest)), memberLoginId);
 
                 em.flush();
                 em.clear();
@@ -214,10 +220,13 @@ public class OrderIntegrationTest {
                 em.flush();
                 em.clear();
 
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(albumNumber1, 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(albumNumber2, 2);
+
                 System.out.println("============== FIRST WHEN START ==============");
 
                 //when 주문 생성
-                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2)), memberLoginId);
+                String orderNumber = orderService.order(new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2)), memberLoginId);
 
                 em.flush();
                 em.clear();
@@ -264,7 +273,9 @@ public class OrderIntegrationTest {
             @DisplayName("주문을 삭제하면 주문 상품, 배송, 결제도 삭제된다")
             void deleteOrder() {
                 //given
-                String orderNumber = orderService.order(new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2)), memberLoginId);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(albumNumber1, 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(albumNumber2, 2);
+                String orderNumber = orderService.order(new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2)), memberLoginId);
                 paymentService.request(orderNumber, "id_A");
 
                 Order order = orderRepository.findWithAllExceptMember(orderNumber)

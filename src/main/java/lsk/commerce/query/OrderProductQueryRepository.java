@@ -18,7 +18,7 @@ public class OrderProductQueryRepository {
 
     protected List<OrderProductQueryDto> findOrderProductListByOrderNumber(String orderNumber) {
         return em.createQuery(
-                        "select new lsk.commerce.query.dto.OrderProductQueryDto(op.order.orderNumber, prod.name, prod.price, op.count, op.orderPrice)" +
+                        "select new lsk.commerce.query.dto.OrderProductQueryDto(op.order.orderNumber, prod.name, prod.price, op.quantity, op.orderPrice)" +
                                 " from OrderProduct op" +
                                 " join op.product prod" +
                                 " where op.order.orderNumber = :orderNumber", OrderProductQueryDto.class)
@@ -28,7 +28,7 @@ public class OrderProductQueryRepository {
 
     protected Map<String, List<OrderProductQueryDto>> findOrderProductListByOrderNumbers(List<String> orderNumbers) {
         List<OrderProductQueryDto> orderProducts = em.createQuery(
-                        "select new lsk.commerce.query.dto.OrderProductQueryDto(op.order.orderNumber, prod.name, prod.price, op.count, op.orderPrice)" +
+                        "select new lsk.commerce.query.dto.OrderProductQueryDto(op.order.orderNumber, prod.name, prod.price, op.quantity, op.orderPrice)" +
                                 " from OrderProduct op" +
                                 " join op.product prod" +
                                 " where op.order.orderNumber in :orderNumbers", OrderProductQueryDto.class)

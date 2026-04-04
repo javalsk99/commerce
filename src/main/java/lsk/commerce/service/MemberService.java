@@ -43,6 +43,9 @@ public class MemberService {
     @Transactional
     public Member changePassword(String memberLoginId, MemberChangePasswordRequest request) {
         Member member = findMemberByLoginId(memberLoginId);
+        if (memberLoginId.equals("testId")) {
+            return member;
+        }
         member.changePassword(request.password(), passwordEncoder);
         return member;
     }
@@ -56,15 +59,16 @@ public class MemberService {
 
     @Transactional
     public void deleteMember(String memberLoginId) {
+        if (memberLoginId.equals("testId")) {
+            return;
+        }
+
         Optional<Member> optionalMember = memberRepository.findByLoginId(memberLoginId);
         if (optionalMember.isEmpty()) {
             return;
         }
 
         Member member = optionalMember.get();
-        if (member.getGrade() == Grade.ADMIN) {
-            return;
-        }
 
         memberRepository.delete(member);
     }

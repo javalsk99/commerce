@@ -31,7 +31,7 @@ class OrderProductTest {
 
                 //then
                 then(orderProduct)
-                        .extracting("order", "product", "orderPrice", "count")
+                        .extracting("order", "product", "orderPrice", "quantity")
                         .containsExactly(null, album, 75000, 5);
             }
         }
@@ -40,7 +40,7 @@ class OrderProductTest {
         class FailureCase {
 
             @Test
-            void countNull() {
+            void quantityNull() {
                 //given
                 Album album = Album.builder()
                         .price(15000)

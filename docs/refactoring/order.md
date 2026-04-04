@@ -9,11 +9,13 @@
 
 - changeOrder  
   POST에서 멱등성에 더 적합한 PATCH로 변경했다.  
-  Delivery와 Payment만 가져오는 Fetch Join에 OrderProducts도 Fetch Join으로 추가했다.
+  Delivery와 Payment만 가져오는 Fetch Join에 OrderProducts도 Fetch Join으로 추가했다.  
+  반환을 간략하게 변경했다.
 
 
 - cancelOrder  
-  POST에서 멱등성에 더 적합한 PATCH로 변경했다.
+  POST에서 멱등성에 더 적합한 PATCH로 변경했다.  
+  반환을 간략하게 변경했다.
 
 
 - create, changeOrder, delete, cancelOrder  
@@ -55,3 +57,11 @@
 - isOwner  
   주문의 memberLoginId와 서비스에서 받은 loginId가 일치하는지 검증한다.
 
+
+- isSameOrderProducts  
+  기존의 주문 상품 리스트를 OrderProductRequest로 변경 후 정렬해서 요청으로 들어온 리스트를 정렬 후 같은지 비교한다.
+
+
+## OrderQueryRepository
+- search  
+  반환을 간략하게 변경했다.

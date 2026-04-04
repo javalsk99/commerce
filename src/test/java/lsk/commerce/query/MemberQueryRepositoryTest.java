@@ -8,6 +8,7 @@ import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
 import lsk.commerce.domain.product.Album;
+import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
 import org.junit.jupiter.api.BeforeEach;
@@ -157,20 +158,14 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
+                List<MemberResponse> memberResponseList = memberQueryRepository.search(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                thenSoftly(softly -> {
-                    softly.then(memberQueryDtoList)
-                            .extracting("orderQueryDtoList")
-                            .containsOnly(Collections.emptyList());
-                    softly.then(memberQueryDtoList)
-                            .hasSize(3)
-                            .extracting("loginId")
-                            .containsExactlyInAnyOrder("id_A", "id_B", "id_C");
-                });
+                then(memberResponseList)
+                        .extracting("loginId")
+                        .containsExactlyInAnyOrder("id_A", "id_B", "id_C");
             }
 
             @ParameterizedTest
@@ -230,12 +225,12 @@ class MemberQueryRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryRepository.search(cond);
+                List<MemberResponse> memberResponseList = memberQueryRepository.search(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                then(memberQueryDtoList)
+                then(memberResponseList)
                         .hasSize(size)
                         .extracting("loginId")
                         .containsExactlyInAnyOrderElementsOf(loginIds);

@@ -7,7 +7,7 @@ public record OrderProductQueryDto(
         String orderNumber,
         String name,
         int price,
-        int count,
+        int quantity,
         int orderPrice
 ) {
 }

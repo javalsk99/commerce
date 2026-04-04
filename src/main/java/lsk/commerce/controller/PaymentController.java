@@ -3,6 +3,9 @@ package lsk.commerce.controller;
 import io.portone.sdk.server.webhook.Webhook;
 import io.portone.sdk.server.webhook.WebhookTransaction;
 import io.portone.sdk.server.webhook.WebhookVerifier;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import kotlin.Unit;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.api.portone.CompletePaymentRequest;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+@Tag(name = "06. 결제", description = "요청")
 @RestController
 @RequiredArgsConstructor
 public class PaymentController {
@@ -35,9 +39,20 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final PaymentSyncService paymentSyncService;
 
+    @Operation(
+            summary = "결제 요청",
+            description = "**주문의 주인**만 결제 요청할 수 있습니다. \n\n" +
+                    "주문의 주인이 아니면 관리자도 요청할 수 없습니다. \n\n" +
+                    "예시 주문은 주인이 아니어도 요청되지 않고 성공합니다. \n\n" +
+                    "**취소된 주문**은 요청할 수 없습니다. \n\n" +
+                    "요청이 완료된 주문은 https://lsk-commerce.shop/payments/{orderNumber}에서 결제를 진행해 주세요. \n\n" +
+                    "테스트 결제라서 실제 돈이 결제되지 않습니다."
+    )
     @PostMapping("/payments/orders/{orderNumber}")
     public ResponseEntity<Result<PaymentResponse>> requestPayment(
+            @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.")
             @PathVariable("orderNumber") String orderNumber,
+            @Parameter(hidden = true)
             @Login String loginId
     ) {
         Payment payment = paymentService.request(orderNumber, loginId);
@@ -45,6 +60,7 @@ public class PaymentController {
         return ResponseEntity.ok(new Result<>(paymentResponse, 1));
     }
 
+    @Operation(hidden = true)
     @GetMapping("/api/payments/{orderNumber}")
     public ResponseEntity<Result<OrderPaymentResponse>> getOrder(
             @PathVariable("orderNumber") String orderNumber,
@@ -56,6 +72,7 @@ public class PaymentController {
         return ResponseEntity.ok(new Result<>(orderPaymentResponse, 1));
     }
 
+    @Operation(hidden = true)
     @PostMapping("/api/payments/complete")
     public Mono<ResponseEntity<Result<PaymentCompleteResponse>>> completePayment(
             @RequestBody CompletePaymentRequest completeRequest,
@@ -66,6 +83,7 @@ public class PaymentController {
                 .map(response -> ResponseEntity.ok(new Result<>(response, 1)));
     }
 
+    @Operation(hidden = true)
     //결제 정보를 실시간으로 전달받기 위한 웹훅
     @PostMapping("/api/payment/webhook")
     public Mono<Unit> handleWebhook(

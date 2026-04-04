@@ -10,6 +10,7 @@ import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
+import lsk.commerce.dto.request.OrderProductRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.response.Result;
 import lsk.commerce.repository.MemberRepository;
@@ -34,7 +35,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.tuple;
@@ -258,7 +258,9 @@ public class IntegrationTest {
             @DisplayName("주문 생성 후 결제 요청 흐름")
             void CreateOrderAndRequestPayment() {
                 //given
-                OrderCreateRequest createRequest = new OrderCreateRequest(Map.of(albumNumber1, 3, albumNumber2, 2));
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(albumNumber1, 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(albumNumber2, 2);
+                OrderCreateRequest createRequest = new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 System.out.println("============== FIRST WHEN START ==============");
 
@@ -288,7 +290,7 @@ public class IntegrationTest {
                             .extracting("member.loginId", "orderStatus", "delivery.deliveryStatus", "payment", "totalAmount")
                             .containsExactly("id_A", OrderStatus.CREATED, DeliveryStatus.WAITING, null, 75000);
                     softly.then(createdOrder.getOrderProducts())
-                            .extracting("product.name", "count", "orderPrice")
+                            .extracting("product.name", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(tuple("BANG BANG", 3, 45000), tuple("BLACKHOLE", 2, 30000));
                     softly.then(createdOrder.getOrderProducts())
                             .extracting("product.name", "product.stockQuantity")

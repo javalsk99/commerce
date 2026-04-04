@@ -32,6 +32,7 @@ import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.request.MemberLoginRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
+import lsk.commerce.dto.request.OrderProductRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.response.Result;
 import lsk.commerce.repository.OrderRepository;
@@ -57,7 +58,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -210,8 +210,8 @@ public class E2ETest {
         });
 
         //given
-        Map<String, Integer> productMap = createProductMap();
-        OrderCreateRequest orderCreateRequest = new OrderCreateRequest(productMap);
+        List<OrderProductRequest> orderProductRequestList = createOrderProductRequestList();
+        OrderCreateRequest orderCreateRequest = new OrderCreateRequest(orderProductRequestList);
 
         System.out.println("============== THIRD WHEN START ==============");
 
@@ -243,7 +243,7 @@ public class E2ETest {
                     .extracting("member.loginId", "delivery.deliveryStatus", "payment", "totalAmount", "orderStatus", "deleted")
                     .containsExactly("id_A", DeliveryStatus.WAITING, null, 139000, OrderStatus.CREATED, false);
             softly.then(createdOrder.getOrderProducts())
-                    .extracting("product.name", "count", "orderPrice")
+                    .extracting("product.name", "quantity", "orderPrice")
                     .containsExactlyInAnyOrder(
                             tuple("BANG BANG", 3, 36000),
                             tuple("BLACKHOLE", 4, 56000),
@@ -386,7 +386,7 @@ public class E2ETest {
 
             //then 배송 시작 검증
             await()
-                    .pollDelay(4,TimeUnit.SECONDS)
+                    .pollDelay(4, TimeUnit.SECONDS)
                     .atMost(7, TimeUnit.SECONDS)
                     .pollInterval(1, TimeUnit.SECONDS)
                     .untilAsserted(() -> {
@@ -400,7 +400,7 @@ public class E2ETest {
         }
     }
 
-    private Map<String, Integer> createProductMap() {
+    private List<OrderProductRequest> createOrderProductRequestList() {
         String categoryName1 = categoryService.create(new CategoryCreateRequest("가요", null));
         String categoryName2 = categoryService.create(new CategoryCreateRequest("컴퓨터/IT", null));
         String categoryName3 = categoryService.create(new CategoryCreateRequest("국내 영화", null));
@@ -411,7 +411,11 @@ public class E2ETest {
         String movieNumber1 = productService.register(createMovieRequest("범죄도시2", 9000, 4), List.of(categoryName3));
         productService.register(createMovieRequest("범죄도시3", 11000, 6), List.of(categoryName3));
 
-        return Map.of(albumNumber1, 3, albumNumber2, 4, bookNumber, 2, movieNumber1, 3);
+        OrderProductRequest orderProductRequest1 = new OrderProductRequest(albumNumber1, 3);
+        OrderProductRequest orderProductRequest2 = new OrderProductRequest(albumNumber2, 4);
+        OrderProductRequest orderProductRequest3 = new OrderProductRequest(bookNumber, 2);
+        OrderProductRequest orderProductRequest4 = new OrderProductRequest(movieNumber1, 3);
+        return List.of(orderProductRequest1, orderProductRequest2, orderProductRequest3, orderProductRequest4);
     }
 
     private static ProductCreateRequest createAlbumRequest(String name, Integer price, Integer stockQuantity) {

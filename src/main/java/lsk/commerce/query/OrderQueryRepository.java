@@ -10,6 +10,8 @@ import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.OrderStatus;
 import lsk.commerce.domain.PaymentStatus;
 import lsk.commerce.domain.QOrderProduct;
+import lsk.commerce.dto.response.OrderSearchResponse;
+import lsk.commerce.dto.response.QOrderSearchResponse;
 import lsk.commerce.query.dto.OrderProductQueryDto;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
@@ -79,9 +81,8 @@ public class OrderQueryRepository {
                 .getResultList();
     }
 
-    protected List<OrderQueryDto> search(OrderSearchCond cond) {
-        return query.select(new QOrderQueryDto(order.member.loginId, order.orderNumber, order.totalAmount, order.orderStatus, order.orderDate, order.payment.paymentStatus,
-                        order.payment.paymentDate, order.delivery.deliveryStatus, order.delivery.shippedDate, order.delivery.deliveredDate))
+    protected List<OrderSearchResponse> search(OrderSearchCond cond) {
+        return query.select(new QOrderSearchResponse(order.orderNumber, order.totalAmount, order.orderStatus))
                 .from(order)
                 .join(order.member, member)
                 .leftJoin(order.payment, payment)
@@ -116,7 +117,7 @@ public class OrderQueryRepository {
                         order.orderNumber,
                         product.name,
                         product.price,
-                        orderProduct.count,
+                        orderProduct.quantity,
                         orderProduct.orderPrice))
                 .from(subOrderProduct)
                 .where(

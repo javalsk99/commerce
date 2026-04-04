@@ -181,24 +181,24 @@ class MemberControllerTest {
                 MultiValueMap<String, String> cond = new LinkedMultiValueMap<>();
                 cond.add("name", "ㅇㅈ");
                 cond.add("loginId", "id");
-                List<OrderQueryDto> orderQueryDtoList1 = List.of(OrderQueryDto.builder().loginId("id_A").build());
-                List<OrderQueryDto> orderQueryDtoList2 = List.of(OrderQueryDto.builder().loginId("id_B").build());
-                MemberQueryDto memberQueryDto1 = MemberQueryDto.builder().loginId("id_A").grade(Grade.USER).orderQueryDtoList(orderQueryDtoList1).build();
-                MemberQueryDto memberQueryDto2 = MemberQueryDto.builder().loginId("id_B").grade(Grade.USER).orderQueryDtoList(orderQueryDtoList2).build();
-                List<MemberQueryDto> memberQueryDtoList = List.of(memberQueryDto1, memberQueryDto2);
+                MemberResponse memberResponse1 = new MemberResponse("id_A", "Seoul", "Gangnam", "01234");
+                MemberResponse memberResponse2 = new MemberResponse("id_B", "Seoul", "Gangnam", "01234");
+                List<MemberResponse> memberResponseList = List.of(memberResponse1, memberResponse2);
 
-                given(memberQueryService.searchMembers(any(MemberSearchCond.class))).willReturn(memberQueryDtoList);
+                given(memberQueryService.searchMembers(any(MemberSearchCond.class))).willReturn(memberResponseList);
 
                 //when & then
                 mvc.perform(get("/members")
                                 .params(cond))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data[0].loginId").value("id_A"))
-                        .andExpect(jsonPath("$.data[0].grade").value("USER"))
-                        .andExpect(jsonPath("$.data[0].orderQueryDtoList").exists())
+                        .andExpect(jsonPath("$.data[0].city").value("Seoul"))
+                        .andExpect(jsonPath("$.data[0].street").value("Gangnam"))
+                        .andExpect(jsonPath("$.data[0].zipcode").value("01234"))
                         .andExpect(jsonPath("$.data[1].loginId").value("id_B"))
-                        .andExpect(jsonPath("$.data[1].grade").value("USER"))
-                        .andExpect(jsonPath("$.data[1].orderQueryDtoList").exists())
+                        .andExpect(jsonPath("$.data[1].city").value("Seoul"))
+                        .andExpect(jsonPath("$.data[1].street").value("Gangnam"))
+                        .andExpect(jsonPath("$.data[1].zipcode").value("01234"))
                         .andExpect(jsonPath("$.count").value(2))
                         .andDo(print());
 

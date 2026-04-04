@@ -14,8 +14,8 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
-import lsk.commerce.dto.response.OrderPaymentResponse;
-import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.dto.request.OrderProductRequest;
+import lsk.commerce.dto.response.OrderChangeResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.InvalidDataException;
 import lsk.commerce.exception.NotResourceOwnerException;
@@ -34,11 +34,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDAssertions.tuple;
@@ -136,8 +135,10 @@ class OrderServiceTest {
             @Test
             void basic() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
-                OrderCreateRequest request = new OrderCreateRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 2);
+                OrderProductRequest orderProductRequest3 = new OrderProductRequest(productNumber3, 4);
+                OrderCreateRequest request = new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2, orderProductRequest3));
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -166,7 +167,7 @@ class OrderServiceTest {
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts()).isEqualTo(orderProducts);
                     softly.then(order.getOrderProducts())
-                            .extracting("product.name", "product.price", "count", "orderPrice")
+                            .extracting("product.name", "product.price", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(
                                     tuple("BANG BANG", 15000, 3, 45000),
                                     tuple("자바 ORM 표준 JPA 프로그래밍", 15000, 2, 30000),
@@ -192,8 +193,10 @@ class OrderServiceTest {
             @Test
             void memberNotFound() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
-                OrderCreateRequest request = new OrderCreateRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 2);
+                OrderProductRequest orderProductRequest3 = new OrderProductRequest(productNumber3, 4);
+                OrderCreateRequest request = new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2, orderProductRequest3));
 
                 given(memberService.findMemberByLoginId(anyString())).willThrow(new DataNotFoundException("존재하지 않는 아이디입니다"));
 
@@ -212,11 +215,10 @@ class OrderServiceTest {
             }
 
             @Test
-            void productMapContainsNullKey() {
+            void productNumberIsNull() {
                 //given
-                Map<String, Integer> hasNullProductMap = new HashMap<>();
-                hasNullProductMap.put(null, 3);
-                OrderCreateRequest request = new OrderCreateRequest(hasNullProductMap);
+                OrderProductRequest nullProductNumberOrderProductRequest = new OrderProductRequest(null, 3);
+                OrderCreateRequest request = new OrderCreateRequest(List.of(nullProductNumberOrderProductRequest));
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -237,9 +239,8 @@ class OrderServiceTest {
 
             @Test
             void exceed() {
-                Map<String, Integer> exceedProductMap = new HashMap<>();
-                exceedProductMap.put(productNumber1, 11);
-                OrderCreateRequest request = new OrderCreateRequest(exceedProductMap);
+                OrderProductRequest exceedOrderProductRequest = new OrderProductRequest(productNumber1, 11);
+                OrderCreateRequest request = new OrderCreateRequest(List.of(exceedOrderProductRequest));
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -259,11 +260,11 @@ class OrderServiceTest {
             }
 
             @Test
-            void productMapContainsNullValue() {
+            void quantityIsNull() {
                 //given
-                Map<String, Integer> hasNullProductMap = new HashMap<>();
-                hasNullProductMap.put(productNumber1, null);
-                OrderCreateRequest request = new OrderCreateRequest(hasNullProductMap);
+                OrderProductRequest nullQuantityOrderProductRequest = new OrderProductRequest(productNumber1, null);
+
+                OrderCreateRequest request = new OrderCreateRequest(List.of(nullQuantityOrderProductRequest));
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -285,8 +286,8 @@ class OrderServiceTest {
             @Test
             void productNotFound() {
                 //given
-                Map<String, Integer> notExistsNameProductMap = Map.of("lllIIIll00OO", 3);
-                OrderCreateRequest request = new OrderCreateRequest(notExistsNameProductMap);
+                OrderProductRequest notExistsProductNumberOrderProductRequest = new OrderProductRequest("lllIIIll00OO", 3);
+                OrderCreateRequest request = new OrderCreateRequest(List.of(notExistsProductNumberOrderProductRequest));
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -308,8 +309,10 @@ class OrderServiceTest {
             @Test
             void failedSaveAll() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 3, productNumber2, 2, productNumber3, 4);
-                OrderCreateRequest request = new OrderCreateRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 2);
+                OrderProductRequest orderProductRequest3 = new OrderProductRequest(productNumber3, 4);
+                OrderCreateRequest request = new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2, orderProductRequest3));
 
                 given(memberService.findMemberByLoginId(anyString())).willReturn(member);
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
@@ -400,8 +403,9 @@ class OrderServiceTest {
             @Test
             void basic() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
-                OrderChangeRequest request = new OrderChangeRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 2);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -432,7 +436,7 @@ class OrderServiceTest {
                 List<OrderProduct> orderProducts = orderProductCaptor.getValue();
                 thenSoftly(softly -> {
                     softly.then(orderProducts)
-                            .extracting("product.name", "count", "orderPrice")
+                            .extracting("product.name", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(
                                     tuple("BANG BANG", 2, 30000),
                                     tuple("자바 ORM 표준 JPA 프로그래밍", 5, 75000));
@@ -448,8 +452,9 @@ class OrderServiceTest {
             @Test
             void idempotency() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
-                OrderChangeRequest request = new OrderChangeRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 2);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -470,7 +475,7 @@ class OrderServiceTest {
                 List<OrderProduct> orderProducts = orderProductCaptor.getValue();
                 thenSoftly(softly -> {
                     softly.then(orderProducts)
-                            .extracting("product.name", "count", "orderPrice")
+                            .extracting("product.name", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(
                                     tuple("BANG BANG", 2, 30000),
                                     tuple("자바 ORM 표준 JPA 프로그래밍", 5, 75000));
@@ -508,8 +513,9 @@ class OrderServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
-                OrderChangeRequest request = new OrderChangeRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 2);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.empty());
 
@@ -531,8 +537,9 @@ class OrderServiceTest {
             @Test
             void notOwner() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
-                OrderChangeRequest request = new OrderChangeRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 2);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
@@ -552,11 +559,37 @@ class OrderServiceTest {
             }
 
             @Test
+            void orderStatusIsCanceled() {
+                //given
+                Order canceledOrder = createCanceledOrder();
+
+                OrderProductRequest orderProductRequest = new OrderProductRequest(productNumber1, 2);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest));
+
+                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(canceledOrder));
+
+                //when & then
+                thenThrownBy(() -> orderService.changeOrder(canceledOrder.getOrderNumber(), request, "id_A"))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("취소된 주문은 수정할 수 없습니다");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).deleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
+                    softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
+                    softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).saveAll(any()));
+                });
+            }
+
+            @Test
             void orderIdIsNull() {
                 //given
                 Order order = createNotSavedOrder();
-                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
-                OrderChangeRequest request = new OrderChangeRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 2);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
 
@@ -578,8 +611,9 @@ class OrderServiceTest {
             @Test
             void failedDeleteOrderProducts() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
-                OrderChangeRequest request = new OrderChangeRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 2);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 willThrow(new RuntimeException("JDBC DELETE Failed")).given(orderProductJdbcRepository).deleteOrderProductsByOrderId(anyLong());
@@ -600,11 +634,10 @@ class OrderServiceTest {
             }
 
             @Test
-            void productMapContainsNullKey() {
+            void productNumberIsNull() {
                 //given
-                Map<String, Integer> newProductMap = new HashMap<>();
-                newProductMap.put(null, 3);
-                OrderChangeRequest request = new OrderChangeRequest(newProductMap);
+                OrderProductRequest nullProductNumberOrderProductRequest = new OrderProductRequest(null, 3);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(nullProductNumberOrderProductRequest));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -626,11 +659,10 @@ class OrderServiceTest {
             }
 
             @Test
-            void productMapContainsNullValue() {
+            void quantityIsNull() {
                 //given
-                Map<String, Integer> newProductMap = new HashMap<>();
-                newProductMap.put(productNumber1, null);
-                OrderChangeRequest request = new OrderChangeRequest(newProductMap);
+                OrderProductRequest nullQuantityOrderProductRequest = new OrderProductRequest(productNumber1, null);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(nullQuantityOrderProductRequest));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -654,8 +686,8 @@ class OrderServiceTest {
             @Test
             void productNotFound() {
                 //given
-                Map<String, Integer> newProductMap = Map.of("lllIIIll00OO", 3);
-                OrderChangeRequest request = new OrderChangeRequest(newProductMap);
+                OrderProductRequest notExistsProductNumberOrderProductRequest = new OrderProductRequest("lllIIIll00OO", 3);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(notExistsProductNumberOrderProductRequest));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -679,8 +711,9 @@ class OrderServiceTest {
             @Test
             void failedSaveAll() {
                 //given
-                Map<String, Integer> productMap = Map.of(productNumber1, 2, productNumber2, 5);
-                OrderChangeRequest request = new OrderChangeRequest(productMap);
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(productNumber1, 2);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
                 given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
@@ -700,6 +733,19 @@ class OrderServiceTest {
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().saveAll(anyList()));
                 });
+            }
+
+            private Order createCanceledOrder() {
+                Delivery delivery = new Delivery(member);
+
+                OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 2);
+
+                Order canceledOrder = Order.createOrder(member, delivery, List.of(orderProduct));
+
+                ReflectionTestUtils.setField(canceledOrder, "id", 2L);
+                ReflectionTestUtils.setField(canceledOrder, "orderStatus", OrderStatus.CANCELED);
+
+                return canceledOrder;
             }
 
             private Order createNotSavedOrder() {
@@ -732,7 +778,7 @@ class OrderServiceTest {
                 BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts())
-                            .extracting("product.name", "count", "orderPrice")
+                            .extracting("product.name", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(
                                     tuple("BANG BANG", 3, 45000),
                                     tuple("자바 ORM 표준 JPA 프로그래밍", 2, 30000),
@@ -765,7 +811,7 @@ class OrderServiceTest {
                 BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts())
-                            .extracting("product.name", "count", "orderPrice")
+                            .extracting("product.name", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(
                                     tuple("BANG BANG", 3, 45000),
                                     tuple("자바 ORM 표준 JPA 프로그래밍", 2, 30000),
@@ -814,7 +860,7 @@ class OrderServiceTest {
                 BDDMockito.then(orderRepository).should(times(2)).findWithAllExceptMember(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts())
-                            .extracting("product.name", "count", "orderPrice")
+                            .extracting("product.name", "quantity", "orderPrice")
                             .containsExactlyInAnyOrder(
                                     tuple("BANG BANG", 3, 45000),
                                     tuple("자바 ORM 표준 JPA 프로그래밍", 2, 30000),
@@ -1013,24 +1059,13 @@ class OrderServiceTest {
 
             @Test
             void basic() {
-                Payment.requestPayment(order);
-
                 //when
-                OrderPaymentResponse orderPaymentResponse = orderService.getOrderPaymentResponse(order);
-                OrderResponse orderResponse = orderService.getOrderResponse(order);
+                OrderChangeResponse orderChangeResponse = orderService.getOrderChangeResponse(order);
 
                 //then
-                thenSoftly(softly -> {
-                    softly.then(orderPaymentResponse)
-                            .extracting("orderNumber", "memberLoginId", "paymentId")
-                            .containsExactlyInAnyOrder(order.getOrderNumber(), "id_A", order.getPayment().getPaymentId());
-                    softly.then(orderResponse)
-                            .extracting("paymentDate", "shippedDate", "deliveredDate")
-                            .containsOnlyNulls();
-                    softly.then(orderPaymentResponse.orderProductDtoList())
-                            .usingRecursiveComparison()
-                            .isEqualTo(orderResponse.orderProductDtoList());
-                });
+                then(orderChangeResponse.orderProductDtoList())
+                        .extracting("name", "quantity")
+                        .containsExactlyInAnyOrder(tuple("BANG BANG", 3), tuple("자바 ORM 표준 JPA 프로그래밍", 2), tuple("범죄도시", 4));
             }
         }
     }

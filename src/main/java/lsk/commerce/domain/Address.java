@@ -14,15 +14,18 @@ import static lombok.AccessLevel.PROTECTED;
 @NoArgsConstructor(access = PROTECTED)
 public class Address {
 
-    @NotBlank @Size(max = 50)
+    @NotBlank
+    @Size(max = 50)
     @Column(nullable = false, length = 50)
     private String city;
 
-    @NotBlank @Size(max = 50)
+    @NotBlank
+    @Size(max = 50)
     @Column(nullable = false, length = 50)
     private String street;
 
-    @NotBlank @Size(max = 10)
+    @NotBlank
+    @Size(max = 10)
     @Column(nullable = false, length = 10)
     private String zipcode;
 

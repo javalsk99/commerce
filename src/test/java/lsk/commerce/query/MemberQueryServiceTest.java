@@ -9,6 +9,7 @@ import lsk.commerce.domain.Payment;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.response.MemberResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
@@ -127,27 +128,14 @@ class MemberQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryService.searchMembers(cond);
+                List<MemberResponse> memberResponseList = memberQueryService.searchMembers(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                thenSoftly(softly -> {
-                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().orderQueryDtoList())).isTrue();
-                    softly.then(Hibernate.isInitialized(memberQueryDtoList.getFirst().orderQueryDtoList().getFirst().orderProductQueryDtoList())).isTrue();
-                    softly.then(memberQueryDtoList)
-                            .hasSize(3)
-                            .flatExtracting("orderQueryDtoList")
-                            .hasSize(8)
-                            .flatExtracting("orderProductQueryDtoList")
-                            .hasSize(16)
-                            .extracting("name")
-                            .containsExactlyInAnyOrder(
-                                    "BANG BANG", "Blue Valentine", "404", "타임 캡슐", "너의 모든 순간", "천상연",
-                                    "자바 ORM 표준 JPA 프로그래밍", "면접을 위한 CS 전공지식 노트", "Do it! 점프 투 파이썬", "범죄도시",
-                                    "범죄도시2", "범죄도시3", "범죄도시4", "BANG BANG", "Blue Valentine", "자바 ORM 표준 JPA 프로그래밍"
-                            );
-                });
+                then(memberResponseList)
+                        .extracting("loginId")
+                        .containsExactlyInAnyOrder("id_A", "id_B", "id_C");
             }
 
             @Test
@@ -158,19 +146,15 @@ class MemberQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryService.searchMembers(cond);
+                List<MemberResponse> memberResponseList = memberQueryService.searchMembers(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                then(memberQueryDtoList)
-                        .hasSize(1)
-                        .flatExtracting("orderQueryDtoList")
-                        .hasSize(1)
-                        .flatExtracting("orderProductQueryDtoList")
-                        .hasSize(1)
-                        .extracting("name")
-                        .containsExactlyInAnyOrder("Blue Valentine");
+                thenSoftly(softly -> {
+                    softly.then(memberResponseList).hasSize(1);
+                    softly.then(memberResponseList.getFirst().loginId()).isEqualTo("id_B");
+                });
             }
 
             @Test
@@ -181,12 +165,12 @@ class MemberQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<MemberQueryDto> memberQueryDtoList = memberQueryService.searchMembers(cond);
+                List<MemberResponse> memberResponseList = memberQueryService.searchMembers(cond);
 
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                then(memberQueryDtoList).isEmpty();
+                then(memberResponseList).isEmpty();
             }
         }
     }

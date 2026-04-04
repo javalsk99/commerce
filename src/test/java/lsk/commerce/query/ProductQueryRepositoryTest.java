@@ -5,7 +5,6 @@ import lsk.commerce.domain.Category;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
-import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.query.dto.ProductSearchCond;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,8 +24,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.BDDAssertions.tuple;
-import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @DataJpaTest(showSql = false)

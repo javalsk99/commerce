@@ -3,6 +3,7 @@ package lsk.commerce.domain;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
+import lsk.commerce.dto.request.OrderProductRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.BDDAssertions.entry;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
@@ -78,7 +77,7 @@ class OrderTest {
                     softly.then(createdOrder.getMember().getAddress()).isEqualTo(createdOrder.getDelivery().getAddress());
                     softly.then(createdOrder.getOrderProducts())
                             .isNotEmpty()
-                            .extracting("order", "product", "orderPrice", "count")
+                            .extracting("order", "product", "orderPrice", "quantity")
                             .containsExactlyInAnyOrder(tuple(createdOrder, album, 75000, 5), tuple(createdOrder, book, 45000, 3));
                     softly.then(createdOrder.getTotalAmount()).isEqualTo(120000);
                 });
@@ -241,7 +240,7 @@ class OrderTest {
     }
 
     @Nested
-    class GetOrderProductAsMap extends Setup {
+    class IsSameOrderProducts extends Setup {
 
         @Nested
         class SuccessCase {
@@ -249,16 +248,15 @@ class OrderTest {
             @Test
             void basic() {
                 //given
-                String productNumber1 = album.getProductNumber();
-                String productNumber2 = book.getProductNumber();
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(album.getProductNumber(), 5);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(book.getProductNumber(), 3);
+                List<OrderProductRequest> orderProductRequestList = List.of(orderProductRequest1, orderProductRequest2);
 
                 //when
-                Map<String, Integer> orderProductsAsMap = order.getOrderProductsAsMap();
+                boolean result = order.isSameOrderProducts(orderProductRequestList);
 
                 //then
-                then(orderProductsAsMap)
-                        .hasSize(2)
-                        .containsOnly(entry(productNumber1, 5), entry(productNumber2, 3));
+                then(result).isTrue();
             }
         }
     }
@@ -284,7 +282,7 @@ class OrderTest {
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts())
                             .isNotEmpty()
-                            .extracting("product", "orderPrice", "count")
+                            .extracting("product", "orderPrice", "quantity")
                             .containsExactlyInAnyOrder(tuple(movie, 30000, 2), tuple(album, 30000, 2));
                     softly.then(order.getTotalAmount()).isEqualTo(60000);
                 });

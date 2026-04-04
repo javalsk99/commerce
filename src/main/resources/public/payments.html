@@ -106,7 +106,7 @@
         productListContainer.innerHTML = ""
 
         orderPaymentResponse.orderProductDtoList.forEach((product, index) => {
-          totalAmount += product.price * product.count;
+          totalAmount += product.price * product.quantity;
 
           if (index === 0) orderName = product.name;
 
@@ -114,7 +114,7 @@
             <div class="orderProductDtoList-product" style="min-width: 120px; flex: 0 0 auto; text-align: center;">
                 <img src="/${product.name}.png" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" />
                 <h6 style="margin: 5px 0;">${product.name}</h6>
-                <p style="font-size: 0.8rem;">${product.price.toLocaleString()}원 / ${product.count}개</p>
+                <p style="font-size: 0.8rem;">${product.price.toLocaleString()}원 / ${product.quantity}개</p>
             </div>
           `
           productListContainer.insertAdjacentHTML('beforeend', productHtml)

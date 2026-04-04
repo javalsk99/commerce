@@ -19,7 +19,7 @@ public class OrderProductJdbcRepository {
             return;
         }
 
-        String sql = "INSERT INTO order_product (order_id, product_id, count, order_price, deleted)" +
+        String sql = "INSERT INTO order_product (order_id, product_id, quantity, order_price, deleted)" +
                 " VALUES (?, ?, ?, ?, ?)";
 
         for (int i = 0; i < orderProducts.size(); i += BATCH_SIZE) {
@@ -28,7 +28,7 @@ public class OrderProductJdbcRepository {
             jdbcTemplate.batchUpdate(sql, batchList, batchList.size(), (ps, orderProduct) -> {
                 ps.setLong(1, orderProduct.getOrder().getId());
                 ps.setLong(2, orderProduct.getProduct().getId());
-                ps.setInt(3, orderProduct.getCount());
+                ps.setInt(3, orderProduct.getQuantity());
                 ps.setInt(4, orderProduct.getOrderPrice());
                 ps.setBoolean(5, orderProduct.isDeleted());
             });

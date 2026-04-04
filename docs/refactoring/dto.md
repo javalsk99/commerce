@@ -83,7 +83,6 @@
   컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.
 
 
-- OrderResponse
 - OrderProductDto
 
 
@@ -105,4 +104,20 @@
 
 - ProductResponse  
   검색 결과를 간략하게 반환하기 위해 생성했다.
+
+
+- OrderCreateRequest, OrderChangeRequest  
+  받기 힘든 Map에서 공통으로 사용하는 DTO OrderProductRequest를 생성해 리스트로 받는 것으로 변경했다.
+
+
+- OrderSearchResponse  
+  주문 검색 결과를 간략하게 반환하기 위해 생성했다.
+
+
+- OrderChangeResponse  
+  주문 수정 결과를 간략하게 반환하기 위해 OrderResponse에서 변경했다.
+
+
+- OrderCancelResponse  
+  주문 취소 결과를 간략하게 반환하게 위해 생성했다.
 

@@ -13,7 +13,10 @@ import lsk.commerce.domain.product.Album;
 import lsk.commerce.dto.OrderProductDto;
 import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
-import lsk.commerce.dto.response.OrderResponse;
+import lsk.commerce.dto.request.OrderProductRequest;
+import lsk.commerce.dto.response.OrderCancelResponse;
+import lsk.commerce.dto.response.OrderChangeResponse;
+import lsk.commerce.dto.response.OrderSearchResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.GlobalExceptionHandler;
 import lsk.commerce.query.OrderQueryService;
@@ -40,10 +43,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -112,10 +113,11 @@ class OrderControllerTest {
                 //given
                 Album album1 = createAlbum1("BANG BANG");
                 Album album2 = createAlbum1("BLACKHOLE");
-                String productNumber1 = album1.getProductNumber();
-                String productNumber2 = album2.getProductNumber();
 
-                OrderCreateRequest request = new OrderCreateRequest(Map.of(productNumber1, 3, productNumber2, 2));
+                OrderProductRequest orderProductRequest1 = new OrderProductRequest(album1.getProductNumber(), 3);
+                OrderProductRequest orderProductRequest2 = new OrderProductRequest(album2.getProductNumber(), 2);
+                List<OrderProductRequest> orderProductRequestList = List.of(orderProductRequest1, orderProductRequest2);
+                OrderCreateRequest request = new OrderCreateRequest(orderProductRequestList);
                 String json = objectMapper.writeValueAsString(request);
 
                 String orderNumber = "dn39chfus9cu";
@@ -161,7 +163,8 @@ class OrderControllerTest {
             @Test
             void order_Failed_ProductNotFound() throws Exception {
                 //given
-                OrderCreateRequest request = new OrderCreateRequest(Map.of("llIIllII00OO", 4));
+                OrderProductRequest orderProductRequest = new OrderProductRequest("llIIllII00OO", 4);
+                OrderCreateRequest request = new OrderCreateRequest(List.of(orderProductRequest));
                 String json = objectMapper.writeValueAsString(request);
 
                 given(orderService.order(any(OrderCreateRequest.class), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
@@ -182,18 +185,17 @@ class OrderControllerTest {
 
             static Stream<Arguments> invalidCreateRequestProvider() {
                 String productNumber = "fji36nc7xk3b";
-                Map<String, Integer> nullValueMap = new HashMap<>();
-                nullValueMap.put(productNumber, null);
 
                 return Stream.of(
-                        argumentSet("productMap null", new OrderCreateRequest(null)),
-                        argumentSet("productMap empty", new OrderCreateRequest(Collections.emptyMap())),
-                        argumentSet("productMap key 빈 문자열", new OrderCreateRequest(Map.of("", 3))),
-                        argumentSet("productMap key 공백", new OrderCreateRequest(Map.of(" ".repeat(12), 3))),
-                        argumentSet("productMap key 12자 미만", new OrderCreateRequest(Map.of("l".repeat(11), 3))),
-                        argumentSet("productMap key 12자 초과", new OrderCreateRequest(Map.of("l".repeat(13), 3))),
-                        argumentSet("productMap value null", new OrderCreateRequest(nullValueMap)),
-                        argumentSet("productMap value 100 초과", new OrderCreateRequest(Map.of(productNumber, 101)))
+                        argumentSet("OrderProductRequestList null", new OrderCreateRequest(null)),
+                        argumentSet("OrderProductRequestList empty", new OrderCreateRequest(Collections.emptyList())),
+                        argumentSet("productNumber 빈 문자열", new OrderCreateRequest(List.of(new OrderProductRequest(null, 3)))),
+                        argumentSet("productNumber 빈 문자열", new OrderCreateRequest(List.of(new OrderProductRequest("", 3)))),
+                        argumentSet("productNumber 공백", new OrderCreateRequest(List.of(new OrderProductRequest(" ".repeat(12), 3)))),
+                        argumentSet("productNumber 12자 미만", new OrderCreateRequest(List.of(new OrderProductRequest("l".repeat(11), 3)))),
+                        argumentSet("productNumber 12자 초과", new OrderCreateRequest(List.of(new OrderProductRequest("l".repeat(13), 3)))),
+                        argumentSet("quantity null", new OrderCreateRequest(List.of(new OrderProductRequest(productNumber, null)))),
+                        argumentSet("quantity 100 초과", new OrderCreateRequest(List.of(new OrderProductRequest(productNumber, 101))))
                 );
             }
         }
@@ -217,54 +219,27 @@ class OrderControllerTest {
                 cond.add("loginId", "a");
                 cond.add("orderStatus", OrderStatus.CREATED.name());
 
-                List<OrderQueryDto> orderQueryDtoList = getOrderQueryDtoList(orderNumber1, orderNumber2);
+                OrderSearchResponse orderSearchResponse1 = new OrderSearchResponse(orderNumber1, 115000, OrderStatus.CREATED);
+                OrderSearchResponse orderSearchResponse2 = new OrderSearchResponse(orderNumber2, 30000, OrderStatus.CREATED);
+                List<OrderSearchResponse> orderSearchResponseList = List.of(orderSearchResponse1, orderSearchResponse2);
 
-                given(orderQueryService.searchOrders(any(OrderSearchCond.class))).willReturn(orderQueryDtoList);
+                given(orderQueryService.searchOrders(any(OrderSearchCond.class))).willReturn(orderSearchResponseList);
 
                 //when & then
                 mvc.perform(get("/orders")
                                 .params(cond))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.data[0].loginId").doesNotExist())
                         .andExpect(jsonPath("$.data[0].orderNumber").value(orderNumber1))
-                        .andExpect(jsonPath("$.data[0].orderProductQueryDtoList[0].name").value("BANG BANG"))
-                        .andExpect(jsonPath("$.data[0].orderProductQueryDtoList[1].name").value("BLACKHOLE"))
+                        .andExpect(jsonPath("$.data[0].totalAmount").value(115000))
                         .andExpect(jsonPath("$.data[0].orderStatus").value(OrderStatus.CREATED.name()))
-                        .andExpect(jsonPath("$.data[0].deliveryStatus").value(DeliveryStatus.WAITING.name()))
-                        .andExpect(jsonPath("$.data[1].loginId").doesNotExist())
                         .andExpect(jsonPath("$.data[1].orderNumber").value(orderNumber2))
-                        .andExpect(jsonPath("$.data[1].orderProductQueryDtoList[0].name").value("타임 캡슐"))
+                        .andExpect(jsonPath("$.data[1].totalAmount").value(30000))
                         .andExpect(jsonPath("$.data[1].orderStatus").value(OrderStatus.CREATED.name()))
-                        .andExpect(jsonPath("$.data[1].deliveryStatus").value(DeliveryStatus.WAITING.name()))
                         .andExpect(jsonPath("$.count").value(2))
                         .andDo(print());
 
                 //then
                 then(orderQueryService).should().searchOrders(any(OrderSearchCond.class));
-            }
-
-            private static List<OrderQueryDto> getOrderQueryDtoList(String orderNumber1, String orderNumber2) {
-                OrderProductQueryDto orderProductQueryDto1 = new OrderProductQueryDto(orderNumber1, "BANG BANG", 15000, 3, 45000);
-                OrderProductQueryDto orderProductQueryDto2 = new OrderProductQueryDto(orderNumber1, "BLACKHOLE", 15000, 4, 60000);
-                OrderProductQueryDto orderProductQueryDto3 = new OrderProductQueryDto(orderNumber2, "타임 캡슐", 15000, 2, 30000);
-                OrderQueryDto orderQueryDto1 = OrderQueryDto.builder()
-                        .loginId("id_A")
-                        .orderNumber(orderNumber1)
-                        .orderProductQueryDtoList(List.of(orderProductQueryDto1, orderProductQueryDto2))
-                        .totalAmount(105000)
-                        .orderStatus(OrderStatus.CREATED)
-                        .deliveryStatus(DeliveryStatus.WAITING)
-                        .build();
-                OrderQueryDto orderQueryDto2 = OrderQueryDto.builder()
-                        .loginId("id_A")
-                        .orderNumber(orderNumber2)
-                        .orderProductQueryDtoList(List.of(orderProductQueryDto3))
-                        .totalAmount(30000)
-                        .orderStatus(OrderStatus.CREATED)
-                        .deliveryStatus(DeliveryStatus.WAITING)
-                        .build();
-
-                return List.of(orderQueryDto1, orderQueryDto2);
             }
 
             @Test
@@ -367,17 +342,17 @@ class OrderControllerTest {
             void basic() throws Exception {
                 //given
                 Album album = createAlbum1("BLACKHOLE");
-                String productNumber = album.getProductNumber();
-
-                OrderChangeRequest request = new OrderChangeRequest(Map.of(productNumber, 5));
+                OrderProductRequest orderProductRequest = new OrderProductRequest(album.getProductNumber(), 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest));
                 String json = objectMapper.writeValueAsString(request);
 
                 Order order = createOrder1(Map.of("BLACKHOLE", 5));
                 String orderNumber = order.getOrderNumber();
-                OrderResponse orderResponse = OrderResponse.from(order);
+                OrderProductDto orderProductDto = new OrderProductDto("BLACKHOLE", 15000, 5, 75000);
+                OrderChangeResponse orderChangeResponse = new OrderChangeResponse(List.of(orderProductDto), 75000);
 
                 given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
-                given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
+                given(orderService.getOrderChangeResponse(any(Order.class))).willReturn(orderChangeResponse);
 
                 //when & then
                 mvc.perform(patch("/orders/{orderNumber}", orderNumber)
@@ -386,17 +361,17 @@ class OrderControllerTest {
                                 .content(json))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.orderProductDtoList[0].name").value("BLACKHOLE"))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].price").value(15000))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].quantity").value(5))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].orderPrice").value(75000))
                         .andExpect(jsonPath("$.data.totalAmount").value(75000))
-                        .andExpect(jsonPath("$.data.orderStatus").value(OrderStatus.CREATED.name()))
-                        .andExpect(jsonPath("$.data.paymentStatus").value(nullValue()))
-                        .andExpect(jsonPath("$.data.deliveryStatus").value(DeliveryStatus.WAITING.name()))
                         .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should().changeOrder(orderNumber, request, "id_A"));
                     softly.check(() -> then(orderService).should().findOrderWithAllExceptMember(orderNumber));
-                    softly.check(() -> then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().getOrderChangeResponse(order));
                 });
             }
 
@@ -404,17 +379,17 @@ class OrderControllerTest {
             void idempotency() throws Exception {
                 //given
                 Album album = createAlbum1("BLACKHOLE");
-                String productNumber = album.getProductNumber();
-
-                OrderChangeRequest request = new OrderChangeRequest(Map.of(productNumber, 5));
+                OrderProductRequest orderProductRequest = new OrderProductRequest(album.getProductNumber(), 5);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest));
                 String json = objectMapper.writeValueAsString(request);
 
                 Order order = createOrder1(Map.of("BLACKHOLE", 5));
                 String orderNumber = order.getOrderNumber();
-                OrderResponse orderResponse = OrderResponse.from(order);
+                OrderProductDto orderProductDto = new OrderProductDto("BLACKHOLE", 15000, 5, 75000);
+                OrderChangeResponse orderChangeResponse = new OrderChangeResponse(List.of(orderProductDto), 75000);
 
                 given(orderService.findOrderWithAllExceptMember(anyString())).willReturn(order);
-                given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
+                given(orderService.getOrderChangeResponse(any(Order.class))).willReturn(orderChangeResponse);
 
                 //when & then 첫 번째 요청
                 mvc.perform(patch("/orders/{orderNumber}", orderNumber)
@@ -423,17 +398,17 @@ class OrderControllerTest {
                                 .content(json))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.orderProductDtoList[0].name").value("BLACKHOLE"))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].price").value(15000))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].quantity").value(5))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].orderPrice").value(75000))
                         .andExpect(jsonPath("$.data.totalAmount").value(75000))
-                        .andExpect(jsonPath("$.data.orderStatus").value(OrderStatus.CREATED.name()))
-                        .andExpect(jsonPath("$.data.paymentStatus").value(nullValue()))
-                        .andExpect(jsonPath("$.data.deliveryStatus").value(DeliveryStatus.WAITING.name()))
                         .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should().changeOrder(orderNumber, request, "id_A"));
                     softly.check(() -> then(orderService).should().findOrderWithAllExceptMember(orderNumber));
-                    softly.check(() -> then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().getOrderChangeResponse(order));
                 });
 
                 //when & then 두 번째 요청
@@ -443,17 +418,17 @@ class OrderControllerTest {
                                 .content(json))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.orderProductDtoList[0].name").value("BLACKHOLE"))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].price").value(15000))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].quantity").value(5))
+                        .andExpect(jsonPath("$.data.orderProductDtoList[0].orderPrice").value(75000))
                         .andExpect(jsonPath("$.data.totalAmount").value(75000))
-                        .andExpect(jsonPath("$.data.orderStatus").value(OrderStatus.CREATED.name()))
-                        .andExpect(jsonPath("$.data.paymentStatus").value(nullValue()))
-                        .andExpect(jsonPath("$.data.deliveryStatus").value(DeliveryStatus.WAITING.name()))
                         .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should(times(2)).changeOrder(orderNumber, request, "id_A"));
                     softly.check(() -> then(orderService).should(times(2)).findOrderWithAllExceptMember(orderNumber));
-                    softly.check(() -> then(orderService).should(times(2)).getOrderResponse(order));
+                    softly.check(() -> then(orderService).should(times(2)).getOrderChangeResponse(order));
                 });
             }
         }
@@ -482,7 +457,7 @@ class OrderControllerTest {
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should(never()).changeOrder(any(), any(), any()));
                     softly.check(() -> then(orderService).should(never()).findOrderWithAllExceptMember(any()));
-                    softly.check(() -> then(orderService).should(never()).getOrderResponse(any()));
+                    softly.check(() -> then(orderService).should(never()).getOrderChangeResponse(any()));
                 });
             }
 
@@ -491,8 +466,8 @@ class OrderControllerTest {
                 //given
                 Order order = createOrder1(Map.of("BANG BANG", 3, "BLACKHOLE", 4));
                 String orderNumber = order.getOrderNumber();
-
-                OrderChangeRequest request = new OrderChangeRequest(Map.of("lllIIIll00OO", 3));
+                OrderProductRequest orderProductRequest = new OrderProductRequest("lllIIIll00OO", 3);
+                OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest));
                 String json = objectMapper.writeValueAsString(request);
 
                 willThrow(new DataNotFoundException("존재하지 않는 상품입니다")).given(orderService).changeOrder(anyString(), any(OrderChangeRequest.class), anyString());
@@ -511,24 +486,23 @@ class OrderControllerTest {
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should().changeOrder(orderNumber, request, "id_A"));
                     softly.check(() -> then(orderService).should(never()).findOrderWithAllExceptMember(any()));
-                    softly.check(() -> then(orderService).should(never()).getOrderResponse(any()));
+                    softly.check(() -> then(orderService).should(never()).getOrderChangeResponse(any()));
                 });
             }
 
             static Stream<Arguments> invalidChangeRequestProvider() {
                 String productNumber = "fji36nc7xk3b";
-                Map<String, Integer> nullValueMap = new HashMap<>();
-                nullValueMap.put(productNumber, null);
 
                 return Stream.of(
-                        argumentSet("productMap null", new OrderChangeRequest(null)),
-                        argumentSet("productMap empty", new OrderChangeRequest(Collections.emptyMap())),
-                        argumentSet("productMap key 빈 문자열", new OrderChangeRequest(Map.of("", 3))),
-                        argumentSet("productMap key 공백", new OrderChangeRequest(Map.of(" ".repeat(12), 3))),
-                        argumentSet("productMap key 12자 미만", new OrderChangeRequest(Map.of("l".repeat(11), 3))),
-                        argumentSet("productMap key 12자 초과", new OrderChangeRequest(Map.of("l".repeat(13), 3))),
-                        argumentSet("productMap value null", new OrderChangeRequest(nullValueMap)),
-                        argumentSet("productMap value 100 초과", new OrderChangeRequest(Map.of(productNumber, 101)))
+                        argumentSet("OrderProductRequestList null", new OrderChangeRequest(null)),
+                        argumentSet("OrderProductRequestList empty", new OrderChangeRequest(Collections.emptyList())),
+                        argumentSet("productNumber 빈 문자열", new OrderChangeRequest(List.of(new OrderProductRequest(null, 3)))),
+                        argumentSet("productNumber 빈 문자열", new OrderChangeRequest(List.of(new OrderProductRequest("", 3)))),
+                        argumentSet("productNumber 공백", new OrderChangeRequest(List.of(new OrderProductRequest(" ".repeat(12), 3)))),
+                        argumentSet("productNumber 12자 미만", new OrderChangeRequest(List.of(new OrderProductRequest("l".repeat(11), 3)))),
+                        argumentSet("productNumber 12자 초과", new OrderChangeRequest(List.of(new OrderProductRequest("l".repeat(13), 3)))),
+                        argumentSet("quantity null", new OrderChangeRequest(List.of(new OrderProductRequest(productNumber, null)))),
+                        argumentSet("quantity 100 초과", new OrderChangeRequest(List.of(new OrderProductRequest(productNumber, 101))))
                 );
             }
         }
@@ -597,11 +571,10 @@ class OrderControllerTest {
                 //given
                 Order order = createOrder1(Map.of("BANG BANG", 3, "BLACKHOLE", 4));
                 String orderNumber = order.getOrderNumber();
-
-                OrderResponse orderResponse = getOrderResponseHasNoPayment();
+                OrderCancelResponse orderCancelResponse = new OrderCancelResponse(OrderStatus.CANCELED, null, DeliveryStatus.CANCELED);
 
                 given(orderService.cancelOrder(anyString(), anyString())).willReturn(order);
-                given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
+                given(orderService.getOrderCancelResponse(any(Order.class))).willReturn(orderCancelResponse);
 
                 //when & then
                 mvc.perform(patch("/orders/{orderNumber}/cancel", orderNumber))
@@ -615,7 +588,7 @@ class OrderControllerTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should().cancelOrder(orderNumber, "id_A"));
-                    softly.check(() -> then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().getOrderCancelResponse(order));
                 });
             }
 
@@ -624,11 +597,10 @@ class OrderControllerTest {
                 //given
                 Order order = createOrder1(Map.of("BANG BANG", 3, "BLACKHOLE", 4));
                 String orderNumber = order.getOrderNumber();
-
-                OrderResponse orderResponse = getOrderResponseHasPayment();
+                OrderCancelResponse orderCancelResponse = new OrderCancelResponse(OrderStatus.CANCELED, PaymentStatus.CANCELED, DeliveryStatus.CANCELED);
 
                 given(orderService.cancelOrder(anyString(), anyString())).willReturn(order);
-                given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
+                given(orderService.getOrderCancelResponse(any(Order.class))).willReturn(orderCancelResponse);
 
                 //when & then
                 mvc.perform(patch("/orders/{orderNumber}/cancel", orderNumber))
@@ -642,7 +614,7 @@ class OrderControllerTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should().cancelOrder(orderNumber, "id_A"));
-                    softly.check(() -> then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().getOrderCancelResponse(order));
                 });
             }
 
@@ -651,11 +623,10 @@ class OrderControllerTest {
                 //given
                 Order order = createOrder1(Map.of("BANG BANG", 3, "BLACKHOLE", 4));
                 String orderNumber = order.getOrderNumber();
-
-                OrderResponse orderResponse = getOrderResponseHasPayment();
+                OrderCancelResponse orderCancelResponse = new OrderCancelResponse(OrderStatus.CANCELED, PaymentStatus.CANCELED, DeliveryStatus.CANCELED);
 
                 given(orderService.cancelOrder(anyString(), anyString())).willReturn(order);
-                given(orderService.getOrderResponse(any(Order.class))).willReturn(orderResponse);
+                given(orderService.getOrderCancelResponse(any(Order.class))).willReturn(orderCancelResponse);
 
                 //when & then 첫 번째 요청
                 mvc.perform(patch("/orders/{orderNumber}/cancel", orderNumber))
@@ -669,7 +640,7 @@ class OrderControllerTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should().cancelOrder(orderNumber, "id_A"));
-                    softly.check(() -> then(orderService).should().getOrderResponse(order));
+                    softly.check(() -> then(orderService).should().getOrderCancelResponse(order));
                 });
 
                 //when & then 두 번째 요청
@@ -684,23 +655,9 @@ class OrderControllerTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> then(orderService).should(times(2)).cancelOrder(orderNumber, "id_A"));
-                    softly.check(() -> then(orderService).should(times(2)).getOrderResponse(order));
+                    softly.check(() -> then(orderService).should(times(2)).getOrderCancelResponse(order));
                 });
             }
-        }
-
-        private static OrderResponse getOrderResponseHasNoPayment() {
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 3, 45000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("BLACKHOLE", 15000, 4, 60000);
-            return new OrderResponse(List.of(orderProductDto1, orderProductDto2), 105000, OrderStatus.CANCELED, LocalDateTime.now(),
-                    null, null, DeliveryStatus.CANCELED, null, null);
-        }
-
-        private static OrderResponse getOrderResponseHasPayment() {
-            OrderProductDto orderProductDto1 = new OrderProductDto("BANG BANG", 15000, 3, 45000);
-            OrderProductDto orderProductDto2 = new OrderProductDto("BLACKHOLE", 15000, 4, 60000);
-            return new OrderResponse(List.of(orderProductDto1, orderProductDto2), 105000, OrderStatus.CANCELED, LocalDateTime.now(),
-                    PaymentStatus.CANCELED, null, DeliveryStatus.CANCELED, null, null);
         }
     }
 
