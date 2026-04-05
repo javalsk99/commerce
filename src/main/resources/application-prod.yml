@@ -5,18 +5,26 @@ spring:
     url: jdbc:mysql://${RDS_ENDPOINT}:3306/commerce?useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
     username: ${USER_NAME}
     password: ${USER_PASSWORD}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 15
+      connection-timeout: 10000
+      max-lifetime: 1740000
 
 # JPA
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         default_batch_fetch_size: 100
         jdbc:
           batch_size: 100
         order_updates: true
+    mvc:
+      async:
+        request-timeout: 30000
 
 # log
 logging:

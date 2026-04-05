@@ -1,6 +1,9 @@
 package lsk.commerce.integration;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
+import jakarta.servlet.http.Cookie;
 import lsk.commerce.domain.DeliveryStatus;
 import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
@@ -25,26 +28,36 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class IntegrationTest {
 
     @Autowired
-    WebTestClient client;
+    MockMvc mvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -113,24 +126,23 @@ public class IntegrationTest {
 
             @Test
             @DisplayName("토큰이 있고 본인인 경우 비밀번호 변경은 성공한다")
-            void shouldChangePassword_WhenHasToken() {
+            void shouldChangePassword_WhenHasToken() throws Exception {
                 //given
                 MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
+                String json = objectMapper.writeValueAsString(request);
 
                 System.out.println("================= WHEN START =================");
 
                 //when & then
-                client.post().uri("/members/{memberLoginId}/password", "id_A")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .bodyValue(request)
-                        .cookie("jjwt", token)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.data").isEqualTo("비밀번호가 변경되었습니다")
-                        .jsonPath("$.count").isEqualTo(1)
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/members/{memberLoginId}/password", "id_A")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json)
+                                .cookie(new Cookie("jjwt", token)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data").value("비밀번호가 변경되었습니다"))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
 
                 System.out.println("================= WHEN END ===================");
 
@@ -147,54 +159,52 @@ public class IntegrationTest {
 
             @Test
             @DisplayName("토큰이 없는 경우 401 에러가 발생한다")
-            void shouldFailToChange_WhenHasNoToken() {
+            void shouldFailToChange_WhenHasNoToken() throws Exception {
                 //given
                 MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
+                String json = objectMapper.writeValueAsString(request);
 
                 System.out.println("================= WHEN START =================");
 
                 //when & then
-                client.post().uri("/members/{memberLoginId}/password", "id_A")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .bodyValue(request)
-                        .exchange()
-                        .expectStatus().isUnauthorized()
-                        .expectBody()
-                        .jsonPath("$.code").isEqualTo("UNAUTHORIZED")
-                        .jsonPath("$.message").isEqualTo("로그인을 해야 접근할 수 있습니다")
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/members/{memberLoginId}/password", "id_A")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json))
+                        .andExpect(status().isUnauthorized())
+                        .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+                        .andExpect(jsonPath("$.message").value("로그인을 해야 접근할 수 있습니다"))
+                        .andDo(print());
 
                 System.out.println("================= WHEN END ===================");
             }
 
             @Test
             @DisplayName("토큰이 있어도 본인이 아닌 경우 403 에러가 발생한다")
-            void shouldFailToChange_WhenMemberIsNotOwner() {
+            void shouldFailToChange_WhenMemberIsNotOwner() throws Exception {
                 //given
                 MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
+                String json = objectMapper.writeValueAsString(request);
 
                 System.out.println("================= WHEN START =================");
 
                 //when & then
-                client.post().uri("/members/{memberLoginId}/password", "id_B")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .bodyValue(request)
-                        .cookie("jjwt", token)
-                        .exchange()
-                        .expectStatus().isForbidden()
-                        .expectBody()
-                        .jsonPath("$.code").isEqualTo("NOT_RESOURCE_OWNER")
-                        .jsonPath("$.message").isEqualTo("아이디의 주인이 아닙니다")
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/members/{memberLoginId}/password", "id_B")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json)
+                                .cookie(new Cookie("jjwt", token)))
+                        .andExpect(status().isForbidden())
+                        .andExpect(jsonPath("$.code").value("NOT_RESOURCE_OWNER"))
+                        .andExpect(jsonPath("$.message").value("아이디의 주인이 아닙니다"))
+                        .andDo(print());
 
                 System.out.println("================= WHEN END ===================");
             }
 
             @Test
             @DisplayName("토큰이 있어도 관리자가 아닌 경우 403 에러가 발생한다")
-            void shouldFailToSearch_WhenMemberIsNotAdmin() {
+            void shouldFailToSearch_WhenMemberIsNotAdmin() throws Exception {
                 //given
                 MultiValueMap<String, String> cond = new LinkedMultiValueMap<>();
                 cond.add("name", "User");
@@ -203,17 +213,13 @@ public class IntegrationTest {
                 System.out.println("================= WHEN START =================");
 
                 //when & then
-                client.get().uri(uriBuilder -> uriBuilder
-                                .path("/members")
+                mvc.perform(get("/members")
                                 .queryParams(cond)
-                                .build())
-                        .cookie("jjwt", token)
-                        .exchange()
-                        .expectStatus().isForbidden()
-                        .expectBody()
-                        .jsonPath("$.code").isEqualTo("FORBIDDEN")
-                        .jsonPath("$.message").isEqualTo("관리자만 접근할 수 있습니다")
-                        .consumeWith(System.out::println);
+                                .cookie(new Cookie("jjwt", token)))
+                        .andExpect(status().isForbidden())
+                        .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                        .andExpect(jsonPath("$.message").value("관리자만 접근할 수 있습니다"))
+                        .andDo(print());
 
                 System.out.println("================= WHEN END ===================");
             }
@@ -256,32 +262,33 @@ public class IntegrationTest {
 
             @Test
             @DisplayName("주문 생성 후 결제 요청 흐름")
-            void CreateOrderAndRequestPayment() {
+            void CreateOrderAndRequestPayment() throws Exception {
                 //given
                 OrderProductRequest orderProductRequest1 = new OrderProductRequest(albumNumber1, 3);
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(albumNumber2, 2);
                 OrderCreateRequest createRequest = new OrderCreateRequest(List.of(orderProductRequest1, orderProductRequest2));
+                String json = objectMapper.writeValueAsString(createRequest);
 
                 System.out.println("============== FIRST WHEN START ==============");
 
                 //when & then 주문 생성
-                Result<String> body = client.post().uri("/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .bodyValue(createRequest)
-                        .cookie("jjwt", token)
-                        .exchange()
-                        .expectStatus().isCreated()
-                        .expectBody(new ParameterizedTypeReference<Result<String>>() {
-                        })
-                        .consumeWith(System.out::println)
-                        .returnResult()
-                        .getResponseBody();
+                String body = mvc.perform(post("/orders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json)
+                                .cookie(new Cookie("jjwt", token)))
+                        .andExpect(status().isCreated())
+                        .andDo(print())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString(StandardCharsets.UTF_8);
 
                 System.out.println("============== FIRST WHEN END ================");
 
                 //then
-                String orderNumber = body.data();
+                Result<String> result = objectMapper.readValue(body, new TypeReference<Result<String>>() {
+                });
+                String orderNumber = result.data();
                 Order createdOrder = orderRepository.findWithAll(orderNumber)
                         .orElseThrow(() -> new AssertionError("주문이 저장되지 않았습니다"));
 
@@ -300,17 +307,15 @@ public class IntegrationTest {
                 System.out.println("============== SECOND WHEN START ==============");
 
                 //when & then 결제 요청
-                client.post().uri("/payments/orders/{orderNumber}", orderNumber)
-                        .cookie("jjwt", token)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.data.totalAmount").isEqualTo(75000)
-                        .jsonPath("$.data.paymentStatus").isEqualTo(PaymentStatus.PENDING.name())
-                        .jsonPath("$.data.orderStatus").isEqualTo(OrderStatus.CREATED.name())
-                        .jsonPath("$.data.deliveryStatus").isEqualTo(DeliveryStatus.WAITING.name())
-                        .jsonPath("$.count").isEqualTo(1)
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/payments/orders/{orderNumber}", orderNumber)
+                                .cookie(new Cookie("jjwt", token)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.totalAmount").value(75000))
+                        .andExpect(jsonPath("$.data.paymentStatus").value(PaymentStatus.PENDING.name()))
+                        .andExpect(jsonPath("$.data.orderStatus").value(OrderStatus.CREATED.name()))
+                        .andExpect(jsonPath("$.data.deliveryStatus").value(DeliveryStatus.WAITING.name()))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
 
                 System.out.println("============== SECOND WHEN END ================");
 

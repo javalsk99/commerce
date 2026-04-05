@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "05. 주문", description = "생성, 검색, 수정, 삭제, 취소")
+@Tag(name = "05. 주문", description = "결제 테스트 진행을 위해 주문을 **생성**한 후, 응답으로 받은 **주문 번호**를 복사하여 다음 단계에서 활용하세요.")
 @RestController
 @RequiredArgsConstructor
 public class OrderController {
@@ -43,8 +43,7 @@ public class OrderController {
     @Operation(
             summary = "주문 생성",
             description = "**상품 번호**와 주문할 **수량**을 입력해 주세요. \n\n" +
-                    "주문할 상품은 한 가지 이상 넣어주세요. \n\n" +
-                    "결제 테스트 진행을 위해 주문을 생성한 후, 응답으로 받은 **주문 번호**를 복사하여 다음 단계에서 활용하세요."
+                    "주문할 상품은 한 가지 이상 넣어주세요."
     )
     @PostMapping("/orders")
     public ResponseEntity<Result<String>> create(
@@ -70,15 +69,17 @@ public class OrderController {
 
     @Operation(
             summary = "주문 상세 조회",
-            description = "**관리자**만 조회할 수 있습니다. \n\n" +
+            description = "**본인**만 조회할 수 있습니다. \n\n" +
                     "주문의 상세 정보를 조회합니다."
     )
     @GetMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderQueryDto>> findOrder(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
-            @PathVariable("orderNumber") String orderNumber
+            @PathVariable("orderNumber") String orderNumber,
+            @Parameter(hidden = true)
+            @Login String loginId
     ) {
-        OrderQueryDto orderQueryDto = orderQueryService.findOrder(orderNumber);
+        OrderQueryDto orderQueryDto = orderQueryService.findOrder(orderNumber, loginId);
         return ResponseEntity.ok(new Result<>(orderQueryDto, 1));
     }
 

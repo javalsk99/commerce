@@ -15,7 +15,6 @@ import lsk.commerce.dto.response.QOrderSearchResponse;
 import lsk.commerce.query.dto.OrderProductQueryDto;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
-import lsk.commerce.query.dto.QOrderQueryDto;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -48,7 +47,7 @@ public class OrderQueryRepository {
 
     protected Optional<OrderQueryDto> findOrderByOrderNumber(String orderNumber) {
         return em.createQuery(
-                        "select new lsk.commerce.query.dto.OrderQueryDto(o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
+                        "select new lsk.commerce.query.dto.OrderQueryDto(o.member.loginId, o.orderNumber, o.totalAmount, o.orderStatus, o.orderDate, pay.paymentStatus, pay.paymentDate, d.deliveryStatus, d.shippedDate, d.deliveredDate)" +
                                 " from Order o" +
                                 " left join o.payment pay" +
                                 " join o.delivery d" +

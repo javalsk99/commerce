@@ -29,7 +29,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
-@Tag(name = "06. 결제", description = "요청")
+@Tag(
+        name = "06. 결제",
+        description = "요청이 완료된 주문은 https://lsk-commerce.shop/payments/{orderNumber}에서 결제를 진행해 주세요. \n\n" +
+                "테스트 결제라서 실제 돈이 결제되지 않습니다."
+)
 @RestController
 @RequiredArgsConstructor
 public class PaymentController {
@@ -44,9 +48,8 @@ public class PaymentController {
             description = "**주문의 주인**만 결제 요청할 수 있습니다. \n\n" +
                     "주문의 주인이 아니면 관리자도 요청할 수 없습니다. \n\n" +
                     "예시 주문은 주인이 아니어도 요청되지 않고 성공합니다. \n\n" +
-                    "**취소된 주문**은 요청할 수 없습니다. \n\n" +
-                    "요청이 완료된 주문은 https://lsk-commerce.shop/payments/{orderNumber}에서 결제를 진행해 주세요. \n\n" +
-                    "테스트 결제라서 실제 돈이 결제되지 않습니다."
+                    "**취소된 주문**은 요청할 수 없습니다."
+
     )
     @PostMapping("/payments/orders/{orderNumber}")
     public ResponseEntity<Result<PaymentResponse>> requestPayment(

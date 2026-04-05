@@ -266,7 +266,7 @@ class OrderControllerTest {
     }
 
     @Nested
-    class FindOrder {
+    class FindOrder extends SetUp {
 
         @Nested
         class SuccessCase {
@@ -279,7 +279,7 @@ class OrderControllerTest {
 
                 OrderQueryDto orderQueryDto = getOrderQueryDto(orderNumber);
 
-                given(orderQueryService.findOrder(orderNumber)).willReturn(orderQueryDto);
+                given(orderQueryService.findOrder(anyString(), anyString())).willReturn(orderQueryDto);
 
                 //when & then
                 mvc.perform(get("/orders/{orderNumber}", orderNumber))
@@ -293,7 +293,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                then(orderQueryService).should().findOrder(orderNumber);
+                then(orderQueryService).should().findOrder(orderNumber, "id_A");
             }
 
             private static OrderQueryDto getOrderQueryDto(String orderNumber) {
@@ -317,7 +317,7 @@ class OrderControllerTest {
             @Test
             void findOrder_Failed_OrderNotFound() throws Exception {
                 //given
-                given(orderQueryService.findOrder(anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다"));
+                given(orderQueryService.findOrder(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다"));
 
                 //when & then
                 mvc.perform(get("/orders/{orderNumber}", "lllIIIll00OO"))
@@ -327,7 +327,7 @@ class OrderControllerTest {
                         .andDo(print());
 
                 //then
-                then(orderQueryService).should().findOrder("lllIIIll00OO");
+                then(orderQueryService).should().findOrder("lllIIIll00OO", "id_A");
             }
         }
     }

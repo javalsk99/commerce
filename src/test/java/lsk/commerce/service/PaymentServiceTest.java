@@ -278,8 +278,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(singleOrder, List.of(orderProductDto));
 
-                String orderName = givenOrderNameAndAmount(singleOrder, orderPaymentResponse);
-                paidPaymentToString(orderName);
+                givenOrderNameAndAmount(singleOrder, orderPaymentResponse);
 
                 givenCompletePayment(singleOrder);
 
@@ -321,8 +320,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
-                String orderName = givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
-                paidPaymentToString(orderName);
+                givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
 
                 givenCompletePayment(multipleOrder);
 
@@ -572,8 +570,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(notRequestOrder, List.of(orderProductDto1, orderProductDto2));
 
-                String orderName = givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
-                paidPaymentToString(orderName);
+                givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
 
                 given(paidPayment.getId()).willReturn(wrongPaymentId);
                 given(paymentRepository.findWithOrderDelivery(anyString())).willReturn(Optional.empty());
@@ -604,8 +601,7 @@ class PaymentServiceTest {
 
                 findOrderAndProducts(multipleOrder, List.of(orderProductDto1, orderProductDto2));
 
-                String orderName = givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
-                paidPaymentToString(orderName);
+                givenOrderNameAndAmount(multipleOrder, orderPaymentResponse);
 
                 String paymentId = multipleOrder.getPayment().getPaymentId();
                 given(paidPayment.getId()).willReturn(paymentId);
@@ -644,7 +640,7 @@ class PaymentServiceTest {
             given(productService.findProducts()).willReturn(List.of(album, book, movie));
         }
 
-        private String givenOrderNameAndAmount(Order order, OrderPaymentResponse response) {
+        private void givenOrderNameAndAmount(Order order, OrderPaymentResponse response) {
             given(paidPayment.getAmount().getTotal()).willReturn(order.getTotalAmount().longValue());
             given(response.totalAmount()).willReturn(order.getTotalAmount());
 
@@ -656,12 +652,6 @@ class PaymentServiceTest {
             }
 
             given(paidPayment.getOrderName()).willReturn(orderName);
-            return orderName;
-        }
-
-        private void paidPaymentToString(String orderName) {
-            long total = paidPayment.getAmount().getTotal();
-            given(paidPayment.toString()).willReturn("orderName = " + orderName + ", total = " + total);
         }
     }
 

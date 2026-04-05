@@ -10,6 +10,7 @@ import lsk.commerce.exception.NotAdminException;
 import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.util.JwtProvider;
 import lsk.commerce.util.NanoIdProvider;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
@@ -27,6 +28,9 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
         log.info("인증 체크 인터셉터 실행 [{}]{}", method, requestURI);
+        if (HttpMethod.OPTIONS.matches(method)) {
+            return true;
+        }
 
         if (!(handler instanceof HandlerMethod)) {
             if (requestURI.equals("/payments.html")) {
@@ -106,6 +110,6 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        return requestURI.startsWith("/orders") && "GET".equalsIgnoreCase(method);
+        return requestURI.equals("/orders") && "GET".equalsIgnoreCase(method);
     }
 }

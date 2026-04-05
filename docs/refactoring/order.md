@@ -22,6 +22,10 @@
   @Login으로 loginId을 쿠키에서 꺼내서 OrderService로 보낸다.
 
 
+- findOrder  
+  관리자만 조회 가능에서 주문의 주인만 조회 가능으로 변경했다.
+
+
 ## OrderService
 - order, changeOrder  
   파라미터를 DTO로 변경했다.  
@@ -65,3 +69,7 @@
 ## OrderQueryRepository
 - search  
   반환을 간략하게 변경했다.
+
+
+- findOrderByOrderNumber  
+  주문의 주인인지 검증하기 위해 loginId를 같이 조회한다.

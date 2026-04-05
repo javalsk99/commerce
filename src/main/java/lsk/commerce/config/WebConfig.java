@@ -1,6 +1,6 @@
 package lsk.commerce.config;
 
-import lsk.commerce.argumentresolver.LoginMvcArgumentResolver;
+import lsk.commerce.argumentresolver.LoginArgumentResolver;
 import lsk.commerce.interceptor.LoginCheckInterceptor;
 import lsk.commerce.util.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +28,13 @@ public class WebConfig implements WebMvcConfigurer {
                         "/", "/error",
                         "/login", "/logout", "/web/login",
                         "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs.yaml", "/webjars/**", "/swagger-resources/**",
-                        "/css/**", "/*.ico", "/*.png"
+                        "/payments.css", "/css/**", "/*.ico", "/*.png"
                 );
     }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(new LoginMvcArgumentResolver(jwtProvider));
+        resolvers.add(new LoginArgumentResolver(jwtProvider));
     }
 
     @Override

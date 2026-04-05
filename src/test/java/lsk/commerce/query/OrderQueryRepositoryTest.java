@@ -85,10 +85,10 @@ class OrderQueryRepositoryTest {
                     softly.then(orderQueryDto).isPresent();
                     softly.then(orderQueryDto.get().orderProductQueryDtoList()).isEmpty();
                     softly.then(orderQueryDto.get())
-                            .extracting("totalAmount", "orderStatus", "deliveryStatus")
-                            .containsExactly(105000, OrderStatus.CREATED, DeliveryStatus.WAITING);
+                            .extracting("loginId", "totalAmount", "orderStatus", "deliveryStatus")
+                            .containsExactly("id_A", 105000, OrderStatus.CREATED, DeliveryStatus.WAITING);
                     softly.then(orderQueryDto.get())
-                            .extracting("loginId", "paymentStatus", "paymentDate", "shippedDate", "deliveredDate")
+                            .extracting("paymentStatus", "paymentDate", "shippedDate", "deliveredDate")
                             .containsOnlyNulls();
                 });
             }
@@ -107,10 +107,10 @@ class OrderQueryRepositoryTest {
                     softly.then(orderQueryDto).isPresent();
                     softly.then(orderQueryDto.get().orderProductQueryDtoList()).isEmpty();
                     softly.then(orderQueryDto.get())
-                            .extracting("totalAmount", "orderStatus", "paymentStatus", "deliveryStatus")
-                            .containsExactly(30000, OrderStatus.CREATED, PaymentStatus.PENDING, DeliveryStatus.WAITING);
+                            .extracting("loginId", "totalAmount", "orderStatus", "paymentStatus", "deliveryStatus")
+                            .containsExactly("id_B", 30000, OrderStatus.CREATED, PaymentStatus.PENDING, DeliveryStatus.WAITING);
                     softly.then(orderQueryDto.get())
-                            .extracting("loginId", "paymentDate", "shippedDate", "deliveredDate")
+                            .extracting("paymentDate", "shippedDate", "deliveredDate")
                             .containsOnlyNulls();
                 });
             }
@@ -129,10 +129,10 @@ class OrderQueryRepositoryTest {
                     softly.then(orderQueryDto).isPresent();
                     softly.then(orderQueryDto.get().orderProductQueryDtoList()).isEmpty();
                     softly.then(orderQueryDto.get())
-                            .extracting("totalAmount", "orderStatus", "paymentStatus", "deliveryStatus")
-                            .containsExactly(60000, OrderStatus.CANCELED, PaymentStatus.CANCELED, DeliveryStatus.CANCELED);
+                            .extracting("loginId", "totalAmount", "orderStatus", "paymentStatus", "deliveryStatus")
+                            .containsExactly("id_A", 60000, OrderStatus.CANCELED, PaymentStatus.CANCELED, DeliveryStatus.CANCELED);
                     softly.then(orderQueryDto.get())
-                            .extracting("loginId", "paymentDate", "shippedDate", "deliveredDate")
+                            .extracting("paymentDate", "shippedDate", "deliveredDate")
                             .containsOnlyNulls();
                 });
             }

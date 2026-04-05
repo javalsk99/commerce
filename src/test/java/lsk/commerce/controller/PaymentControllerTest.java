@@ -1,5 +1,6 @@
 package lsk.commerce.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.portone.sdk.server.webhook.WebhookVerifier;
 import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.api.portone.SyncPaymentException;
@@ -28,14 +29,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -47,17 +49,26 @@ import static org.mockito.BDDMockito.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.times;
 import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(
         controllers = PaymentController.class,
         excludeAutoConfiguration = SecurityAutoConfiguration.class,
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebConfig.class)
 )
-@AutoConfigureWebTestClient
 class PaymentControllerTest {
 
     @Autowired
-    WebTestClient client;
+    MockMvc mvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @MockitoBean
     OrderService orderService;
@@ -77,11 +88,11 @@ class PaymentControllerTest {
         void beforeEach() throws Exception {
             HandlerMethodArgumentResolver resolver = mock(HandlerMethodArgumentResolver.class);
             given(resolver.supportsParameter(any())).willReturn(true);
-            given(resolver.resolveArgument(any(), any(), any())).willReturn(Mono.just("id_A"));
+            given(resolver.resolveArgument(any(), any(), any(), any())).willReturn("id_A");
 
-            client = WebTestClient.bindToController(new PaymentController(portoneWebhook, orderService, paymentService, paymentSyncService))
-                    .argumentResolvers(configurer -> configurer.addCustomResolver(resolver))
-                    .controllerAdvice(new GlobalExceptionHandler(), new SyncPaymentExceptionHandler())
+            mvc = MockMvcBuilders.standaloneSetup(new PaymentController(portoneWebhook, orderService, paymentService, paymentSyncService))
+                    .setControllerAdvice(new GlobalExceptionHandler(), new SyncPaymentExceptionHandler())
+                    .setCustomArgumentResolvers(resolver)
                     .build();
         }
     }
@@ -93,7 +104,7 @@ class PaymentControllerTest {
         class SuccessCase {
 
             @Test
-            void basic() {
+            void basic() throws Exception {
                 //given
                 Order order = createOrder();
                 String orderNumber = order.getOrderNumber();
@@ -105,16 +116,14 @@ class PaymentControllerTest {
                 given(paymentService.getPaymentResponse(any(Payment.class))).willReturn(paymentResponse);
 
                 //when & then
-                client.post().uri("/payments/orders/{orderNumber}", orderNumber)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.data.totalAmount").isEqualTo(75000)
-                        .jsonPath("$.data.paymentStatus").isEqualTo(PaymentStatus.PENDING.name())
-                        .jsonPath("$.data.orderStatus").isEqualTo(OrderStatus.CREATED.name())
-                        .jsonPath("$.data.deliveryStatus").isEqualTo(DeliveryStatus.WAITING.name())
-                        .jsonPath("$.count").isEqualTo(1)
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/payments/orders/{orderNumber}", orderNumber))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.totalAmount").value(75000))
+                        .andExpect(jsonPath("$.data.paymentStatus").value(PaymentStatus.PENDING.name()))
+                        .andExpect(jsonPath("$.data.orderStatus").value(OrderStatus.CREATED.name()))
+                        .andExpect(jsonPath("$.data.deliveryStatus").value(DeliveryStatus.WAITING.name()))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
@@ -128,7 +137,7 @@ class PaymentControllerTest {
         class FailureCase {
 
             @Test
-            void request_Failed_AlreadyRequest() {
+            void request_Failed_AlreadyRequest() throws Exception {
                 //given
                 Order order = createOrder();
                 String orderNumber = order.getOrderNumber();
@@ -142,16 +151,14 @@ class PaymentControllerTest {
                 given(paymentService.getPaymentResponse(any(Payment.class))).willReturn(paymentResponse);
 
                 //when & then 첫 번째 요청
-                client.post().uri("/payments/orders/{orderNumber}", orderNumber)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.data.totalAmount").isEqualTo(75000)
-                        .jsonPath("$.data.paymentStatus").isEqualTo(PaymentStatus.PENDING.name())
-                        .jsonPath("$.data.orderStatus").isEqualTo(OrderStatus.CREATED.name())
-                        .jsonPath("$.data.deliveryStatus").isEqualTo(DeliveryStatus.WAITING.name())
-                        .jsonPath("$.count").isEqualTo(1)
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/payments/orders/{orderNumber}", orderNumber))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.totalAmount").value(75000))
+                        .andExpect(jsonPath("$.data.paymentStatus").value(PaymentStatus.PENDING.name()))
+                        .andExpect(jsonPath("$.data.orderStatus").value(OrderStatus.CREATED.name()))
+                        .andExpect(jsonPath("$.data.deliveryStatus").value(DeliveryStatus.WAITING.name()))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
@@ -160,13 +167,11 @@ class PaymentControllerTest {
                 });
 
                 //when & then 두 번째 요청
-                client.post().uri("/payments/orders/{orderNumber}", orderNumber)
-                        .exchange()
-                        .expectStatus().isBadRequest()
-                        .expectBody()
-                        .jsonPath("$.code").isEqualTo("BAD_STATUS")
-                        .jsonPath("$.message").isEqualTo("이미 결제 정보가 있습니다")
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/payments/orders/{orderNumber}", orderNumber))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.code").value("BAD_STATUS"))
+                        .andExpect(jsonPath("$.message").value("이미 결제 정보가 있습니다"))
+                        .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
@@ -212,7 +217,7 @@ class PaymentControllerTest {
         class SuccessCase {
 
             @Test
-            void basic() {
+            void basic() throws Exception {
                 //given
                 Order order = createOrder();
                 String orderNumber = order.getOrderNumber();
@@ -223,13 +228,11 @@ class PaymentControllerTest {
                 given(orderService.getOrderPaymentResponse(any(Order.class))).willReturn(orderPaymentResponse);
 
                 //when & then
-                client.get().uri("/api/payments/{orderNumber}", orderNumber)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.data.orderStatus").isEqualTo(OrderStatus.CREATED.name())
-                        .jsonPath("$.data.paymentStatus").isEqualTo(PaymentStatus.PENDING.name())
-                        .consumeWith(System.out::println);
+                mvc.perform(get("/api/payments/{orderNumber}", orderNumber))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.orderStatus").value(OrderStatus.CREATED.name()))
+                        .andExpect(jsonPath("$.data.paymentStatus").value(PaymentStatus.PENDING.name()))
+                        .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
@@ -258,27 +261,30 @@ class PaymentControllerTest {
         class SuccessCase {
 
             @Test
-            void basic() {
+            void basic() throws Exception {
                 //given
                 String paymentId = "vndu867sbci3";
                 CompletePaymentRequest request = new CompletePaymentRequest(paymentId);
+                String json = objectMapper.writeValueAsString(request);
 
                 PaymentCompleteResponse paymentCompleteResponse = new PaymentCompleteResponse(paymentId, PaymentStatus.COMPLETED);
 
                 given(paymentSyncService.syncPayment(anyString(), anyString())).willReturn(Mono.just(paymentCompleteResponse));
 
                 //when & then
-                client.post().uri("/api/payments/complete")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .bodyValue(request)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.data.paymentStatus").isEqualTo(PaymentStatus.COMPLETED.name())
-                        .consumeWith(System.out::println);
+                MvcResult mvcResult = mvc.perform(post("/api/payments/complete")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json))
+                        .andExpect(request().asyncStarted())
+                        .andReturn();
 
                 //then
+                mvc.perform(asyncDispatch(mvcResult))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.paymentStatus").value(PaymentStatus.COMPLETED.name()))
+                        .andDo(print());
+
                 BDDMockito.then(paymentSyncService).should().syncPayment(paymentId, "id_A");
             }
         }
@@ -287,24 +293,23 @@ class PaymentControllerTest {
         class FailureCase {
 
             @Test
-            void syncPayment_Failed_NotFound() {
+            void syncPayment_Failed_NotFound() throws Exception {
                 //given
                 String paymentId = "lllIIIll00OO";
                 CompletePaymentRequest request = new CompletePaymentRequest(paymentId);
+                String json = objectMapper.writeValueAsString(request);
 
                 given(paymentSyncService.syncPayment(anyString(), anyString())).willThrow(new SyncPaymentException("결제 정보 조회 중 오류 발생"));
 
                 //when & then
-                client.post().uri("/api/payments/complete")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .bodyValue(request)
-                        .exchange()
-                        .expectStatus().isBadRequest()
-                        .expectBody()
-                        .jsonPath("$.code").isEqualTo("PORTONE_ERROR")
-                        .jsonPath("$.message").isEqualTo("결제 처리 중 오류가 발생했습니다. 잠시만 기다려 주세요")
-                        .consumeWith(System.out::println);
+                mvc.perform(post("/api/payments/complete")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(json))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.code").value("PORTONE_ERROR"))
+                        .andExpect(jsonPath("$.message").value("결제 처리 중 오류가 발생했습니다. 잠시만 기다려 주세요"))
+                        .andDo(print());
 
                 //then
                 BDDMockito.then(paymentSyncService).should().syncPayment(paymentId, "id_A");

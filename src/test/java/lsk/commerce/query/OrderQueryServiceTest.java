@@ -14,6 +14,7 @@ import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.response.OrderSearchResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
 import org.hibernate.Hibernate;
@@ -79,7 +80,7 @@ class OrderQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                OrderQueryDto orderQueryDto = orderQueryService.findOrder(orderNumber1);
+                OrderQueryDto orderQueryDto = orderQueryService.findOrder(orderNumber1, "id_A");
 
                 System.out.println("================= WHEN END ===================");
 
@@ -104,9 +105,21 @@ class OrderQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when & then
-                thenThrownBy(() -> orderQueryService.findOrder("ll1lI1IlOO00"))
+                thenThrownBy(() -> orderQueryService.findOrder("ll1lI1IlOO00", "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 주문입니다");
+
+                System.out.println("================= WHEN END ===================");
+            }
+
+            @Test
+            void orderNotOwner() {
+                System.out.println("================= WHEN START =================");
+
+                //when & then
+                thenThrownBy(() -> orderQueryService.findOrder(orderNumber1, "id_D"))
+                        .isInstanceOf(NotResourceOwnerException.class)
+                        .hasMessage("주문의 주인이 아닙니다");
 
                 System.out.println("================= WHEN END ===================");
             }

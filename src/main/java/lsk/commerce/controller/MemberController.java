@@ -60,7 +60,11 @@ public class MemberController {
         return ResponseEntity.ok(new Result<>(memberResponseList, memberResponseList.size()));
     }
 
-    @Operation(summary = "회원 상세 조회", description = "**본인**만 조회할 수 있습니다.")
+    @Operation(
+            summary = "회원 상세 조회",
+            description = "**본인**만 조회할 수 있습니다. \n\n" +
+                    "회원의 상세 정보를 조회합니다."
+    )
     @GetMapping("/members/{memberLoginId}")
     public ResponseEntity<Result<MemberQueryDto>> findMember(
             @Parameter(example = "testId")

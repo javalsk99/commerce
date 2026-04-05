@@ -44,3 +44,5 @@
 - [Swagger Annotation](https://jeonyoungho.github.io/posts/Open-API-3.0-Swagger-v3-%EC%83%81%EC%84%B8%EC%84%A4%EC%A0%95/)
 - [Linux grep](https://fabxoe.tistory.com/205) 
 - [Linux sed](https://blog.naver.com/ikssun/150046292130)
+- [Docker 환경에서의 JVM](https://jobreview.tistory.com/164)
+- [yml database](https://www.devteam.co.kr/blog/database/database-connection-timeout-optimization)
