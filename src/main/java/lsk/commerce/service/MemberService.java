@@ -1,12 +1,12 @@
 package lsk.commerce.service;
 
 import lombok.RequiredArgsConstructor;
-import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.response.MemberResponse;
+import lsk.commerce.exception.InvalidDataException;
 import lsk.commerce.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

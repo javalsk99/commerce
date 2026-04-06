@@ -6,10 +6,10 @@ import jakarta.validation.constraints.Size;
 
 public record MemberLoginRequest(
         @Schema(example = "testId")
-        @NotBlank @Size(min = 4, max = 20)
+        @NotBlank(message = "아이디는 필수입니다")
         String loginId,
         @Schema(example = "testPassword")
-        @NotBlank @Size(min = 8, max = 20)
+        @NotBlank(message = "비밀번호는 필수입니다")
         String password
 ) {
 }

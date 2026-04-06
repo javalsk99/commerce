@@ -1,5 +1,5 @@
 # 토큰에서 발생한 예외
-- io.jsonwebtoken.RequiredTypeException: Cannot convert existing claim value of type 'class java.lang.String' to desired type 'class lsk.commerce.domain.Grade'  
+- io.jsonwebtoken.RequiredTypeException: Cannot convert existing claim value of type 'class java.lang.String' to desired type 'class lsk.commerce.domain.Role'  
   Enum 타입의 Grade를 String으로 받지 않아서 생긴 문제 .claim("grade", loginMember.getGrade())  
   해결: .claim("grade", loginMember.getGrade().name())로 변경
 

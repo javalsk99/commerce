@@ -60,7 +60,7 @@ public class Member {
 
     @NotNull
     @Enumerated(STRING)
-    private Grade grade;
+    private Role role;
 
     @Valid
     @NotNull
@@ -72,7 +72,7 @@ public class Member {
         this.name = name;
         this.loginId = loginId;
         this.password = password;
-        this.grade = Grade.USER;
+        this.role = Role.USER;
         this.address = new Address(city, street, zipcode);
     }
 

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 @Builder
 public record OrderSearchCond(
-        @Schema(example = "id")
+        @Schema(description = "**회원 아이디**는 일치해야 합니다.", example = "id")
         String memberLoginId,
 
         @Schema(description = "**상품 이름**은 초성으로도 검색할 수 있습니다.", example = "ㅍㄹㄱㄹㅁ")

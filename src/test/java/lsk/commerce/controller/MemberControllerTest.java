@@ -2,7 +2,7 @@ package lsk.commerce.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lsk.commerce.config.WebConfig;
-import lsk.commerce.domain.Grade;
+import lsk.commerce.domain.Role;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
@@ -239,7 +239,7 @@ class MemberControllerTest {
             void basic() throws Exception {
                 //given
                 List<OrderQueryDto> orderQueryDtoList = List.of(OrderQueryDto.builder().loginId("id_A").build());
-                MemberQueryDto memberQueryDto = MemberQueryDto.builder().loginId("id_A").grade(Grade.USER).orderQueryDtoList(orderQueryDtoList).build();
+                MemberQueryDto memberQueryDto = MemberQueryDto.builder().loginId("id_A").role(Role.USER).orderQueryDtoList(orderQueryDtoList).build();
 
                 given(memberQueryService.findMember(anyString())).willReturn(memberQueryDto);
 
@@ -247,7 +247,7 @@ class MemberControllerTest {
                 mvc.perform(get("/members/{memberLoginId}", "id_A"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.loginId").value("id_A"))
-                        .andExpect(jsonPath("$.data.grade").value("USER"))
+                        .andExpect(jsonPath("$.data.role").value("USER"))
                         .andExpect(jsonPath("$.data.orderQueryDtoList").exists())
                         .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());

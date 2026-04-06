@@ -1,8 +1,8 @@
 package lsk.commerce.integration;
 
 import jakarta.persistence.EntityManager;
-import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
+import lsk.commerce.domain.Role;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.repository.MemberRepository;
@@ -63,7 +63,7 @@ public class MemberIntegrationTest {
                 thenSoftly(softly -> {
                     softly.then(member.getPassword()).isNotEqualTo("00000000");
                     softly.then(passwordEncoder.matches("00000000", member.getPassword())).isTrue();
-                    softly.then(member.getGrade()).isEqualTo(Grade.USER);
+                    softly.then(member.getRole()).isEqualTo(Role.USER);
                 });
             }
         }

@@ -2,7 +2,10 @@
 - JSON 데이터로 보내기 쉽고, 간결한 Record로 변경
 
 
-- MemberLoginRequest
+- MemberLoginRequest  
+  일치하지 않으면 실패하므로 @NotBlank만 남기고 글자 수 제한을 없앴다.
+
+
 - MemberCreateRequest
 - MemberSearchCond
 

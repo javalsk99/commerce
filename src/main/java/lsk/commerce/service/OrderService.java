@@ -98,8 +98,8 @@ public class OrderService {
 
         order.isOwner(loginId);
 
-        if (order.getOrderStatus() == OrderStatus.CANCELED) {
-            throw new IllegalStateException("취소된 주문은 수정할 수 없습니다");
+        if (order.getOrderStatus() != OrderStatus.CREATED) {
+            throw new IllegalStateException("주문을 수정할 수 없습니다. OrderStatus: " + order.getOrderStatus());
         }
 
         if (order.getId() == null) {

@@ -22,7 +22,7 @@ import io.portone.sdk.server.payment.PaymentClient;
 import jakarta.persistence.EntityManager;
 import lsk.commerce.api.portone.CompletePaymentRequest;
 import lsk.commerce.domain.DeliveryStatus;
-import lsk.commerce.domain.Grade;
+import lsk.commerce.domain.Role;
 import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderStatus;
@@ -171,8 +171,8 @@ public class E2ETest {
             softly.then(member.getOrders()).isEmpty();
             softly.then(passwordEncoder.matches("00000000", member.getPassword())).isTrue();
             softly.then(member)
-                    .extracting("name", "initial", "loginId", "grade", "address.city", "address.street", "address.zipcode")
-                    .containsExactly("유저A", "ㅇㅈA", "id_A", Grade.USER, "Seoul", "Gangnam", "01234");
+                    .extracting("name", "initial", "loginId", "role", "address.city", "address.street", "address.zipcode")
+                    .containsExactly("유저A", "ㅇㅈA", "id_A", Role.USER, "Seoul", "Gangnam", "01234");
         });
 
         //given
@@ -206,7 +206,7 @@ public class E2ETest {
         thenSoftly(softly -> {
             softly.then(result).isTrue();
             softly.then(claims.getSubject()).isEqualTo("id_A");
-            softly.then(claims.get("grade", String.class)).isEqualTo(Grade.USER.name());
+            softly.then(claims.get("role", String.class)).isEqualTo(Role.USER.name());
         });
 
         //given

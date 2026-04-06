@@ -1,5 +1,5 @@
 package lsk.commerce.domain;
 
-public enum Grade {
+public enum Role {
     USER, ADMIN;
 }

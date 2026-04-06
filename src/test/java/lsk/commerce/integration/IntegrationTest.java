@@ -217,7 +217,7 @@ public class IntegrationTest {
                                 .queryParams(cond)
                                 .cookie(new Cookie("jjwt", token)))
                         .andExpect(status().isForbidden())
-                        .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                        .andExpect(jsonPath("$.code").value("NOT_ADMIN"))
                         .andExpect(jsonPath("$.message").value("관리자만 접근할 수 있습니다"))
                         .andDo(print());
 

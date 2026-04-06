@@ -1,7 +1,7 @@
 package lsk.commerce.service;
 
-import lsk.commerce.domain.Grade;
 import lsk.commerce.domain.Member;
+import lsk.commerce.domain.Role;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
@@ -70,7 +70,7 @@ class MemberServiceTest {
                     softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
                     softly.check(() -> BDDMockito.then(memberRepository).should().existsByLoginId(anyString()));
                     softly.check(() -> BDDMockito.then(memberRepository).should().save(argThat(m ->
-                            m.getPassword().equals(encodedPassword) && m.getGrade() == Grade.USER)));
+                            m.getPassword().equals(encodedPassword) && m.getRole() == Role.USER)));
                 });
             }
         }

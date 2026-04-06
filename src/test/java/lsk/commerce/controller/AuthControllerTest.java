@@ -125,8 +125,7 @@ class AuthControllerTest {
                         argumentSet("loginId null", new MemberLoginRequest(null, "00000000")),
                         argumentSet("password null", new MemberLoginRequest("id_A", null)),
                         argumentSet("password 빈 문자열", new MemberLoginRequest("id_A", "")),
-                        argumentSet("password 공백", new MemberLoginRequest("id_A", " ".repeat(8))),
-                        argumentSet("password 8자 미만", new MemberLoginRequest("id_A", "a".repeat(7)))
+                        argumentSet("password 공백", new MemberLoginRequest("id_A", " ".repeat(8)))
                 );
             }
         }

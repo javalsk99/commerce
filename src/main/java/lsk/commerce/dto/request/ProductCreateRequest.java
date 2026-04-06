@@ -25,14 +25,20 @@ public record ProductCreateRequest(
         String dtype,
 
         @Schema(example = "artist")
+        @Size(max = 50)
         String artist,
         @Schema(example = "studio")
+        @Size(max = 50)
         String studio,
 
+        @Size(max = 50)
         String author,
+        @Size(min = 10, max = 13)
         String isbn,
 
+        @Size(max = 50)
         String actor,
+        @Size(max = 50)
         String director
 ) {
     @Schema(hidden = true)

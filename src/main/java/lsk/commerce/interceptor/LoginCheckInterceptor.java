@@ -61,15 +61,15 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
 
         Claims claims = jwtProvider.extractClaims(token);
         String loginId = claims.getSubject();
-        String grade = claims.get("grade", String.class);
-        if (loginId == null || grade == null) {
+        String role = claims.get("role", String.class);
+        if (loginId == null || role == null) {
             throw new JwtException("잘못된 토큰입니다");
         }
 
         isMemberPath(request, requestURI, loginId);
 
         if (isAdminPath(requestURI, method)) {
-            if (!"ADMIN".equals(grade)) {
+            if (!"ADMIN".equals(role)) {
                 throw new NotAdminException("관리자만 접근할 수 있습니다");
             }
         }

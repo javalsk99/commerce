@@ -32,7 +32,7 @@ class MemberTest {
                 Member member = Member.builder().build();
 
                 //then
-                then(member.getGrade()).isEqualTo(Grade.USER);
+                then(member.getRole()).isEqualTo(Role.USER);
             }
         }
     }

@@ -1,7 +1,7 @@
 package lsk.commerce.repository;
 
 import jakarta.validation.ConstraintViolationException;
-import lsk.commerce.domain.Grade;
+import lsk.commerce.domain.Role;
 import lsk.commerce.domain.Member;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,8 +59,8 @@ class MemberRepositoryTest {
                 //then
                 Member findMember = em.find(Member.class, memberId);
                 then(findMember)
-                        .extracting("id", "name", "initial", "loginId", "grade", "password", "address.city", "address.street", "address.zipcode")
-                        .containsExactly(memberId, "유저A", "ㅇㅈA", "id_A", Grade.USER, "00000000", "Seoul", "Gangnam", "01234");
+                        .extracting("id", "name", "initial", "loginId", "role", "password", "address.city", "address.street", "address.zipcode")
+                        .containsExactly(memberId, "유저A", "ㅇㅈA", "id_A", Role.USER, "00000000", "Seoul", "Gangnam", "01234");
             }
         }
 

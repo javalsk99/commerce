@@ -5,6 +5,10 @@ import io.portone.sdk.server.webhook.WebhookTransaction;
 import io.portone.sdk.server.webhook.WebhookVerifier;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kotlin.Unit;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +21,11 @@ import lsk.commerce.dto.request.PaymentCompleteResponse;
 import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.response.PaymentResponse;
 import lsk.commerce.dto.response.Result;
+import lsk.commerce.exception.ErrorResult;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
 import lsk.commerce.service.PaymentSyncService;
+import lsk.commerce.swagger.ApiOwnerError;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,8 +55,12 @@ public class PaymentController {
                     "주문의 주인이 아니면 관리자도 요청할 수 없습니다. \n\n" +
                     "예시 주문은 주인이 아니어도 요청되지 않고 성공합니다. \n\n" +
                     "**취소된 주문**은 요청할 수 없습니다."
-
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
+    })
+    @ApiOwnerError
     @PostMapping("/payments/orders/{orderNumber}")
     public ResponseEntity<Result<PaymentResponse>> requestPayment(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")

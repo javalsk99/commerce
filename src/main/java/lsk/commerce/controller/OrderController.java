@@ -2,7 +2,10 @@ package lsk.commerce.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +17,13 @@ import lsk.commerce.dto.response.OrderCancelResponse;
 import lsk.commerce.dto.response.OrderChangeResponse;
 import lsk.commerce.dto.response.OrderSearchResponse;
 import lsk.commerce.dto.response.Result;
+import lsk.commerce.exception.ErrorResult;
 import lsk.commerce.query.OrderQueryService;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
 import lsk.commerce.service.OrderService;
+import lsk.commerce.swagger.ApiOwnerError;
+import lsk.commerce.swagger.ApiRoleError;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,9 +48,14 @@ public class OrderController {
 
     @Operation(
             summary = "주문 생성",
-            description = "**상품 번호**와 주문할 **수량**을 입력해 주세요. \n\n" +
+            description = "**상품 번호**와 (필수, 12자) 주문할 **수량**을 (필수, 0개 이상, 100개 이하) 입력해 주세요. \n\n" +
                     "주문할 상품은 한 가지 이상 넣어주세요."
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "401", description = "비 로그인", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 상품", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
+    })
     @PostMapping("/orders")
     public ResponseEntity<Result<String>> create(
             @RequestBody @Valid OrderCreateRequest request,
@@ -61,6 +72,8 @@ public class OrderController {
                     "검색 조건에 맞춰 조회합니다. \n\n" +
                     "원하지 않는 검색 조건은 비워주세요."
     )
+    @ApiResponse(responseCode = "200")
+    @ApiRoleError
     @GetMapping("/orders")
     public ResponseEntity<Result<List<OrderSearchResponse>>> orderList(@ParameterObject @ModelAttribute OrderSearchCond cond) {
         List<OrderSearchResponse> orderSearchResponseList = orderQueryService.searchOrders(cond);
@@ -72,6 +85,11 @@ public class OrderController {
             description = "**본인**만 조회할 수 있습니다. \n\n" +
                     "주문의 상세 정보를 조회합니다."
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
+    })
+    @ApiOwnerError
     @GetMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderQueryDto>> findOrder(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
@@ -88,9 +106,17 @@ public class OrderController {
             description = "**주문의 주인**만 수정할 수 있습니다. \n\n" +
                     "주문의 주인이 아니면 관리자도 수정할 수 없습니다. \n\n" +
                     "예시 주문은 주인이 아니어도 수정되지 않고 성공합니다. \n\n" +
-                    "**취소된 주문**은 수정할 수 없습니다." +
-                    "**회원 상세 조회**를 통해 주문이 있는지 확인하고 주문 번호를 입력해 주세요."
+                    "**취소**된 주문과 **결제 완료**된 주문은 수정할 수 없습니다. \n\n" +
+                    "**회원 상세 조회**를 통해 주문이 있는지 확인하고 주문 번호를 입력해 주세요. \n\n" +
+                    "**상품 번호**: 필수, 12자 \n\n" +
+                    "**수량**: 필수, 0개 이상, 100개 이하"
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
+    })
+    @ApiOwnerError
     @PatchMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderChangeResponse>> changeOrder(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
@@ -114,6 +140,8 @@ public class OrderController {
                     "**결제가 완료되지 않은 주문**은 **취소**해야 삭제할 수 있습니다. \n\n" +
                     "**결제가 완료된 주문**은 **배송이 완료**돼야 삭제할 수 있습니다."
     )
+    @ApiResponse(responseCode = "200")
+    @ApiOwnerError
     @DeleteMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<String>> delete(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
@@ -133,6 +161,12 @@ public class OrderController {
                     "**회원 상세 조회**를 통해 주문이 있는지 확인하고 주문 번호를 입력해 주세요. \n\n" +
                     "**결제가 완료되지 않은 주문**만 취소할 수 있습니다."
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
+    })
+    @ApiOwnerError
     @PatchMapping("/orders/{orderNumber}/cancel")
     public ResponseEntity<Result<OrderCancelResponse>> cancelOrder(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")

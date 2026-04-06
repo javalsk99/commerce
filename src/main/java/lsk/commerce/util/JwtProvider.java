@@ -31,7 +31,7 @@ public class JwtProvider {
     public String createToken(Member loginMember) {
         return Jwts.builder()
                 .subject(loginMember.getLoginId())
-                .claim("grade", loginMember.getGrade().name())
+                .claim("role", loginMember.getRole().name())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(secretKey)

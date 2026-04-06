@@ -4,12 +4,24 @@ import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResult> validExHandle(MethodArgumentNotValidException e) {
+        String errorMessage = "입력값이 잘못됐습니다";
+        if (e.getBindingResult().getFieldError() != null) {
+            errorMessage = e.getBindingResult().getFieldError()
+                    .getDefaultMessage();
+        }
+
+        return ResponseEntity.badRequest().body(new ErrorResult("NOT_VALID", errorMessage));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResult> illegalArgumentExHandle(IllegalArgumentException e) {
@@ -32,8 +44,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NotAdminException.class)
-    public ResponseEntity<ErrorResult> forbiddenExHandle(NotAdminException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResult("FORBIDDEN", e.getMessage()));
+    public ResponseEntity<ErrorResult> notAdminExHandle(NotAdminException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResult("NOT_ADMIN", e.getMessage()));
     }
 
     @ExceptionHandler(DataNotFoundException.class)

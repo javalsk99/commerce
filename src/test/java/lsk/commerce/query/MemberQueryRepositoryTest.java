@@ -3,7 +3,7 @@ package lsk.commerce.query;
 import lsk.commerce.config.QuerydslConfig;
 import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Delivery;
-import lsk.commerce.domain.Grade;
+import lsk.commerce.domain.Role;
 import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Order;
 import lsk.commerce.domain.OrderProduct;
@@ -124,8 +124,8 @@ class MemberQueryRepositoryTest {
                     softly.then(memberQueryDto).isPresent();
                     softly.then(memberQueryDto.get().orderQueryDtoList()).isEmpty();
                     softly.then(memberQueryDto.get())
-                            .extracting("grade", "loginId")
-                            .containsExactly(Grade.USER, "id_A");
+                            .extracting("role", "loginId")
+                            .containsExactly(Role.USER, "id_A");
                 });
             }
 
@@ -262,11 +262,11 @@ class MemberQueryRepositoryTest {
 
             static Stream<Arguments> memberQueryDtoListProvider() {
                 return Stream.of(
-                        argumentSet("MemberQueryDto 3개", List.of(MemberQueryDto.builder().loginId("id_A").grade(Grade.USER).build(), MemberQueryDto.builder().loginId("id_B").grade(Grade.USER).build(), MemberQueryDto.builder().loginId("id_C").grade(Grade.USER).build()), 3, List.of("id_A", "id_B", "id_C")),
-                        argumentSet("MemberQueryDto 2개", List.of(MemberQueryDto.builder().loginId("id_A").grade(Grade.USER).build(), MemberQueryDto.builder().loginId("id_B").grade(Grade.USER).build()), 2, List.of("id_A", "id_B")),
-                        argumentSet("MemberQueryDto 1개", List.of(MemberQueryDto.builder().loginId("id_A").grade(Grade.USER).build()), 1, List.of("id_A")),
+                        argumentSet("MemberQueryDto 3개", List.of(MemberQueryDto.builder().loginId("id_A").role(Role.USER).build(), MemberQueryDto.builder().loginId("id_B").role(Role.USER).build(), MemberQueryDto.builder().loginId("id_C").role(Role.USER).build()), 3, List.of("id_A", "id_B", "id_C")),
+                        argumentSet("MemberQueryDto 2개", List.of(MemberQueryDto.builder().loginId("id_A").role(Role.USER).build(), MemberQueryDto.builder().loginId("id_B").role(Role.USER).build()), 2, List.of("id_A", "id_B")),
+                        argumentSet("MemberQueryDto 1개", List.of(MemberQueryDto.builder().loginId("id_A").role(Role.USER).build()), 1, List.of("id_A")),
                         argumentSet("MemberQueryDto 0개", Collections.emptyList(), 0, Collections.emptyList()),
-                        argumentSet("loginId가 없는 MemberQueryDto", List.of(MemberQueryDto.builder().loginId(null).grade(Grade.USER).build()), 0, Collections.emptyList())
+                        argumentSet("loginId가 없는 MemberQueryDto", List.of(MemberQueryDto.builder().loginId(null).role(Role.USER).build()), 0, Collections.emptyList())
                 );
             }
         }

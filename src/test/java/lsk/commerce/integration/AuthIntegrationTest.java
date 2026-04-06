@@ -2,7 +2,7 @@ package lsk.commerce.integration;
 
 import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityManager;
-import lsk.commerce.domain.Grade;
+import lsk.commerce.domain.Role;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.service.AuthService;
 import lsk.commerce.service.MemberService;
@@ -60,11 +60,11 @@ public class AuthIntegrationTest {
                 //then
                 Claims claims = jwtProvider.extractClaims(token);
                 String loginId = claims.getSubject();
-                String grade = claims.get("grade", String.class);
+                String role = claims.get("role", String.class);
 
                 thenSoftly(softly -> {
                     softly.then(loginId).isEqualTo("id_A");
-                    softly.then(grade).isEqualTo(Grade.USER.name());
+                    softly.then(role).isEqualTo(Role.USER.name());
                 });
             }
 

@@ -34,7 +34,7 @@ public class MemberQueryRepository {
 
     protected Optional<MemberQueryDto> findMember(String loginId) {
         return em.createQuery(
-                        "select new lsk.commerce.query.dto.MemberQueryDto(m.loginId, m.grade)" +
+                        "select new lsk.commerce.query.dto.MemberQueryDto(m.loginId, m.role)" +
                                 " from Member m" +
                                 " where m.loginId = :loginId", MemberQueryDto.class)
                 .setParameter("loginId", loginId)
