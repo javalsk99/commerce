@@ -6,6 +6,8 @@ import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.response.MemberResponse;
+import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.MemberRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,7 @@ class MemberServiceTest {
     MemberService memberService;
 
     String loginId = "id_A";
-    String rawPassword = "12345678";
+    String rawPassword = "abAB12!@";
     String encodedPassword = "$2a$diioffd783294fkdj";
     String newEncodedPassword = "$2a$jgio2383dshnj987";
 
@@ -91,8 +93,8 @@ class MemberServiceTest {
 
                 //when & then
                 thenThrownBy(() -> memberService.join(request))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 사용 중인 아이디입니다");
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("이미 사용 중인 아이디입니다. loginId: " + loginId);
 
                 //then
                 thenSoftly(softly -> {
@@ -125,27 +127,6 @@ class MemberServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(passwordEncoder).should(never()).encode(any()));
-                    softly.check(() -> BDDMockito.then(memberRepository).should(never()).save(any()));
-                });
-            }
-
-            @Test
-            void rawPassword() {
-                //given
-                MemberCreateRequest request = MemberCreateRequest.builder()
-                        .password(rawPassword)
-                        .build();
-
-                given(passwordEncoder.encode(anyString())).willReturn(rawPassword);
-
-                //when & then
-                thenThrownBy(() -> memberService.join(request))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("암호화되지 않은 비밀번호입니다");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(passwordEncoder).should().encode(anyString()));
                     softly.check(() -> BDDMockito.then(memberRepository).should(never()).save(any()));
                 });
             }
@@ -201,8 +182,8 @@ class MemberServiceTest {
 
                 //when & then
                 thenThrownBy(() -> memberService.findMemberByLoginId(loginId))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다");
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 아이디입니다. loginId: " + loginId);
 
                 //then
                 BDDMockito.then(memberRepository).should().findByLoginId(anyString());
@@ -237,7 +218,7 @@ class MemberServiceTest {
                         .loginId(loginId)
                         .password(encodedPassword)
                         .build();
-                MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
+                MemberChangePasswordRequest request = new MemberChangePasswordRequest("cdCD34#$");
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
                 given(passwordEncoder.encode(anyString())).willReturn(newEncodedPassword);
@@ -262,14 +243,14 @@ class MemberServiceTest {
             @Test
             void memberNotFound() {
                 //given
-                MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
+                MemberChangePasswordRequest request = new MemberChangePasswordRequest("cdCD34#$");
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.empty());
 
                 //when & then
                 thenThrownBy(() -> memberService.changePassword(loginId, request))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 아이디입니다");
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 아이디입니다. loginId: " + loginId);
 
                 //then
                 thenSoftly(softly -> {
@@ -292,11 +273,11 @@ class MemberServiceTest {
                 //given
                 Member member = Member.builder()
                         .loginId(loginId)
-                        .city("Seoul")
-                        .street("Gangnam")
-                        .street("01234")
+                        .zipcode("01234")
+                        .baseAddress("서울시 강남구")
+                        .detailAddress("101동 101호")
                         .build();
-                MemberChangeAddressRequest request = new MemberChangeAddressRequest("Gyeonggi-do", "Gangbuk", "01235");
+                MemberChangeAddressRequest request = new MemberChangeAddressRequest("01235", "서울시 강남구", "101동 101호");
 
                 given(memberRepository.findByLoginId(anyString())).willReturn(Optional.of(member));
 
@@ -307,8 +288,8 @@ class MemberServiceTest {
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(memberRepository).should().findByLoginId(anyString()));
                     softly.then(member.getAddress())
-                            .extracting("city", "street", "zipcode")
-                            .contains("Gyeonggi-do", "Gangbuk", "01235");
+                            .extracting("zipcode", "baseAddress", "detailAddress")
+                            .contains("01235", "서울시 강남구", "101동 101호");
                 });
             }
         }
@@ -397,20 +378,20 @@ class MemberServiceTest {
                 //given
                 Member member = Member.builder()
                         .loginId(loginId)
-                        .city("Seoul")
-                        .street("Gangnam")
                         .zipcode("01234")
+                        .baseAddress("서울시 강남구")
+                        .detailAddress("101동 101호")
                         .build();
 
                 //when
-                MemberResponse memberDto = memberService.getMemberDto(member);
+                MemberResponse memberResponse = memberService.getMemberResponse(member);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(memberDto.loginId()).isEqualTo(loginId);
-                    softly.then(memberDto.city()).isEqualTo("Seoul");
-                    softly.then(memberDto.street()).isEqualTo("Gangnam");
-                    softly.then(memberDto.zipcode()).isEqualTo("01234");
+                    softly.then(memberResponse.loginId()).isEqualTo(loginId);
+                    softly.then(memberResponse.zipcode()).isEqualTo("01234");
+                    softly.then(memberResponse.baseAddress()).isEqualTo("서울시 강남구");
+                    softly.then(memberResponse.detailAddress()).isEqualTo("101동 101호");
                 });
             }
         }

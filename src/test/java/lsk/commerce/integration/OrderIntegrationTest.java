@@ -77,13 +77,13 @@ public class OrderIntegrationTest {
         memberLoginId = memberService.join(MemberCreateRequest.builder()
                 .name("UserA")
                 .loginId("id_A")
-                .password("00000000")
-                .city("Seoul")
-                .street("Gangnam")
+                .password("abAB12!@")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build());
-        String parentCategoryName = categoryService.create(new CategoryCreateRequest("가요", null));
-        String childCategoryName = categoryService.create(new CategoryCreateRequest("댄스", parentCategoryName));
+        String name = categoryService.create(new CategoryCreateRequest("가요", null));
+        String childCategoryName = categoryService.create(new CategoryCreateRequest("댄스", name));
         albumNumber1 = productService.register(ProductCreateRequest.builder()
                 .name("BANG BANG")
                 .price(15000)

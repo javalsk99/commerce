@@ -665,10 +665,10 @@ class OrderControllerTest {
         Member member = Member.builder()
                 .name("UserA")
                 .loginId("id_A")
-                .password("00000000")
-                .city("Seoul")
-                .street("Gangnam")
+                .password("abAB12!@")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
         Delivery delivery = new Delivery(member);
 
@@ -686,10 +686,10 @@ class OrderControllerTest {
         Member member = Member.builder()
                 .name("UserA")
                 .loginId("id_A")
-                .password("00000000")
-                .city("Seoul")
-                .street("Gangnam")
+                .password("abAB12!@")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
         Delivery delivery = new Delivery(member);
         Album album = createAlbum2();

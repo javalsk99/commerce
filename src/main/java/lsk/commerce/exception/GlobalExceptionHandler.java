@@ -53,6 +53,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResult("NOT_FOUND", e.getMessage()));
     }
 
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResult> duplicateResourceExHandle(DuplicateResourceException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResult("DUPLICATE_RESOURCE", e.getMessage()));
+    }
+
     @ExceptionHandler(InvalidDataException.class)
     public ResponseEntity<ErrorResult> invalidDataExHandle(InvalidDataException e) {
         log.error("[500 INVALID_DATA] 데이터 정합성 오류 발생: {}", e.getMessage(), e);

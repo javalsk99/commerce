@@ -51,6 +51,14 @@
   보안을 위해 사용하지 않는 관리자 가입을 제거하고, DB에서 직접 변경하는 방식으로 관리자를 설정한다.
 
 
+- validateMember  
+  아이디 중복을 409 에러로 변경했다.
+
+
+- findMemberByLoginId  
+  데이터가 없어서 발생하는 예외이므로 404 에러로 변경했다.
+
+
 ## Member
 - changeAddress  
   멱등성을 위해 주소가 기존과 같으면 이후 로직을 실행하지 않고 반환했다.
@@ -62,6 +70,14 @@
 
 - role  
   회원의 등급에 더 적합해서 grade에서 변경했다.
+
+
+- name  
+  패턴을 추가했다.
+
+
+- password  
+  암호화되어 저장되므로 패턴을 추가하지 않았다.
 
 
 ## MemberQueryRepository

@@ -94,10 +94,10 @@ public class IntegrationTest {
         memberLoginId = memberService.join(MemberCreateRequest.builder()
                 .name("UserA")
                 .loginId("id_A")
-                .password("00000000")
-                .city("Seoul")
-                .street("Gangnam")
+                .password("abAB12!@")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build());
         Member member = memberService.findMemberByLoginId(memberLoginId);
         token = jwtProvider.createToken(member);
@@ -128,7 +128,7 @@ public class IntegrationTest {
             @DisplayName("토큰이 있고 본인인 경우 비밀번호 변경은 성공한다")
             void shouldChangePassword_WhenHasToken() throws Exception {
                 //given
-                MemberChangePasswordRequest request = new MemberChangePasswordRequest("11111111");
+                MemberChangePasswordRequest request = new MemberChangePasswordRequest("cdCD34#$");
                 String json = objectMapper.writeValueAsString(request);
 
                 System.out.println("================= WHEN START =================");
@@ -150,7 +150,7 @@ public class IntegrationTest {
                 Member member = memberRepository.findByLoginId("id_A")
                         .orElseThrow(() -> new AssertionError("회원이 저장되지 않았습니다"));
 
-                then(passwordEncoder.matches("11111111", member.getPassword())).isTrue();
+                then(passwordEncoder.matches("cdCD34#$", member.getPassword())).isTrue();
             }
         }
 
@@ -233,8 +233,8 @@ public class IntegrationTest {
 
         @BeforeEach
         void beforeEach() {
-            String parentCategoryName = categoryService.create(new CategoryCreateRequest("가요", null));
-            String childCategoryName = categoryService.create(new CategoryCreateRequest("댄스", parentCategoryName));
+            String name = categoryService.create(new CategoryCreateRequest("가요", null));
+            String childCategoryName = categoryService.create(new CategoryCreateRequest("댄스", name));
             albumNumber1 = productService.register(ProductCreateRequest.builder()
                     .name("BANG BANG")
                     .price(15000)

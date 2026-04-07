@@ -63,7 +63,7 @@ public class AuthController {
     }
 
     @Operation(summary = "로그아웃", description = "쿠키를 제거합니다.")
-    @ApiResponse(responseCode = "200", description = "로그아웃 성공", content = @Content(schema = @Schema(implementation = Result.class)))
+    @ApiResponse(responseCode = "200")
     @PostMapping("/logout")
     public ResponseEntity<Result<String>> logout(HttpServletResponse response) {
         Cookie cookie = new Cookie("jjwt", null);

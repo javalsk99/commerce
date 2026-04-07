@@ -49,10 +49,10 @@ class MemberTest {
                 Member member = getMember();
 
                 //when
-                member.changePassword("11111111", passwordEncoder);
+                member.changePassword("cdCD34#$", passwordEncoder);
 
                 //then
-                then(passwordEncoder.matches("11111111", member.getPassword())).isTrue();
+                then(passwordEncoder.matches("cdCD34#$", member.getPassword())).isTrue();
             }
         }
 
@@ -77,14 +77,14 @@ class MemberTest {
                 Member member = getMember();
 
                 //when & then
-                thenThrownBy(() -> member.changePassword("00000000", passwordEncoder))
+                thenThrownBy(() -> member.changePassword("abAB12!@", passwordEncoder))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessage("비밀번호가 기존과 달라야 합니다");
             }
 
             static Stream<Arguments> passwordProvider() {
                 return Stream.of(
-                        argumentSet("비밀번호 null", (Object) null),
+                        argumentSet("비밀번호 null", (String) null),
                         argumentSet("비밀번호 빈 문자열", ""),
                         argumentSet("비밀번호 공백", " ")
                 );
@@ -94,7 +94,7 @@ class MemberTest {
         private Member getMember() {
             passwordEncoder = new BCryptPasswordEncoder();
             return Member.builder()
-                    .password(passwordEncoder.encode("00000000"))
+                    .password(passwordEncoder.encode("abAB12!@"))
                     .build();
         }
     }
@@ -109,33 +109,33 @@ class MemberTest {
             void shouldIgnoreChange_WhenAddressIsSame() {
                 //given
                 Member member = Member.builder()
-                        .city("Seoul")
-                        .street("Gangnam")
                         .zipcode("01234")
+                        .baseAddress("서울시 강남구")
+                        .detailAddress("101동 101호")
                         .build();
 
                 //when
-                member.changeAddress(member.getAddress().getCity(), member.getAddress().getStreet(), member.getAddress().getZipcode());
+                member.changeAddress(member.getAddress().getBaseAddress(), member.getAddress().getDetailAddress(), member.getAddress().getZipcode());
             }
 
             @ParameterizedTest
             @MethodSource("addressProvider")
-            void shouldChangeSuccess_WhenAddressFieldsAreDifferent(String city, String street, String zipcode) {
+            void shouldChangeSuccess_WhenAddressFieldsAreDifferent(String zipcode, String baseAddress, String detailAddress) {
                 //given
                 Member member = Member.builder()
-                        .city("Seoul")
-                        .street("Gangnam")
                         .zipcode("01234")
+                        .baseAddress("서울시 강남구")
+                        .detailAddress("101동 101호")
                         .build();
 
                 //when
-                member.changeAddress(city, street, zipcode);
+                member.changeAddress(zipcode, baseAddress, detailAddress);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(member.getAddress().getCity()).isEqualTo(city);
-                    softly.then(member.getAddress().getStreet()).isEqualTo(street);
                     softly.then(member.getAddress().getZipcode()).isEqualTo(zipcode);
+                    softly.then(member.getAddress().getBaseAddress()).isEqualTo(baseAddress);
+                    softly.then(member.getAddress().getDetailAddress()).isEqualTo(detailAddress);
                 });
             }
 
@@ -143,38 +143,38 @@ class MemberTest {
             void idempotency() {
                 //given
                 Member member = Member.builder()
-                        .city("Seoul")
-                        .street("Gangnam")
                         .zipcode("01234")
+                        .baseAddress("서울시 강남구")
+                        .detailAddress("101동 101호")
                         .build();
 
                 //when 첫 번째 호출
-                member.changeAddress("Seoul", "Gangbuk", "01234");
+                member.changeAddress("01234", "서울시 강북구", "101동 101호");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(member.getAddress().getCity()).isEqualTo("Seoul");
-                    softly.then(member.getAddress().getStreet()).isEqualTo("Gangbuk");
                     softly.then(member.getAddress().getZipcode()).isEqualTo("01234");
+                    softly.then(member.getAddress().getBaseAddress()).isEqualTo("서울시 강북구");
+                    softly.then(member.getAddress().getDetailAddress()).isEqualTo("101동 101호");
                 });
 
                 //when 두 번째 호출
-                thenNoException().isThrownBy(() -> member.changeAddress("Seoul", "Gangbuk", "01234"));
+                thenNoException().isThrownBy(() -> member.changeAddress("01234", "서울시 강북구", "101동 101호"));
 
                 //then
                 thenSoftly(softly -> {
-                    softly.then(member.getAddress().getCity()).isEqualTo("Seoul");
-                    softly.then(member.getAddress().getStreet()).isEqualTo("Gangbuk");
                     softly.then(member.getAddress().getZipcode()).isEqualTo("01234");
+                    softly.then(member.getAddress().getBaseAddress()).isEqualTo("서울시 강북구");
+                    softly.then(member.getAddress().getDetailAddress()).isEqualTo("101동 101호");
                 });
             }
 
             static Stream<Arguments> addressProvider() {
                 return Stream.of(
-                        argumentSet("city 변경", "Gyeonggi-do", "Gangnam", "01234"),
-                        argumentSet("street 변경", "Seoul", "Gangbuk", "01234"),
-                        argumentSet("zipcode 변경", "Seoul", "Gangnam", "01235"),
-                        argumentSet("모두 변경", "Gyeonggi-do", "Gangbuk", "01235")
+                        argumentSet("zipcode 변경", "01235", "서울시 강남구", "101동 101호"),
+                        argumentSet("baseAddress 변경", "01234", "서울시 강북구", "101동 101호"),
+                        argumentSet("detailAddress 변경", "01234", "서울시 강남구", "101동 102호"),
+                        argumentSet("모두 변경", "01235", "서울시 강북구", "101동 102호")
                 );
             }
         }

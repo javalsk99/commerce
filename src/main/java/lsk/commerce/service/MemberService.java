@@ -6,7 +6,8 @@ import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
 import lsk.commerce.dto.response.MemberResponse;
-import lsk.commerce.exception.InvalidDataException;
+import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class MemberService {
 
     public Member findMemberByLoginId(String loginId) {
         return memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 아이디입니다. loginId: " + loginId));
     }
 
     public Member findMemberForLogin(String loginId) {
@@ -43,9 +44,6 @@ public class MemberService {
     @Transactional
     public Member changePassword(String memberLoginId, MemberChangePasswordRequest request) {
         Member member = findMemberByLoginId(memberLoginId);
-        if (memberLoginId.equals("testId")) {
-            return member;
-        }
         member.changePassword(request.password(), passwordEncoder);
         return member;
     }
@@ -53,7 +51,7 @@ public class MemberService {
     @Transactional
     public Member changeAddress(String memberLoginId, MemberChangeAddressRequest request) {
         Member member = findMemberByLoginId(memberLoginId);
-        member.changeAddress(request.city(), request.street(), request.zipcode());
+        member.changeAddress(request.zipcode(), request.baseAddress(), request.detailAddress());
         return member;
     }
 
@@ -73,7 +71,7 @@ public class MemberService {
         memberRepository.delete(member);
     }
 
-    public MemberResponse getMemberDto(Member member) {
+    public MemberResponse getMemberResponse(Member member) {
         return MemberResponse.from(member);
     }
 
@@ -91,15 +89,15 @@ public class MemberService {
                 .name(request.name())
                 .loginId(request.loginId())
                 .password(encodedPassword)
-                .city(request.city())
-                .street(request.street())
-                .zipcode(request.zipcode())
+                .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
     }
 
     private void validateMember(Member member) {
         if (memberRepository.existsByLoginId(member.getLoginId())) {
-            throw new IllegalArgumentException("이미 사용 중인 아이디입니다");
+            throw new DuplicateResourceException("이미 사용 중인 아이디입니다. loginId: " + member.getLoginId());
         }
     }
 }

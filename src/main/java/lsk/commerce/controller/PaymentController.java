@@ -25,7 +25,8 @@ import lsk.commerce.exception.ErrorResult;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
 import lsk.commerce.service.PaymentSyncService;
-import lsk.commerce.swagger.ApiOwnerError;
+import lsk.commerce.swagger.ApiMemberOwnerForbiddenResponse;
+import lsk.commerce.swagger.ApiOrderOwnerForbiddenResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +39,8 @@ import reactor.core.publisher.Mono;
 @Tag(
         name = "06. 결제",
         description = "요청이 완료된 주문은 https://lsk-commerce.shop/payments/{orderNumber}에서 결제를 진행해 주세요. \n\n" +
-                "테스트 결제라서 실제 돈이 결제되지 않습니다."
+                "테스트 결제라서 실제 돈이 결제되지 않습니다. \n\n" +
+                "**주의 사항** 실제 결제되진 않지만 카카오페이는 페이머니가 있어야 결제 테스트가 진행됩니다. 토스페이를 통해 진행해 주세요."
 )
 @RestController
 @RequiredArgsConstructor
@@ -60,7 +62,7 @@ public class PaymentController {
             @ApiResponse(responseCode = "200"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
-    @ApiOwnerError
+    @ApiOrderOwnerForbiddenResponse
     @PostMapping("/payments/orders/{orderNumber}")
     public ResponseEntity<Result<PaymentResponse>> requestPayment(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")

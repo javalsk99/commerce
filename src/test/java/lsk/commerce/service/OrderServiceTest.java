@@ -25,6 +25,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
 import org.mockito.Captor;
@@ -93,9 +95,9 @@ class OrderServiceTest {
     void beforeEach() {
         member = Member.builder()
                 .loginId("id_A")
-                .city("Seoul")
-                .street("Gangnam")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
         delivery = new Delivery(member);
 
@@ -558,20 +560,23 @@ class OrderServiceTest {
                 });
             }
 
-            @Test
-            void orderStatusIsCanceled() {
+            @ParameterizedTest
+            @EnumSource(value = OrderStatus.class, names = {"CANCELED", "PAID", "DELIVERED"})
+            void orderStatusIsNotCreated(OrderStatus orderStatus) {
                 //given
-                Order canceledOrder = createCanceledOrder();
+                Order notCreatedOrder = createNotCreatedOrder();
+
+                ReflectionTestUtils.setField(notCreatedOrder, "orderStatus", orderStatus);
 
                 OrderProductRequest orderProductRequest = new OrderProductRequest(productNumber1, 2);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(canceledOrder));
+                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(notCreatedOrder));
 
                 //when & then
-                thenThrownBy(() -> orderService.changeOrder(canceledOrder.getOrderNumber(), request, "id_A"))
+                thenThrownBy(() -> orderService.changeOrder(notCreatedOrder.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("취소된 주문은 수정할 수 없습니다");
+                        .hasMessage("주문을 수정할 수 없습니다. OrderStatus: " + orderStatus);
 
                 //then
                 thenSoftly(softly -> {
@@ -735,15 +740,14 @@ class OrderServiceTest {
                 });
             }
 
-            private Order createCanceledOrder() {
+            private Order createNotCreatedOrder() {
                 Delivery delivery = new Delivery(member);
 
-                OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 2);
+                OrderProduct orderProduct = OrderProduct.createOrderProduct(album, 1);
 
                 Order canceledOrder = Order.createOrder(member, delivery, List.of(orderProduct));
 
                 ReflectionTestUtils.setField(canceledOrder, "id", 2L);
-                ReflectionTestUtils.setField(canceledOrder, "orderStatus", OrderStatus.CANCELED);
 
                 return canceledOrder;
             }

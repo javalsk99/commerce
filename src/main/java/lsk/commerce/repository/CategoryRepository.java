@@ -39,13 +39,13 @@ public class CategoryRepository {
         em.remove(category);
     }
 
-    public List<Category> existsByCategoryNames(String categoryName, String parentCategoryName) {
+    public List<Category> existsByCategoryNames(String categoryName, String name) {
         return em.createQuery(
                 "select c from Category c" +
                         " where c.name = :name" +
                         " or (:parentName is not null and c.name = :parentName)", Category.class)
                 .setParameter("name", categoryName)
-                .setParameter("parentName", parentCategoryName)
+                .setParameter("parentName", name)
                 .getResultList();
     }
 

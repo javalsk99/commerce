@@ -277,10 +277,10 @@ class MemberQueryServiceTest {
         Member member = Member.builder()
                 .name(name)
                 .loginId(loginId)
-                .password("00000000")
-                .city("Seoul")
-                .street("Gangnam")
+                .password("abAB12!@")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
         em.persist(member);
         return member;

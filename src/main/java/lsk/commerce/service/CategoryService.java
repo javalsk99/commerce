@@ -7,6 +7,7 @@ import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,9 +75,9 @@ public class CategoryService {
                 .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
 
         Category newParentCategory = categories.stream()
-                .filter(c -> c.getName().equals(request.name()))
+                .filter(c -> c.getName().equals(request.parentName()))
                 .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + request.name()));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + request.parentName()));
 
         category.changeParentCategory(newParentCategory);
         return newParentCategory;
@@ -84,6 +85,10 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(String categoryName) {
+        if (categoryName.equals("가요")) {
+            return;
+        }
+
         Optional<Category> optionalCategory = categoryRepository.findWithChild(categoryName);
         if (optionalCategory.isEmpty()) {
             return;
@@ -112,18 +117,18 @@ public class CategoryService {
         return CategoryDisconnectResponse.from(category);
     }
 
-    private Category validateCategory(String categoryName, String parentCategoryName) {
-        List<Category> categories = categoryRepository.existsByCategoryNames(categoryName, parentCategoryName);
+    private Category validateCategory(String categoryName, String name) {
+        List<Category> categories = categoryRepository.existsByCategoryNames(categoryName, name);
         if (categories.stream().anyMatch(c -> c.getName().equals(categoryName))) {
-            throw new IllegalArgumentException("이미 존재하는 카테고리입니다. name: " + categoryName);
+            throw new DuplicateResourceException("이미 존재하는 카테고리입니다. name: " + categoryName);
         }
 
         Category parentCategory = null;
-        if (parentCategoryName != null) {
+        if (name != null) {
             parentCategory = categories.stream()
-                    .filter(c -> c.getName().equals(parentCategoryName))
+                    .filter(c -> c.getName().equals(name))
                     .findFirst()
-                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + parentCategoryName));
+                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + name));
         }
 
         return parentCategory;

@@ -6,7 +6,10 @@
   일치하지 않으면 실패하므로 @NotBlank만 남기고 글자 수 제한을 없앴다.
 
 
-- MemberCreateRequest
+- MemberCreateRequest  
+  패턴을 추가했다.
+
+
 - MemberSearchCond
 
 
@@ -30,9 +33,16 @@
   static 메서드는 관례에 맞춰 파라미터가 1개이므로 from으로 이름 변경
 
 
-- MemberChangePassword
-- MemberChangeAddress
-- CategoryCreateRequest
+- MemberChangePassword  
+  패턴을 추가했다.
+
+
+- MemberChangeAddress  
+  패턴을 추가했다.
+
+
+- CategoryCreateRequest  
+  패턴을 추가했다.
 
 
 - CategoryResponse  
@@ -40,7 +50,8 @@
 
 
 - CategoryChangeParentRequest  
-  컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.
+  컨트롤러에서 필드 주입을 DTO 주입으로 변경했다.  
+  패턴을 추가했다.
 
 
 - CategoryDisconnectResponse  

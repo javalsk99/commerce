@@ -88,9 +88,9 @@ public class Delivery {
         Address address = member.getAddress();
         if (address == null) {
             throw new IllegalArgumentException("회원의 주소 정보가 없습니다");
-        } else if (address.getCity() == null || address.getStreet() == null || address.getZipcode() == null) {
-            throw new IllegalArgumentException("회원의 주소 정보가 잘못됐습니다. address.city = " + address.getCity() +
-                    ", address.street = " + address.getStreet() + ", address.zipcode = " + address.getZipcode());
+        } else if (address.getBaseAddress() == null || address.getDetailAddress() == null || address.getZipcode() == null) {
+            throw new IllegalArgumentException("회원의 주소 정보가 잘못됐습니다. address.zipcode = " + address.getZipcode() +
+                    ", address.baseAddress = " + address.getBaseAddress() + ", address.detailAddress = " + address.getDetailAddress());
         }
     }
 

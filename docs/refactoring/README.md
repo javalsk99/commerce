@@ -13,3 +13,4 @@
 - @Login을 Argument Resolver에 등록해서 쿠키에서 loginId를 꺼낸다.
 - [interceptor](interceptor.md)
 - [delivery](delivery.md)
+- 주소를 한국식으로 변경하고 패턴을 추가했다.

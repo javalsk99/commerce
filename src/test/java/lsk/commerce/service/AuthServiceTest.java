@@ -35,7 +35,7 @@ class AuthServiceTest {
     AuthService authService;
 
     String loginId = "id_A";
-    String rawPassword = "12345678";
+    String rawPassword = "abAB12!@";
     String encodedPassword = "$2a$fdio8cv7xh2h98";
     String token = "eyJhfdlsji";
 

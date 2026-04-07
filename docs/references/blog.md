@@ -46,3 +46,4 @@
 - [Linux sed](https://blog.naver.com/ikssun/150046292130)
 - [Docker 환경에서의 JVM](https://jobreview.tistory.com/164)
 - [yml database](https://www.devteam.co.kr/blog/database/database-connection-timeout-optimization)
+- [비밀번호 패턴](https://devzec.tistory.com/entry/java-%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8-%EC%A0%95%EA%B7%9C%EC%8B%9D-%ED%8C%A8%ED%84%B4-%EC%88%AB%EC%9E%90%EB%AC%B8%EC%9E%90%ED%8A%B9%EC%88%98%EB%AC%B8%EC%9E%90-%ED%8F%AC%ED%95%A8)

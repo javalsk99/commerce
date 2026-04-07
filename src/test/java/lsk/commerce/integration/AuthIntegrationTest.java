@@ -50,7 +50,7 @@ public class AuthIntegrationTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                String token = authService.login("id_A", "00000000");
+                String token = authService.login("id_A", "abAB12!@");
 
                 em.flush();
                 em.clear();
@@ -72,10 +72,10 @@ public class AuthIntegrationTest {
                 return MemberCreateRequest.builder()
                         .name("UserA")
                         .loginId("id_A")
-                        .password("00000000")
-                        .city("Seoul")
-                        .street("Gangnam")
+                        .password("abAB12!@")
                         .zipcode("01234")
+                        .baseAddress("서울시 강남구")
+                        .detailAddress("101동 101호")
                         .build();
             }
         }

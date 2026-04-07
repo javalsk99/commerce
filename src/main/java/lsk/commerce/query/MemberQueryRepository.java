@@ -44,7 +44,7 @@ public class MemberQueryRepository {
     }
 
     protected List<MemberResponse> search(MemberSearchCond cond) {
-        return query.select(new QMemberResponse(member.loginId, member.address.city, member.address.street, member.address.zipcode))
+        return query.select(new QMemberResponse(member.loginId, member.address.zipcode, member.address.baseAddress, member.address.detailAddress))
                 .from(member)
                 .where(
                         containsMemberName(cond.name()),

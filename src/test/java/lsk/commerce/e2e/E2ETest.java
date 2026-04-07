@@ -133,10 +133,10 @@ public class E2ETest {
         MemberCreateRequest memberCreateRequest = MemberCreateRequest.builder()
                 .name("유저A")
                 .loginId("id_A")
-                .password("00000000")
-                .city("Seoul")
-                .street("Gangnam")
+                .password("abAB12!@")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
 
         System.out.println("============== FIRST WHEN START ==============");
@@ -169,14 +169,14 @@ public class E2ETest {
         thenSoftly(softly -> {
             softly.then(member.getId()).isNotNull();
             softly.then(member.getOrders()).isEmpty();
-            softly.then(passwordEncoder.matches("00000000", member.getPassword())).isTrue();
+            softly.then(passwordEncoder.matches("abAB12!@", member.getPassword())).isTrue();
             softly.then(member)
-                    .extracting("name", "initial", "loginId", "role", "address.city", "address.street", "address.zipcode")
-                    .containsExactly("유저A", "ㅇㅈA", "id_A", Role.USER, "Seoul", "Gangnam", "01234");
+                    .extracting("name", "initial", "loginId", "role", "address.zipcode", "address.baseAddress", "address.detailAddress")
+                    .containsExactly("유저A", "ㅇㅈA", "id_A", Role.USER, "01234", "서울시 강남구", "101동 101호");
         });
 
         //given
-        MemberLoginRequest loginRequest = new MemberLoginRequest("id_A", "00000000");
+        MemberLoginRequest loginRequest = new MemberLoginRequest("id_A", "abAB12!@");
 
         System.out.println("============== SECOND WHEN START ==============");
 

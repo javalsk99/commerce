@@ -5,6 +5,7 @@ import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.CategoryRepository;
 import lsk.commerce.repository.ProductRepository;
 import lsk.commerce.service.CategoryProductService;
@@ -71,7 +72,7 @@ public class CategoryIntegrationTest {
                     categoryService.create(request);
                     em.flush();
                 })
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DuplicateResourceException.class)
                         .hasMessage("이미 존재하는 카테고리입니다. name: " + "댄스");
 
                 System.out.println("================= WHEN END ===================");
@@ -89,7 +90,7 @@ public class CategoryIntegrationTest {
             @DisplayName("상품과 연결된 카테고리는 삭제할 수 없다")
             void hasProduct() {
                 //given
-                String categoryName = categoryService.create(new CategoryCreateRequest("가요", null));
+                String categoryName = categoryService.create(new CategoryCreateRequest("댄스", null));
 
                 productService.register(createRequest("BANG BANG"), List.of(categoryName));
 

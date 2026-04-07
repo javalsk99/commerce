@@ -7,6 +7,7 @@ import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.response.CategoryDisconnectResponse;
 import lsk.commerce.dto.response.CategoryResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -127,7 +128,7 @@ class CategoryServiceTest {
 
                 //when & then
                 thenThrownBy(() -> categoryService.create(request))
-                        .isInstanceOf(IllegalArgumentException.class)
+                        .isInstanceOf(DuplicateResourceException.class)
                         .hasMessage("이미 존재하는 카테고리입니다. name: " + "컴퓨터/IT");
 
                 //then

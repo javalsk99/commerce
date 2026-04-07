@@ -5,6 +5,7 @@ import lsk.commerce.domain.Member;
 import lsk.commerce.domain.Role;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.MemberRepository;
 import lsk.commerce.service.MemberService;
 import org.junit.jupiter.api.DisplayName;
@@ -44,7 +45,7 @@ public class MemberIntegrationTest {
             @DisplayName("회원 가입 시 기본 등급이 부여되며, 비밀번호는 암호화되어 저장된다")
             void basic() {
                 //given
-                MemberCreateRequest request = createRequest("UserA", "id_A", "00000000");
+                MemberCreateRequest request = createRequest("UserA", "id_A", "abAB12!@");
 
                 System.out.println("================= WHEN START =================");
 
@@ -61,8 +62,8 @@ public class MemberIntegrationTest {
                         .orElseThrow(() -> new AssertionError("회원이 저장되지 않았습니다"));
 
                 thenSoftly(softly -> {
-                    softly.then(member.getPassword()).isNotEqualTo("00000000");
-                    softly.then(passwordEncoder.matches("00000000", member.getPassword())).isTrue();
+                    softly.then(member.getPassword()).isNotEqualTo("abAB12!@");
+                    softly.then(passwordEncoder.matches("abAB12!@", member.getPassword())).isTrue();
                     softly.then(member.getRole()).isEqualTo(Role.USER);
                 });
             }
@@ -75,7 +76,7 @@ public class MemberIntegrationTest {
             @DisplayName("한 아이디가 중복으로 가입될 수 없다")
             void duplicateJoin() {
                 //given
-                memberService.join(createRequest("UserA", "id_A", "00000000"));
+                memberService.join(createRequest("UserA", "id_A", "abAB12!@"));
 
                 em.flush();
                 em.clear();
@@ -89,8 +90,8 @@ public class MemberIntegrationTest {
                     memberService.join(request);
                     em.flush();
                 })
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 사용 중인 아이디입니다");
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("이미 사용 중인 아이디입니다. loginId: " + "id_A");
 
                 System.out.println("================= WHEN END ===================");
             }
@@ -107,7 +108,7 @@ public class MemberIntegrationTest {
             @DisplayName("비밀번호 수정 시, 암호화되어 저장된다")
             void basic() {
                 //given
-                String loginId = memberService.join(createRequest("UserA", "id_A", "00000000"));
+                String loginId = memberService.join(createRequest("UserA", "id_A", "abAB12!@"));
 
                 em.flush();
                 em.clear();
@@ -141,9 +142,9 @@ public class MemberIntegrationTest {
                 .name(name)
                 .loginId(loginId)
                 .password(password)
-                .city("Seoul")
-                .street("Gangnam")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
     }
 }

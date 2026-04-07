@@ -59,8 +59,8 @@ class MemberRepositoryTest {
                 //then
                 Member findMember = em.find(Member.class, memberId);
                 then(findMember)
-                        .extracting("id", "name", "initial", "loginId", "role", "password", "address.city", "address.street", "address.zipcode")
-                        .containsExactly(memberId, "유저A", "ㅇㅈA", "id_A", Role.USER, "00000000", "Seoul", "Gangnam", "01234");
+                        .extracting("id", "name", "initial", "loginId", "role", "password", "address.zipcode", "address.baseAddress", "address.detailAddress")
+                        .containsExactly(memberId, "유저A", "ㅇㅈA", "id_A", Role.USER, "abAB12!@", "01234", "서울시 강남구", "101동 101호");
             }
         }
 
@@ -106,21 +106,21 @@ class MemberRepositoryTest {
 
             static Stream<Arguments> nullFieldsMemberProvider() {
                 return Stream.of(
-                        argumentSet("이름 null", Member.builder().loginId("id_A").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("아이디 null", Member.builder().name("유저A").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("비밀번호 null", Member.builder().name("유저A").loginId("id_A").city("Seoul").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("city null", Member.builder().name("유저A").loginId("id_A").password("00000000").street("Gangnam").zipcode("01234").build()),
-                        argumentSet("street null", Member.builder().name("유저A").loginId("id_A").password("00000000").city("Seoul").zipcode("01234").build()),
-                        argumentSet("zipcode null", Member.builder().name("유저A").loginId("id_A").password("00000000").city("Seoul").street("Gangnam").build())
+                        argumentSet("이름 null", Member.builder().loginId("id_A").password("abAB12!@").zipcode("01234").baseAddress("서울시 강남구").detailAddress("101동 101호").build()),
+                        argumentSet("아이디 null", Member.builder().name("유저A").password("abAB12!@").zipcode("01234").baseAddress("서울시 강남구").detailAddress("101동 101호").build()),
+                        argumentSet("비밀번호 null", Member.builder().name("유저A").loginId("id_A").zipcode("01234").baseAddress("서울시 강남구").detailAddress("101동 101호").build()),
+                        argumentSet("zipcode null", Member.builder().name("유저A").loginId("id_A").password("abAB12!@").baseAddress("서울시 강남구").detailAddress("101동 101호").build()),
+                        argumentSet("baseAddress null", Member.builder().name("유저A").loginId("id_A").password("abAB12!@").zipcode("01234").detailAddress("101동 101호").build()),
+                        argumentSet("detailAddress null", Member.builder().name("유저A").loginId("id_A").password("abAB12!@").zipcode("01234").baseAddress("서울시 강남구").build())
                 );
             }
 
             static Stream<Arguments> wrongLoginIdMemberProvider() {
                 return Stream.of(
-                        argumentSet("아이디 빈 문자열", Member.builder().name("유저A").loginId("").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build(), "공백일 수 없습니다"),
-                        argumentSet("아이디 공백", Member.builder().name("유저A").loginId("    ").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build(), "공백일 수 없습니다"),
-                        argumentSet("아이디 4자 미만", Member.builder().name("유저A").loginId("idA").password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build(), "크기가 4에서 20 사이여야 합니다"),
-                        argumentSet("아이디 20자 초과", Member.builder().name("유저A").loginId("a".repeat(21)).password("00000000").city("Seoul").street("Gangnam").zipcode("01234").build(), "크기가 4에서 20 사이여야 합니다")
+                        argumentSet("아이디 빈 문자열", Member.builder().name("유저A").loginId("").password("abAB12!@").zipcode("01234").baseAddress("서울시 강남구").detailAddress("101동 101호").build(), "공백일 수 없습니다"),
+                        argumentSet("아이디 공백", Member.builder().name("유저A").loginId("    ").password("abAB12!@").zipcode("01234").baseAddress("서울시 강남구").detailAddress("101동 101호").build(), "공백일 수 없습니다"),
+                        argumentSet("아이디 4자 미만", Member.builder().name("유저A").loginId("idA").password("abAB12!@").zipcode("01234").baseAddress("서울시 강남구").detailAddress("101동 101호").build(), "크기가 4에서 20 사이여야 합니다"),
+                        argumentSet("아이디 20자 초과", Member.builder().name("유저A").loginId("a".repeat(21)).password("abAB12!@").zipcode("01234").baseAddress("서울시 강남구").detailAddress("101동 101호").build(), "크기가 4에서 20 사이여야 합니다")
                 );
             }
         }
@@ -250,10 +250,10 @@ class MemberRepositoryTest {
         return Member.builder()
                 .name("유저A")
                 .loginId("id_A")
-                .password("00000000")
-                .city("Seoul")
-                .street("Gangnam")
+                .password("abAB12!@")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
     }
 
@@ -261,10 +261,10 @@ class MemberRepositoryTest {
         return Member.builder()
                 .name("유저B")
                 .loginId("id_A")
-                .password("11111111")
-                .city("Gyeonggi-do")
-                .street("Gangbuk")
-                .zipcode("01235")
+                .password("bcBC23@#")
+                .zipcode("01234")
+                .baseAddress("서울시 강북구")
+                .detailAddress("101동 102호")
                 .build();
     }
 
@@ -272,10 +272,10 @@ class MemberRepositoryTest {
         return Member.builder()
                 .name("유저C")
                 .loginId("id_C")
-                .password("22222222")
-                .city("Seoul")
-                .street("Gangdong")
-                .zipcode("01236")
+                .password("cdCD34#$")
+                .zipcode("01234")
+                .baseAddress("서울시 강동구")
+                .detailAddress("101동 103호")
                 .build();
     }
 }

@@ -6,7 +6,7 @@
 
       private void validateCategory(Category category) {
           if (CategoryRepository.existsByName(category.getName())) {
-              throw new IllegalArgumentException("이미 존재하는 카테고리입니다. name: " + categoryName);
+              throw new DuplicateResourceException("이미 존재하는 카테고리입니다. name: " + categoryName);
           }
       }
 
@@ -27,29 +27,29 @@
   해결: 같은 이름의 카테고리가 있는지 검증하면서, 부모 카테고리의 이름이 있으면 같이 조회
 
       CategoryRepository
-      public List<Category> existsByCategoryName(String categoryName, String parentCategoryName) {
+      public List<Category> existsByCategoryName(String categoryName, String name) {
           return em.createQuery(
                   "select c from Category c" +
                           " where c.name = :name" +
                           " or (:parentName is not null and c.name = :parentName)", Category.class)
                   .setParameter("name", categoryName)
-                  .setParameter("parentName", parentCategoryName)
+                  .setParameter("parentName", name)
                   .getResultList();
       }
 
       CategoryService
-      private Category validateCategory(String categoryName, String parentCategoryName) {
-          List<Category> categories = categoryRepository.existsByCategoryName(categoryName, parentCategoryName);
+      private Category validateCategory(String categoryName, String name) {
+          List<Category> categories = categoryRepository.existsByCategoryName(categoryName, name);
           if (categories.stream().anyMatch(c -> c.getName().equals(categoryName))) {
-              throw new IllegalArgumentException("이미 존재하는 카테고리입니다. name: " + categoryName);
+              throw new DuplicateResourceException("이미 존재하는 카테고리입니다. name: " + categoryName);
           }
 
           Category parentCategory = null;
-          if (parentCategoryName != null) {
+          if (name != null) {
               parentCategory = categories.stream()
-                      .filter(c -> c.getName().equals(parentCategoryName))
+                      .filter(c -> c.getName().equals(name))
                       .findFirst()
-                      .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + parentCategoryName));
+                      .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + name));
           }
 
           return parentCategory;
@@ -87,7 +87,7 @@
 
       CategoryController
       Category category = categoryService.findCategoryByName(categoryName);
-      Category newParentCategory = categoryService.findCategoryByName(newParentCategoryName);
+      Category newParentCategory = categoryService.findCategoryByName(newname);
       categoryService.changeParentCategory(category, newParentCategory);
 
   해결: categoryRepository.findAll()로 모든 카테고리를 조회하고, 카테고리들을 꺼내서 수정을 해서 두 번의 select 쿼리를 한 번으로 줄였다.
@@ -100,14 +100,14 @@
               .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + categoryName));
 
       Category newParentCategory = categories.stream()
-              .filter(c -> c.getName().equals(newParentCategoryName))
+              .filter(c -> c.getName().equals(newname))
               .findFirst()
-              .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + newParentCategoryName));
+              .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + newname));
 
       return category.changeParentCategory(newParentCategory);
 
       CategoryController
-      Category category = categoryService.changeParentCategory(categoryName, newParentCategoryName);
+      Category category = categoryService.changeParentCategory(categoryName, newname);
 
 - DELETE /categories/{categoryName} 두 번의 카테고리 select, 한 번의 카테고리 상품 select 쿼리가 나오고 카테고리 delete 쿼리가 나온다.  
   원인: 자식이 있는지, 카테고리에 등록된 상품이 있는지 검증해서 세 번의 select 쿼리가 나온다.

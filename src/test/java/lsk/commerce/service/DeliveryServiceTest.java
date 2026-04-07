@@ -60,9 +60,9 @@ class DeliveryServiceTest {
     @BeforeEach
     void beforeEach() {
         member = Member.builder()
-                .city("Seoul")
-                .street("Gangnam")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
         delivery = new Delivery(member);
 

@@ -22,8 +22,10 @@ import lsk.commerce.query.OrderQueryService;
 import lsk.commerce.query.dto.OrderQueryDto;
 import lsk.commerce.query.dto.OrderSearchCond;
 import lsk.commerce.service.OrderService;
-import lsk.commerce.swagger.ApiOwnerError;
-import lsk.commerce.swagger.ApiRoleError;
+import lsk.commerce.swagger.ApiMemberOwnerForbiddenResponse;
+import lsk.commerce.swagger.ApiAdminForbiddenResponse;
+import lsk.commerce.swagger.ApiOrderOwnerForbiddenResponse;
+import lsk.commerce.swagger.ApiUnauthorizedResponse;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,9 +55,9 @@ public class OrderController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200"),
-            @ApiResponse(responseCode = "401", description = "비 로그인", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 상품", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
+    @ApiUnauthorizedResponse
     @PostMapping("/orders")
     public ResponseEntity<Result<String>> create(
             @RequestBody @Valid OrderCreateRequest request,
@@ -73,7 +75,7 @@ public class OrderController {
                     "원하지 않는 검색 조건은 비워주세요."
     )
     @ApiResponse(responseCode = "200")
-    @ApiRoleError
+    @ApiAdminForbiddenResponse
     @GetMapping("/orders")
     public ResponseEntity<Result<List<OrderSearchResponse>>> orderList(@ParameterObject @ModelAttribute OrderSearchCond cond) {
         List<OrderSearchResponse> orderSearchResponseList = orderQueryService.searchOrders(cond);
@@ -82,14 +84,14 @@ public class OrderController {
 
     @Operation(
             summary = "주문 상세 조회",
-            description = "**본인**만 조회할 수 있습니다. \n\n" +
+            description = "**주문의 주인**만 조회할 수 있습니다. \n\n" +
                     "주문의 상세 정보를 조회합니다."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
-    @ApiOwnerError
+    @ApiOrderOwnerForbiddenResponse
     @GetMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderQueryDto>> findOrder(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
@@ -116,7 +118,7 @@ public class OrderController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
-    @ApiOwnerError
+    @ApiOrderOwnerForbiddenResponse
     @PatchMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<OrderChangeResponse>> changeOrder(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
@@ -141,7 +143,7 @@ public class OrderController {
                     "**결제가 완료된 주문**은 **배송이 완료**돼야 삭제할 수 있습니다."
     )
     @ApiResponse(responseCode = "200")
-    @ApiOwnerError
+    @ApiOrderOwnerForbiddenResponse
     @DeleteMapping("/orders/{orderNumber}")
     public ResponseEntity<Result<String>> delete(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
@@ -166,7 +168,7 @@ public class OrderController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
-    @ApiOwnerError
+    @ApiOrderOwnerForbiddenResponse
     @PatchMapping("/orders/{orderNumber}/cancel")
     public ResponseEntity<Result<OrderCancelResponse>> cancelOrder(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")

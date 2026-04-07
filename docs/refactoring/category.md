@@ -47,3 +47,8 @@
 
 - validateAndGetCategories  
   ProductController의 create에서 리스트를 @Size(min = 1)으로 검증해서 null과 empty 체크를 제거했다.
+
+
+- validateCategory  
+  이름 중복을 409 에러로 변경했다.
+

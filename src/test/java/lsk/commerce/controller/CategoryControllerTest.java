@@ -358,7 +358,7 @@ class CategoryControllerTest {
                 CategoryChangeParentRequest request = new CategoryChangeParentRequest("록");
                 String json = objectMapper.writeValueAsString(request);
 
-                given(categoryService.changeParentCategory(anyString(), any(CategoryChangeParentRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + request.name()));
+                given(categoryService.changeParentCategory(anyString(), any(CategoryChangeParentRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + request.parentName()));
 
                 //when & then
                 mvc.perform(patch("/categories/{categoryName}", "댄스")

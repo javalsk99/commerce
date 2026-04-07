@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.domain.Member;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
@@ -21,9 +22,9 @@ import lsk.commerce.query.MemberQueryService;
 import lsk.commerce.query.dto.MemberQueryDto;
 import lsk.commerce.query.dto.MemberSearchCond;
 import lsk.commerce.service.MemberService;
-import lsk.commerce.swagger.ApiOwnerError;
-import lsk.commerce.swagger.ApiRoleError;
-import lsk.commerce.swagger.ApiValidationMember;
+import lsk.commerce.swagger.ApiAdminForbiddenResponse;
+import lsk.commerce.swagger.ApiMemberOwnerForbiddenResponse;
+import lsk.commerce.swagger.ApiValidationMemberResponse;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,15 +50,24 @@ public class MemberController {
     @Operation(
             summary = "회원 가입",
             description = "회원을 생성합니다. \n\n" +
-                    "**이름**: 필수, 2자 이상 50자 이하 \n\n" +
-                    "**아이디**: 필수, 중복 불가, 4자 이상 20자 이하 \n\n" +
-                    "**비밀번호**: 필수, 8자 이상 20자 이하 \n\n" +
-                    "**도시명**: 필수, 50자 이하 \n\n" +
-                    "**거리명**: 필수, 50자 이하 \n\n" +
-                    "**우편번호**: 필수, 10자 이하"
+                    "**이름**: (필수) 한글, 영문, 숫자, _만 사용하여 2~50자 사이로 입력해 주세요. \n\n" +
+                    "**아이디**: (필수, 중복 불가) 영문, 숫자, _만 사용하여 4~20자 사이로 입력해 주세요. \n\n" +
+                    "**비밀번호**: (필수) 영문, 숫자, 특수문자(!@#$%^&*()_+=-) 조합으로 8~20자 사이로 입력해 주세요. \n\n" +
+                    "**우편번호**: (필수) 숫자 5자로 입력해 주세요. \n\n" +
+                    "**도시명**: (필수) 한글, 영문, 숫자, -, 공백만 사용하여 1~50자 사이로 입력해 주세요. \n\n" +
+                    "**거리명**: (필수) 한글, 영문, 숫자, 특수문자(().,-), 공백만 사용하여 1~100자 사이로 입력해 주세요."
     )
-    @ApiResponse(responseCode = "201")
-    @ApiValidationMember
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201"),
+            @ApiResponse(
+                    responseCode = "409",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResult.class),
+                            examples = @ExampleObject(name = "아이디 중복", value = "{\"code\": \"DUPLICATE_RESOURCE\", \"message\": \"이미 사용 중인 아이디입니다. loginId: test_id_001\"}")
+                    )
+            )
+    })
+    @ApiValidationMemberResponse
     @PostMapping("/members")
     public ResponseEntity<Result<String>> create(@RequestBody @Valid MemberCreateRequest request) {
         String loginId = memberService.join(request);
@@ -71,7 +81,7 @@ public class MemberController {
                     "원하지 않는 검색 조건은 비워주세요."
     )
     @ApiResponse(responseCode = "200")
-    @ApiRoleError
+    @ApiAdminForbiddenResponse
     @GetMapping("/members")
     public ResponseEntity<Result<List<MemberResponse>>> memberList(@ParameterObject @ModelAttribute MemberSearchCond cond) {
         List<MemberResponse> memberResponseList = memberQueryService.searchMembers(cond);
@@ -84,10 +94,11 @@ public class MemberController {
                     "회원의 상세 정보를 조회합니다."
     )
     @ApiResponse(responseCode = "200")
-    @ApiOwnerError
+    @ApiMemberOwnerForbiddenResponse
     @GetMapping("/members/{memberLoginId}")
     public ResponseEntity<Result<MemberQueryDto>> findMember(
             @Parameter(example = "testId")
+            @Pattern(regexp = "^[A-Za-z0-9_]{4,20}$")
             @PathVariable("memberLoginId") String memberLoginId
     ) {
         MemberQueryDto memberQueryDto = memberQueryService.findMember(memberLoginId);
@@ -100,11 +111,21 @@ public class MemberController {
                     "**관리자 계정**은 변경되지 않고 성공합니다. \n\n" +
                     "**비밀번호**: 필수, 8자 이하, 기존과 달라야 합니다."
     )
-    @ApiResponse(responseCode = "200")
-    @ApiOwnerError
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResult.class),
+                            examples = @ExampleObject(name = "비밀번호 일치", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"비밀번호가 기존과 달라야 합니다\"}")
+                    )
+            )
+    })
+    @ApiMemberOwnerForbiddenResponse
     @PostMapping("/members/{memberLoginId}/password")
     public ResponseEntity<Result<String>> changePassword(
             @Parameter(example = "testId")
+            @Pattern(regexp = "^[A-Za-z0-9_]{4,20}$")
             @PathVariable("memberLoginId") String memberLoginId,
             @RequestBody @Valid MemberChangePasswordRequest request
     ) {
@@ -120,15 +141,16 @@ public class MemberController {
                     "**우편번호**: 필수, 10자 이하"
     )
     @ApiResponse(responseCode = "200")
-    @ApiOwnerError
+    @ApiMemberOwnerForbiddenResponse
     @PatchMapping("/members/{memberLoginId}/address")
     public ResponseEntity<Result<MemberResponse>> changeAddress(
             @Parameter(example = "test_id_001")
+            @Pattern(regexp = "^[A-Za-z0-9_]{4,20}$")
             @PathVariable("memberLoginId") String memberLoginId,
             @RequestBody @Valid MemberChangeAddressRequest request
     ) {
         Member member = memberService.changeAddress(memberLoginId, request);
-        MemberResponse memberResponse = memberService.getMemberDto(member);
+        MemberResponse memberResponse = memberService.getMemberResponse(member);
         return ResponseEntity.ok(new Result<>(memberResponse, 1));
     }
 
@@ -138,10 +160,11 @@ public class MemberController {
                     "**관리자 계정**은 삭제되지 않고 성공합니다."
     )
     @ApiResponse(responseCode = "200")
-    @ApiOwnerError
+    @ApiMemberOwnerForbiddenResponse
     @DeleteMapping("/members/{memberLoginId}")
     public ResponseEntity<Result<String>> delete(
             @Parameter(example = "testId")
+            @Pattern(regexp = "^[A-Za-z0-9_]{4,20}$")
             @PathVariable("memberLoginId") String memberLoginId
     ) {
         memberService.deleteMember(memberLoginId);

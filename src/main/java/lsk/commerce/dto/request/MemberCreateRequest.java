@@ -3,29 +3,33 @@ package lsk.commerce.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 @Builder
 public record MemberCreateRequest(
         @Schema(example = "유저")
-        @NotBlank(message = "이름은 필수입니다") @Size(message = "이름은 2자에서 50자 사이로 입력해 주세요", min = 2, max = 50)
+        @NotBlank(message = "이름은 필수입니다")
+        @Pattern(regexp = "^[A-Za-z가-힣0-9_]{2,50}", message = "이름은 한글, 영문, 숫자, _만 사용하여 2~50자 사이로 입력해 주세요")
         String name,
         @Schema(example = "test_id_001")
-        @NotBlank(message = "아이디는 필수입니다") @Size(message = "아이디는 4자에서 20자 사이로 입력해 주세요", min = 4, max = 20)
-        @Pattern(regexp = "^[A-Za-z0-9_]{4,20}$")
+        @NotBlank(message = "아이디는 필수입니다")
+        @Pattern(regexp = "^[A-Za-z0-9_]{4,20}$", message = "아이디는 영문, 숫자, _만 사용하여 4~20자 사이로 입력해 주세요")
         String loginId,
-        @Schema(example = "12345678")
-        @NotBlank(message = "비밀번호는 필수입니다") @Size(message = "비밀번호는 8자에서 20자 사이로 입력해 주세요", min = 8, max = 20)
+        @Schema(example = "abAB12!@")
+        @NotBlank(message = "비밀번호는 필수입니다")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[!@#$%^&*()_+=-])[A-Za-z0-9!@#$%^&*()_+=-]{8,20}$", message = "비밀번호는 영문, 숫자, 특수문자(!@#$%^&*()_+=-) 조합으로 8~20자 사이로 입력해 주세요")
         String password,
-        @Schema(example = "Seoul")
-        @NotBlank(message = "도시명은 필수입니다") @Size(message = "도시명은 50자 이하로 입력해 주세요", max = 50)
-        String city,
-        @Schema(example = "Gangnam")
-        @NotBlank(message = "거리명은 필수입니다") @Size(message = "거리명은 50자 이하로 입력해 주세요", max = 50)
-        String street,
         @Schema(example = "01234")
-        @NotBlank(message = "우편번호는 필수입니다") @Size(message = "우편번호는 50자 이하로 입력해 주세요", max = 10)
-        String zipcode
-) {
+        @NotBlank(message = "우편번호는 필수입니다")
+        @Pattern(regexp = "^\\d{5}$", message = "우편번호는 숫자 5자로 입력해 주세요")
+        String zipcode,
+        @Schema(example = "서울시 강남구")
+        @NotBlank(message = "기본 주소는 필수입니다")
+        @Pattern(regexp = "^[A-Za-z가-힣0-9 -]{1,50}$", message = "기본 주소는 한글, 영문, 숫자, -, 공백만 사용하여 1~50자 사이로 입력해 주세요")
+        String baseAddress,
+        @Schema(example = "101동 101호")
+        @NotBlank(message = "상세 주소는 필수입니다")
+        @Pattern(regexp = "^[A-Za-z가-힣0-9 ().,-]{1,100}$", message = "상세 주소는 한글, 영문, 숫자, 특수문자(().,-), 공백만 사용하여 1~100자 사이로 입력해 주세요")
+        String detailAddress
+        ) {
 }

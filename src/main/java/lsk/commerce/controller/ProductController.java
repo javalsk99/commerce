@@ -24,7 +24,8 @@ import lsk.commerce.query.ProductQueryService;
 import lsk.commerce.query.dto.ProductSearchCond;
 import lsk.commerce.service.CategoryProductService;
 import lsk.commerce.service.ProductService;
-import lsk.commerce.swagger.ApiRoleError;
+import lsk.commerce.swagger.ApiAdminForbiddenResponse;
+import lsk.commerce.swagger.ApiUnauthorizedResponse;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -74,7 +75,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 카테고리", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
-    @ApiRoleError
+    @ApiAdminForbiddenResponse
     @PostMapping("/products")
     public ResponseEntity<Result<String>> create(
             @Parameter(example = "가요_001, 가요_002")
@@ -90,10 +91,8 @@ public class ProductController {
             description = "검색 조건에 맞춰 조회합니다. \n\n" +
                     "원하지 않는 검색 조건은 비워주세요."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200"),
-            @ApiResponse(responseCode = "401", description = "비 로그인", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
-    })
+    @ApiResponse(responseCode = "200")
+    @ApiUnauthorizedResponse
     @GetMapping("/products")
     public ResponseEntity<Result<List<ProductResponse>>> productList(@ParameterObject @ModelAttribute ProductSearchCond cond) {
         List<ProductResponse> productResponseList = productQueryService.searchProducts(cond);
@@ -103,9 +102,9 @@ public class ProductController {
     @Operation(summary = "상품 상세 조회", description = "상품의 상세 정보를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200"),
-            @ApiResponse(responseCode = "401", description = "비 로그인", content = @Content(schema = @Schema(implementation = ErrorResult.class))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 상품", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
+    @ApiUnauthorizedResponse
     @GetMapping("/products/{productNumber}")
     public ResponseEntity<Result<ProductDetailResponse>> findProduct(
             @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
@@ -125,7 +124,7 @@ public class ProductController {
             @ApiResponse(responseCode = "200"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 상품", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
-    @ApiRoleError
+    @ApiAdminForbiddenResponse
     @PatchMapping("/products/{productNumber}")
     public ResponseEntity<Result<ProductDetailResponse>> changeProduct(
             @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
@@ -143,7 +142,7 @@ public class ProductController {
                     "예시 상품은 삭제되지 않고 성공합니다."
     )
     @ApiResponse(responseCode = "200")
-    @ApiRoleError
+    @ApiAdminForbiddenResponse
     @DeleteMapping("/products/{productNumber}")
     public ResponseEntity<Result<String>> delete(
             @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
@@ -158,7 +157,7 @@ public class ProductController {
             @ApiResponse(responseCode = "200"),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 카테고리 또는 상품", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
     })
-    @ApiRoleError
+    @ApiAdminForbiddenResponse
     @PatchMapping("/products/{productNumber}/{categoryName}")
     public ResponseEntity<Result<ProductNameWithCategoryNameResponse>> connectCategory(
             @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")

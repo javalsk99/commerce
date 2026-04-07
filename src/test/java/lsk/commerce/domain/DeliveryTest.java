@@ -26,9 +26,9 @@ class DeliveryTest {
     @BeforeEach
     void beforeEach() {
         member = Member.builder()
-                .city("Seoul")
-                .street("Gangnam")
                 .zipcode("01234")
+                .baseAddress("서울시 강남구")
+                .detailAddress("101동 101호")
                 .build();
     }
 
@@ -46,8 +46,8 @@ class DeliveryTest {
                 //then
                 thenSoftly(softly -> {
                     softly.then(correctAddressDelivery.getAddress())
-                            .extracting("city", "street", "zipcode")
-                            .containsExactly("Seoul", "Gangnam", "01234");
+                            .extracting("zipcode", "baseAddress", "detailAddress")
+                            .containsExactly("01234", "서울시 강남구", "101동 101호");
                     softly.then(correctAddressDelivery.getDeliveryStatus()).isEqualTo(DeliveryStatus.WAITING);
                 });
             }
@@ -69,12 +69,12 @@ class DeliveryTest {
 
             @ParameterizedTest
             @MethodSource("addressProvider")
-            void wrongMemberAddress(String city, String street, String zipcode, String message) {
+            void wrongMemberAddress(String zipcode, String baseAddress, String detailAddress, String message) {
                 //given
                 Member wrongAddressMember = Member.builder()
-                        .city(city)
-                        .street(street)
                         .zipcode(zipcode)
+                        .baseAddress(baseAddress)
+                        .detailAddress(detailAddress)
                         .build();
 
                 //when & then
@@ -85,9 +85,9 @@ class DeliveryTest {
 
             static Stream<Arguments> addressProvider() {
                 return Stream.of(
-                        argumentSet("city null", null, "Gangnam", "01234", "회원의 주소 정보가 잘못됐습니다. address.city = " + null + ", address.street = " + "Gangnam" + ", address.zipcode = " + "01234"),
-                        argumentSet("street null", "Seoul", null, "01234", "회원의 주소 정보가 잘못됐습니다. address.city = " + "Seoul" + ", address.street = " + null + ", address.zipcode = " + "01234"),
-                        argumentSet("zipcode null", "Seoul", "Gangnam", null, "회원의 주소 정보가 잘못됐습니다. address.city = " + "Seoul" + ", address.street = " + "Gangnam" + ", address.zipcode = " + null)
+                        argumentSet("zipcode null", null, "서울시 강남구", "101동 101호", "회원의 주소 정보가 잘못됐습니다. address.zipcode = " + null + ", address.baseAddress = " + "서울시 강남구" + ", address.detailAddress = " + "101동 101호"),
+                        argumentSet("baseAddress null", "01234", null, "101동 101호", "회원의 주소 정보가 잘못됐습니다. address.zipcode = " + "01234" + ", address.baseAddress = " + null + ", address.detailAddress = " + "101동 101호"),
+                        argumentSet("detailAddress null", "01234", "서울시 강남구", null, "회원의 주소 정보가 잘못됐습니다. address.zipcode = " + "01234" + ", address.baseAddress = " + "서울시 강남구" + ", address.detailAddress = " + null)
                 );
             }
         }

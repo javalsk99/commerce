@@ -41,7 +41,7 @@ public class Member {
     private List<Order> orders = new ArrayList<>();
 
     @NotBlank
-    @Size(min = 2, max = 50)
+    @Pattern(regexp = "^[A-Za-z가-힣0-9_]{2,50}", message = "이름은 한글, 영문, 숫자, _만 사용하여 2~50자 사이로 입력해 주세요")
     @Column(length = 50)
     private String name;
 
@@ -68,12 +68,12 @@ public class Member {
     private Address address;
 
     @Builder
-    public Member(String name, String loginId, String password, String city, String street, String zipcode) {
+    public Member(String name, String loginId, String password, String zipcode, String baseAddress, String detailAddress) {
         this.name = name;
         this.loginId = loginId;
         this.password = password;
         this.role = Role.USER;
-        this.address = new Address(city, street, zipcode);
+        this.address = new Address(zipcode, baseAddress, detailAddress);
     }
 
     public void changePassword(String newPassword, PasswordEncoder passwordEncoder) {
@@ -86,12 +86,12 @@ public class Member {
         this.password = passwordEncoder.encode(newPassword);
     }
 
-    public void changeAddress(String newCity, String newStreet, String newZipcode) {
-        if (this.address.getCity().equals(newCity) && this.address.getStreet().equals(newStreet) && this.address.getZipcode().equals(newZipcode)) {
+    public void changeAddress(String newZipcode, String newBaseAddress, String newDetailAddress) {
+        if (this.address.getZipcode().equals(newZipcode) && this.address.getBaseAddress().equals(newBaseAddress) && this.address.getDetailAddress().equals(newDetailAddress)) {
             return;
         }
 
-        this.address = new Address(newCity, newStreet, newZipcode);
+        this.address = new Address(newZipcode, newBaseAddress, newDetailAddress);
     }
 
     @PrePersist

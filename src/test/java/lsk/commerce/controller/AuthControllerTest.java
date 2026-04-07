@@ -55,7 +55,7 @@ class AuthControllerTest {
             @Test
             void basic() throws Exception {
                 //given
-                MemberLoginRequest request = new MemberLoginRequest("id_A", "00000000");
+                MemberLoginRequest request = new MemberLoginRequest("id_A", "abAB12!@");
                 String json = objectMapper.writeValueAsString(request);
 
                 given(authService.login(anyString(), anyString())).willReturn("token");
@@ -122,7 +122,7 @@ class AuthControllerTest {
 
             static Stream<Arguments> invalidLoginRequestProvider() {
                 return Stream.of(
-                        argumentSet("loginId null", new MemberLoginRequest(null, "00000000")),
+                        argumentSet("loginId null", new MemberLoginRequest(null, "abAB12!@")),
                         argumentSet("password null", new MemberLoginRequest("id_A", null)),
                         argumentSet("password 빈 문자열", new MemberLoginRequest("id_A", "")),
                         argumentSet("password 공백", new MemberLoginRequest("id_A", " ".repeat(8)))
