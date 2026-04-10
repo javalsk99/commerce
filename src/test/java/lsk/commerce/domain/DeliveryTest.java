@@ -85,9 +85,9 @@ class DeliveryTest {
 
             static Stream<Arguments> addressProvider() {
                 return Stream.of(
-                        argumentSet("zipcode null", null, "서울시 강남구", "101동 101호", "회원의 주소 정보가 잘못됐습니다. address.zipcode = " + null + ", address.baseAddress = " + "서울시 강남구" + ", address.detailAddress = " + "101동 101호"),
-                        argumentSet("baseAddress null", "01234", null, "101동 101호", "회원의 주소 정보가 잘못됐습니다. address.zipcode = " + "01234" + ", address.baseAddress = " + null + ", address.detailAddress = " + "101동 101호"),
-                        argumentSet("detailAddress null", "01234", "서울시 강남구", null, "회원의 주소 정보가 잘못됐습니다. address.zipcode = " + "01234" + ", address.baseAddress = " + "서울시 강남구" + ", address.detailAddress = " + null)
+                        argumentSet("zipcode null", null, "서울시 강남구", "101동 101호", "회원의 주소 정보가 잘못되었습니다. address.zipcode = " + null + ", address.baseAddress = " + "서울시 강남구" + ", address.detailAddress = " + "101동 101호"),
+                        argumentSet("baseAddress null", "01234", null, "101동 101호", "회원의 주소 정보가 잘못되었습니다. address.zipcode = " + "01234" + ", address.baseAddress = " + null + ", address.detailAddress = " + "101동 101호"),
+                        argumentSet("detailAddress null", "01234", "서울시 강남구", null, "회원의 주소 정보가 잘못되었습니다. address.zipcode = " + "01234" + ", address.baseAddress = " + "서울시 강남구" + ", address.detailAddress = " + null)
                 );
             }
         }

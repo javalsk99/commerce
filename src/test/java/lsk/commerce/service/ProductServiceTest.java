@@ -10,6 +10,7 @@ import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -206,8 +207,8 @@ class ProductServiceTest {
 
                 //when & then
                 thenThrownBy(() -> productService.register(request, List.of("가요")))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 존재하는 상품입니다");
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("이미 존재하는 상품입니다. name: " + "BANG BANG");
 
                 //then
                 thenSoftly(softly -> {
@@ -308,7 +309,7 @@ class ProductServiceTest {
                 //when & then
                 thenThrownBy(() -> productService.findProduct("lllIIIll00OO"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 상품입니다");
+                        .hasMessage("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO");
 
                 //then
                 BDDMockito.then(productRepository).should().findByNumber(anyString());

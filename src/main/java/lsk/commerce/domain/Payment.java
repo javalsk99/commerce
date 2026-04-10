@@ -98,7 +98,7 @@ public class Payment {
 
         OrderStatus orderStatus = order.getOrderStatus();
         if (orderStatus == OrderStatus.CANCELED) {
-            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다. OrderStatus: " + orderStatus);
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다");
         }
 
         if (orderStatus != OrderStatus.CREATED) {
@@ -126,7 +126,7 @@ public class Payment {
 
         OrderStatus orderStatus = this.order.getOrderStatus();
         if (orderStatus == OrderStatus.CANCELED) {
-            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다. OrderStatus: " + orderStatus);
+            throw new IllegalStateException("취소된 주문은 결제할 수 없습니다");
         }
 
         if (orderStatus == OrderStatus.PAID || orderStatus == OrderStatus.DELIVERED) {

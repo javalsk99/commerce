@@ -6,10 +6,12 @@ import io.portone.sdk.server.webhook.WebhookVerifier;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Pattern;
 import kotlin.Unit;
 import lombok.RequiredArgsConstructor;
 import lsk.commerce.api.portone.CompletePaymentRequest;
@@ -25,7 +27,6 @@ import lsk.commerce.exception.ErrorResult;
 import lsk.commerce.service.OrderService;
 import lsk.commerce.service.PaymentService;
 import lsk.commerce.service.PaymentSyncService;
-import lsk.commerce.swagger.ApiMemberOwnerForbiddenResponse;
 import lsk.commerce.swagger.ApiOrderOwnerForbiddenResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +40,8 @@ import reactor.core.publisher.Mono;
 @Tag(
         name = "06. 결제",
         description = "요청이 완료된 주문은 https://lsk-commerce.shop/payments/{orderNumber}에서 결제를 진행해 주세요. \n\n" +
-                "테스트 결제라서 실제 돈이 결제되지 않습니다. \n\n" +
-                "**주의 사항** 실제 결제되진 않지만 카카오페이는 페이머니가 있어야 결제 테스트가 진행됩니다. 토스페이를 통해 진행해 주세요."
+                "테스트 결제라서 **실제 돈이 결제**되지 않습니다. \n\n" +
+                "**주의 사항** 실제 결제되진 않지만 카카오페이에서 페이머니로 결제 시, 페이머니가 있어야 결제 테스트가 진행됩니다. 등록한 카드를 통해 진행해 주세요."
 )
 @RestController
 @RequiredArgsConstructor
@@ -60,12 +61,32 @@ public class PaymentController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 주문", content = @Content(schema = @Schema(implementation = ErrorResult.class)))
+            @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResult.class),
+                            examples = {
+                                    @ExampleObject(name = "주문 번호 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"orderNumber\", \"message\": \"주문 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "이미 결제 요청된 주문", value = "{\"code\": \"BAD_STATUS\",\"message\": \"이미 결제 정보가 있습니다\", \"errors\": null}"),
+                                    @ExampleObject(name = "주문 취소 상태", value = "{\"code\": \"BAD_STATUS\", \"message\": \"취소된 주문은 결제할 수 없습니다\", \"errors\": null}")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResult.class),
+                            examples = {
+                                    @ExampleObject(name = "존재하지 않는 주문", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 주문입니다. orderNumber: eicanNoP5cW8\", \"errors\": null}")
+                            }
+                    )
+            )
     })
     @ApiOrderOwnerForbiddenResponse
     @PostMapping("/payments/orders/{orderNumber}")
     public ResponseEntity<Result<PaymentResponse>> requestPayment(
             @Parameter(description = "**12**자리의 주문 번호를 입력해 주세요.", example = "eicanNoP5cW8")
+            @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "주문 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요")
             @PathVariable("orderNumber") String orderNumber,
             @Parameter(hidden = true)
             @Login String loginId

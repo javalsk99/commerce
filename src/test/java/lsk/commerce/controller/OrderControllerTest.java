@@ -163,11 +163,11 @@ class OrderControllerTest {
             @Test
             void order_Failed_ProductNotFound() throws Exception {
                 //given
-                OrderProductRequest orderProductRequest = new OrderProductRequest("llIIllII00OO", 4);
+                OrderProductRequest orderProductRequest = new OrderProductRequest("lllIIIll00OO", 4);
                 OrderCreateRequest request = new OrderCreateRequest(List.of(orderProductRequest));
                 String json = objectMapper.writeValueAsString(request);
 
-                given(orderService.order(any(OrderCreateRequest.class), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
+                given(orderService.order(any(OrderCreateRequest.class), anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"));
 
                 //when & then
                 mvc.perform(post("/orders")
@@ -176,7 +176,7 @@ class OrderControllerTest {
                                 .content(json))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"))
                         .andDo(print());
 
                 //then
@@ -317,17 +317,17 @@ class OrderControllerTest {
             @Test
             void findOrder_Failed_OrderNotFound() throws Exception {
                 //given
-                given(orderQueryService.findOrder(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다"));
+                given(orderQueryService.findOrder(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + "ll1lI1IlOO00"));
 
                 //when & then
-                mvc.perform(get("/orders/{orderNumber}", "lllIIIll00OO"))
+                mvc.perform(get("/orders/{orderNumber}", "ll1lI1IlOO00"))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 주문입니다"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 주문입니다. orderNumber: " + "ll1lI1IlOO00"))
                         .andDo(print());
 
                 //then
-                then(orderQueryService).should().findOrder("lllIIIll00OO", "id_A");
+                then(orderQueryService).should().findOrder("ll1lI1IlOO00", "id_A");
             }
         }
     }
@@ -470,7 +470,7 @@ class OrderControllerTest {
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest));
                 String json = objectMapper.writeValueAsString(request);
 
-                willThrow(new DataNotFoundException("존재하지 않는 상품입니다")).given(orderService).changeOrder(anyString(), any(OrderChangeRequest.class), anyString());
+                willThrow(new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO")).given(orderService).changeOrder(anyString(), any(OrderChangeRequest.class), anyString());
 
                 //when & then
                 mvc.perform(patch("/orders/{orderNumber}", orderNumber)
@@ -479,7 +479,7 @@ class OrderControllerTest {
                                 .content(json))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"))
                         .andDo(print());
 
                 //then

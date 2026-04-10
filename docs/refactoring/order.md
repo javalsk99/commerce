@@ -48,6 +48,14 @@
   loginId를 파라미터에 추가해 주문의 주인이 맞는지 검증한다.
 
 
+- changeOrder, cancelOrder  
+  인터셉터로 인해 Member를 조회하는 쿼리가 추가로 나와서 findAllExceptMember에서 findAll로 변경했다.
+
+
+- deleteOrder  
+  인터셉터로 인해 Member를 조회하는 쿼리가 추가로 나와서 orderRepository.findWithDeliveryPayment()에서 orderRepository.findWithDeliveryPaymentMember()로 변경했다.
+
+
 ## Order
 - getOrderProductsAsMap  
   productName이 유니크 키가 아니어서 나노 아이디를 사용하는 productNumber로 변경했다.  

@@ -107,7 +107,7 @@ class OrderQueryServiceTest {
                 //when & then
                 thenThrownBy(() -> orderQueryService.findOrder("ll1lI1IlOO00", "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + "ll1lI1IlOO00");
 
                 System.out.println("================= WHEN END ===================");
             }

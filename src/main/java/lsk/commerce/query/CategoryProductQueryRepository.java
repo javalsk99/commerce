@@ -15,10 +15,10 @@ public class CategoryProductQueryRepository {
 
     protected List<CategoryProductQueryDto> findCategoryProductsByCategoryName(String categoryName) {
         return em.createQuery(
-                "select new lsk.commerce.query.dto.CategoryProductQueryDto(cp.category.name, p.name, p.productNumber)" +
-                        " from CategoryProduct cp" +
-                        " join cp.product p" +
-                        " where cp.category.name = :name", CategoryProductQueryDto.class)
+                        "select new lsk.commerce.query.dto.CategoryProductQueryDto(cp.category.name, p.name, p.productNumber)" +
+                                " from CategoryProduct cp" +
+                                " join cp.product p" +
+                                " where cp.category.name = :name", CategoryProductQueryDto.class)
                 .setParameter("name", categoryName)
                 .getResultList();
     }

@@ -169,7 +169,7 @@ class ProductTest {
                 //when & then
                 thenThrownBy(() -> album.removeStock(4))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다");
+                        .hasMessage("재고가 부족합니다. productNumber: " + album.getProductNumber());
 
                 //then
                 then(album.getStockQuantity()).isEqualTo(3);
@@ -232,7 +232,7 @@ class ProductTest {
                 //when & then
                 thenThrownBy(() -> album.changeStock(1, 5))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다");
+                        .hasMessage("재고가 부족합니다. productNumber: " + album.getProductNumber());
 
                 //then
                 then(album.getStockQuantity()).isEqualTo(3);

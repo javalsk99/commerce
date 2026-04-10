@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
         responseCode = "403",
         content = @Content(
                 schema = @Schema(implementation = ErrorResult.class),
-                examples = @ExampleObject(name = "권한 없음", value = "{\"code\": \"NOT_RESOURCE_OWNER\", \"message\": \"주문의 주인이 아닙니다\"}")
+                examples = @ExampleObject(name = "권한 없음", value = "{\"code\": \"NOT_RESOURCE_OWNER\", \"message\": \"주문의 주인이 아닙니다. orderNumber: eicanNoP5cW8\", \"errors\": null}")
         )
 )
 public @interface ApiOrderOwnerForbiddenResponse {

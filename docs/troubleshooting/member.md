@@ -11,7 +11,7 @@
               .getResultList();
 
   Fetch Join은 가져오는 대상이 null이면 조회가 안되는 문제가 있다. - left join fetch를 사용하면 가져오는 대상이 null이여도 조회가 된다.  
-  추가 문제: 주문이 있으면 Member, Order, Payment, Delivery, OrderProduct, Product가 조회돼서 6번의 쿼리가 나온다.  
+  추가 문제: 주문이 있으면 Member, Order, Payment, Delivery, OrderProduct, Product가 조회되어서 6번의 쿼리가 나온다.  
   해결: 인강에서 들었던 컬렉션 조회 최적화의 JPA에서 DTO 직접 조회 참고 - 위의 메서드들 조립해서 Member -> Order, Payment, Delivery -> OrderProduct, Product로 합쳐서 3번의 쿼리로 줄였다.
 
       protected List<MemberQueryDto> findMembers()
@@ -26,7 +26,7 @@
       protected Optional<MemberQueryDto> findMember(String loginId)
       protected List<OrderQueryDto> findOrdersByLoginId(String loginId)
 
-- POST /members/{memberLoginId}/password, /members/{memberLoginId}/address에서 select가 중복돼서 나온다.  
+- POST /members/{memberLoginId}/password, /members/{memberLoginId}/address에서 select가 중복되어서 나온다.  
   원인: member를 찾고, changePassword, changeAddress에서도 member를 찾아서 생긴 문제
 
       Member member = memberService.findMemberByLoginId(memberLoginId);

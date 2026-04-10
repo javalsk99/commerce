@@ -131,7 +131,7 @@ public class ProductQueryRepository {
             return null;
         }
 
-        return book.isbn.containsIgnoreCase(isbn);
+        return book.isbn.contains(isbn);
     }
 
     private BooleanExpression containsActor(String actor) {

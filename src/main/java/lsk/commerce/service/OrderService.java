@@ -12,8 +12,8 @@ import lsk.commerce.dto.request.OrderChangeRequest;
 import lsk.commerce.dto.request.OrderCreateRequest;
 import lsk.commerce.dto.request.OrderProductRequest;
 import lsk.commerce.dto.response.OrderCancelResponse;
-import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.dto.response.OrderChangeResponse;
+import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.InvalidDataException;
 import lsk.commerce.repository.OrderProductJdbcRepository;
@@ -68,25 +68,31 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Order findOrder(String orderNumber) {
         return orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + orderNumber));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithDeliveryPayment(String orderNumber) {
         return orderRepository.findWithDeliveryPayment(orderNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + orderNumber));
+    }
+
+    @Transactional(readOnly = true)
+    public Order findOrderWithDeliveryPaymentMember(String orderNumber) {
+        return orderRepository.findWithDeliveryPaymentMember(orderNumber)
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + orderNumber));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithAllExceptMember(String orderNumber) {
         return orderRepository.findWithAllExceptMember(orderNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + orderNumber));
     }
 
     @Transactional(readOnly = true)
     public Order findOrderWithAll(String orderNumber) {
         return orderRepository.findWithAll(orderNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + orderNumber));
     }
 
     public void changeOrder(String orderNumber, OrderChangeRequest request, String loginId) {
@@ -94,7 +100,7 @@ public class OrderService {
             return;
         }
 
-        Order order = findOrderWithAllExceptMember(orderNumber);
+        Order order = findOrderWithAll(orderNumber);
 
         order.isOwner(loginId);
 
@@ -137,7 +143,7 @@ public class OrderService {
     }
 
     public Order cancelOrder(String orderNumber, String loginId) {
-        Order order = findOrderWithAllExceptMember(orderNumber);
+        Order order = findOrderWithAll(orderNumber);
         if (orderNumber.equals("eicanNoP5cW8")) {
             return order;
         }
@@ -151,7 +157,7 @@ public class OrderService {
             return;
         }
 
-        Optional<Order> optionalOrder = orderRepository.findWithDeliveryPayment(orderNumber);
+        Optional<Order> optionalOrder = orderRepository.findWithDeliveryPaymentMember(orderNumber);
         if (optionalOrder.isEmpty()) {
             return;
         }
@@ -196,7 +202,7 @@ public class OrderService {
             Product product = products.stream()
                     .filter(p -> p.getProductNumber().equals(productNumber))
                     .findFirst()
-                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
+                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + productNumber));
             orderProducts.add(OrderProduct.createOrderProduct(product, quantity));
         }
 

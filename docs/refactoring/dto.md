@@ -72,7 +72,7 @@
 
 
 - ProductUpdateRequest  
-  price와 stockQuantity 둘 다 null인 상황만 아니면 돼서 @NotNull을 제거하고 @AssertTrue를 추가했다.
+  price와 stockQuantity 둘 다 null인 상황만 아니면 되어서 @NotNull을 제거하고 @AssertTrue를 추가했다.
 
 
 - ProductNameWithCategoryNameResponse, CategoryNameResponse  
@@ -134,4 +134,8 @@
 
 - OrderCancelResponse  
   주문 취소 결과를 간략하게 반환하게 위해 생성했다.
+
+
+- ErrorResult  
+  클라이언트의 잘못된 입력으로 발생하는 예외가 어떤 부분에서 발생했는지 알리기 위해 확장했다.
 

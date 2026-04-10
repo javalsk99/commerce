@@ -397,7 +397,7 @@ class OrderTest {
                 //when & then
                 thenThrownBy(() -> order.cancel())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("결제 완료돼서 취소할 수 없습니다");
+                        .hasMessage("결제 완료되어서 취소할 수 없습니다");
             }
 
             @ParameterizedTest
@@ -614,7 +614,7 @@ class OrderTest {
                 //when & then
                 thenThrownBy(() -> paidOrder.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("배송이 완료돼야 삭제할 수 있습니다");
+                        .hasMessage("배송이 완료되어야 삭제할 수 있습니다");
             }
 
             @Test
@@ -643,7 +643,7 @@ class OrderTest {
                 //when & then
                 thenThrownBy(() -> order.validateDeletable())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("배송이 완료돼야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
+                        .hasMessage("배송이 완료되어야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
             }
 
             @ParameterizedTest

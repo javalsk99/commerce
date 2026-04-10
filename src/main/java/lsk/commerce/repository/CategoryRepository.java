@@ -41,9 +41,9 @@ public class CategoryRepository {
 
     public List<Category> existsByCategoryNames(String categoryName, String name) {
         return em.createQuery(
-                "select c from Category c" +
-                        " where c.name = :name" +
-                        " or (:parentName is not null and c.name = :parentName)", Category.class)
+                        "select c from Category c" +
+                                " where c.name = :name" +
+                                " or (:parentName is not null and c.name = :parentName)", Category.class)
                 .setParameter("name", categoryName)
                 .setParameter("parentName", name)
                 .getResultList();

@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,14 +19,16 @@ import static lombok.AccessLevel.PUBLIC;
 @NoArgsConstructor(access = PUBLIC)
 public class Movie extends Product {
 
-    @NotBlank @Size(max = 50)
+    @NotBlank
+    @Pattern(regexp = "^[A-Za-z가-힣 ,]{1,50}$", message = "배우는 한글, 영문, 공백, (,)만 사용하여 1~50자 사이로 입력해 주세요")
     @Column(length = 50)
     private String actor;
 
     @Column(length = 50)
     private String actorInitial;
 
-    @NotBlank @Size(max = 50)
+    @NotBlank
+    @Pattern(regexp = "^[A-Za-z가-힣]{1,50}$", message = "감독은 한글, 영문만 사용하여 1~50자 사이로 입력해 주세요")
     @Column(length = 50)
     private String director;
 

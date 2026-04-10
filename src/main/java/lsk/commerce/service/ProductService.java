@@ -11,6 +11,7 @@ import lsk.commerce.dto.request.ProductCreateRequest;
 import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,12 +39,12 @@ public class ProductService {
 
     public Product findProduct(String productNumber) {
         return productRepository.findByNumber(productNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + productNumber));
     }
 
     public Product findProductWithCategoryProduct(String productNumber) {
         return productRepository.findWithCategoryProduct(productNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + productNumber));
     }
 
     public List<Product> findProducts() {
@@ -120,7 +121,7 @@ public class ProductService {
         }
 
         if (result) {
-            throw new IllegalArgumentException("이미 존재하는 상품입니다");
+            throw new DuplicateResourceException("이미 존재하는 상품입니다. name: " + product.getName());
         }
 
         return product;

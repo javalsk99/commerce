@@ -2,8 +2,8 @@ package lsk.commerce.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lsk.commerce.config.WebConfig;
-import lsk.commerce.domain.Role;
 import lsk.commerce.domain.Member;
+import lsk.commerce.domain.Role;
 import lsk.commerce.dto.request.MemberChangeAddressRequest;
 import lsk.commerce.dto.request.MemberChangePasswordRequest;
 import lsk.commerce.dto.request.MemberCreateRequest;

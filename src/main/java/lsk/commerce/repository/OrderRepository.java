@@ -48,6 +48,19 @@ public class OrderRepository {
                 .findFirst();
     }
 
+    public Optional<Order> findWithDeliveryPaymentMember(String orderNumber) {
+        return em.createQuery(
+                        "select o from Order o" +
+                                " join fetch o.delivery" +
+                                " left join fetch o.payment" +
+                                " join fetch o.member" +
+                                " where o.orderNumber = :orderNumber", Order.class)
+                .setParameter("orderNumber", orderNumber)
+                .getResultList()
+                .stream()
+                .findFirst();
+    }
+
     public Optional<Order> findWithAllExceptMember(String orderNumber) {
         return em.createQuery(
                         "select o from Order o" +

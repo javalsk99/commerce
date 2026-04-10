@@ -124,7 +124,7 @@ public class OrderIntegrationTest {
                     em.flush();
                 })
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다");
+                        .hasMessage("재고가 부족합니다. productNumber: " + albumNumber1);
 
                 em.clear();
 

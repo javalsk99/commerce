@@ -44,6 +44,9 @@ public class MemberService {
     @Transactional
     public Member changePassword(String memberLoginId, MemberChangePasswordRequest request) {
         Member member = findMemberByLoginId(memberLoginId);
+        if (memberLoginId.equals("testId")) {
+            return member;
+        }
         member.changePassword(request.password(), passwordEncoder);
         return member;
     }

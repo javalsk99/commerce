@@ -37,7 +37,7 @@ public class PaymentService {
     private final ApplicationEventPublisher eventPublisher;
 
     public Payment request(String orderNumber, String loginId) {
-        Order order = orderService.findOrderWithDeliveryPayment(orderNumber);
+        Order order = orderService.findOrderWithDeliveryPaymentMember(orderNumber);
         if (orderNumber.equals("eicanNoP5cW8")) {
             return order.getPayment();
         }

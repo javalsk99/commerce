@@ -14,6 +14,6 @@ public final class SyncPaymentExceptionHandler {
     public ResponseEntity<ErrorResult> handleSyncFailure(SyncPaymentException e) {
         log.error("[포트원 오류 발생]: {}", e.getMessage(), e);
 
-        return ResponseEntity.badRequest().body(new ErrorResult("PORTONE_ERROR", "결제 처리 중 오류가 발생했습니다. 잠시만 기다려 주세요"));
+        return ResponseEntity.badRequest().body(new ErrorResult("PORTONE_ERROR", "결제 처리 중 오류가 발생했습니다. 잠시만 기다려 주세요", null));
     }
 }

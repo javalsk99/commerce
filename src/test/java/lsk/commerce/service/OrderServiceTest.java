@@ -89,7 +89,7 @@ class OrderServiceTest {
     String productNumber1;
     String productNumber2;
     String productNumber3;
-    String wrongOrderNumber = "lllIIllIO00O";
+    String wrongOrderNumber = "ll1lI1IlOO00";
 
     @BeforeEach
     void beforeEach() {
@@ -228,7 +228,7 @@ class OrderServiceTest {
                 //when & then
                 thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 상품입니다");
+                        .hasMessage("존재하지 않는 상품입니다. productNumber: " + "null");
 
                 //then
                 thenSoftly(softly -> {
@@ -250,7 +250,7 @@ class OrderServiceTest {
                 //when & then
                 thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다");
+                        .hasMessage("재고가 부족합니다. productNumber: " + productNumber1);
 
                 //then
                 thenSoftly(softly -> {
@@ -297,7 +297,7 @@ class OrderServiceTest {
                 //when & then
                 thenThrownBy(() -> orderService.order(request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 상품입니다");
+                        .hasMessage("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO");
 
                 //then
                 thenSoftly(softly -> {
@@ -388,7 +388,7 @@ class OrderServiceTest {
                 //when & then
                 thenThrownBy(() -> orderService.findOrder(wrongOrderNumber))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber);
 
                 //then
                 BDDMockito.then(orderRepository).should().findByOrderNumber(anyString());
@@ -409,7 +409,7 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
@@ -420,7 +420,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(inOrder).findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(inOrder).findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(em).should(inOrder).flush());
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(inOrder).deleteOrderProductsByOrderId(order.getId()));
                     softly.check(() -> BDDMockito.then(em).should(inOrder).clear());
@@ -458,7 +458,7 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
@@ -467,7 +467,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(order.getId()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().findByOrderNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
@@ -494,7 +494,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(times(1)).deleteOrderProductsByOrderId(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(times(1)).findByOrderNumber(any()));
                     softly.check(() -> BDDMockito.then(productService).should(times(1)).findProducts());
@@ -519,16 +519,16 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.empty());
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.empty());
 
                 //when & then
                 thenThrownBy(() -> orderService.changeOrder(wrongOrderNumber, request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).deleteOrderProductsByOrderId(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
@@ -543,7 +543,7 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
 
                 //when & then
                 thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_D"))
@@ -552,7 +552,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).deleteOrderProductsByOrderId(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
@@ -571,7 +571,7 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest = new OrderProductRequest(productNumber1, 2);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(notCreatedOrder));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(notCreatedOrder));
 
                 //when & then
                 thenThrownBy(() -> orderService.changeOrder(notCreatedOrder.getOrderNumber(), request, "id_A"))
@@ -580,7 +580,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).deleteOrderProductsByOrderId(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
@@ -596,7 +596,7 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
 
                 //when & then
                 thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
@@ -605,7 +605,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).deleteOrderProductsByOrderId(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
@@ -620,7 +620,7 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
                 willThrow(new RuntimeException("JDBC DELETE Failed")).given(orderProductJdbcRepository).deleteOrderProductsByOrderId(anyLong());
 
                 //when & then
@@ -630,7 +630,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(anyLong()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).findByOrderNumber(any()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).findProducts());
@@ -644,18 +644,18 @@ class OrderServiceTest {
                 OrderProductRequest nullProductNumberOrderProductRequest = new OrderProductRequest(null, 3);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(nullProductNumberOrderProductRequest));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
                 thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 상품입니다");
+                        .hasMessage("존재하지 않는 상품입니다. productNumber: " + "null");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(anyLong()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().findByOrderNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
@@ -669,7 +669,7 @@ class OrderServiceTest {
                 OrderProductRequest nullQuantityOrderProductRequest = new OrderProductRequest(productNumber1, null);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(nullQuantityOrderProductRequest));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
@@ -680,7 +680,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(anyLong()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().findByOrderNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
@@ -694,18 +694,18 @@ class OrderServiceTest {
                 OrderProductRequest notExistsProductNumberOrderProductRequest = new OrderProductRequest("lllIIIll00OO", 3);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(notExistsProductNumberOrderProductRequest));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
 
                 //when & then
                 thenThrownBy(() -> orderService.changeOrder(order.getOrderNumber(), request, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 상품입니다");
+                        .hasMessage("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(anyLong()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().findByOrderNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
@@ -720,7 +720,7 @@ class OrderServiceTest {
                 OrderProductRequest orderProductRequest2 = new OrderProductRequest(productNumber2, 5);
                 OrderChangeRequest request = new OrderChangeRequest(List.of(orderProductRequest1, orderProductRequest2));
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findByOrderNumber(anyString())).willReturn(Optional.of(order));
                 given(productService.findProducts()).willReturn(List.of(album, book, movie));
                 willThrow(new RuntimeException("JDBC Batch INSERT Failed")).given(orderProductJdbcRepository).saveAll(anyList());
@@ -732,7 +732,7 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithAll(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().deleteOrderProductsByOrderId(anyLong()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().findByOrderNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProducts());
@@ -773,13 +773,13 @@ class OrderServiceTest {
             @Test
             void withoutPayment() {
                 //given
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
 
                 //when
                 orderService.cancelOrder(order.getOrderNumber(), "id_A");
 
                 //then
-                BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
+                BDDMockito.then(orderRepository).should().findWithAll(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts())
                             .extracting("product.name", "quantity", "orderPrice")
@@ -806,13 +806,13 @@ class OrderServiceTest {
                 //given
                 Payment.requestPayment(order);
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
 
                 //when
                 orderService.cancelOrder(order.getOrderNumber(), "id_A");
 
                 //then
-                BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
+                BDDMockito.then(orderRepository).should().findWithAll(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts())
                             .extracting("product.name", "quantity", "orderPrice")
@@ -839,13 +839,13 @@ class OrderServiceTest {
                 //given
                 Payment.requestPayment(order);
 
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
 
                 //when 첫 번째 호출
                 orderService.cancelOrder(order.getOrderNumber(), "id_A");
 
                 //then
-                BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
+                BDDMockito.then(orderRepository).should().findWithAll(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
                     softly.then(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.CANCELED);
@@ -861,7 +861,7 @@ class OrderServiceTest {
                 thenNoException().isThrownBy(() -> orderService.cancelOrder(order.getOrderNumber(), "id_A"));
 
                 //then
-                BDDMockito.then(orderRepository).should(times(2)).findWithAllExceptMember(anyString());
+                BDDMockito.then(orderRepository).should(times(2)).findWithAll(anyString());
                 thenSoftly(softly -> {
                     softly.then(order.getOrderProducts())
                             .extracting("product.name", "quantity", "orderPrice")
@@ -890,21 +890,21 @@ class OrderServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.empty());
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.empty());
 
                 //when & then
                 thenThrownBy(() -> orderService.cancelOrder(wrongOrderNumber, "id_A"))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber);
 
                 //then
-                BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
+                BDDMockito.then(orderRepository).should().findWithAll(anyString());
             }
 
             @Test
             void notOwner() {
                 //given
-                given(orderRepository.findWithAllExceptMember(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithAll(anyString())).willReturn(Optional.of(order));
 
                 //when & then
                 thenThrownBy(() -> orderService.cancelOrder(wrongOrderNumber, "id_D"))
@@ -912,7 +912,7 @@ class OrderServiceTest {
                         .hasMessage("주문의 주인이 아닙니다");
 
                 //then
-                BDDMockito.then(orderRepository).should().findWithAllExceptMember(anyString());
+                BDDMockito.then(orderRepository).should().findWithAll(anyString());
             }
         }
     }
@@ -928,6 +928,7 @@ class OrderServiceTest {
                 //given
                 order.cancel();
 
+                given(orderRepository.findWithDeliveryPaymentMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
 
                 //when
@@ -935,8 +936,9 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
                 });
             }
@@ -947,6 +949,7 @@ class OrderServiceTest {
                 Payment.requestPayment(order);
                 order.cancel();
 
+                given(orderRepository.findWithDeliveryPaymentMember(anyString())).willReturn(Optional.of(order));
                 given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
 
                 //when
@@ -954,8 +957,9 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
                 });
             }
@@ -963,15 +967,16 @@ class OrderServiceTest {
             @Test
             void shouldIgnoreDelete_WhenOrderNotFound() {
                 //given
-                given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.empty());
+                given(orderRepository.findWithDeliveryPaymentMember(anyString())).willReturn(Optional.empty());
 
                 //when
                 orderService.deleteOrder(wrongOrderNumber, "id_A");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).softDeleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findWithDeliveryPayment(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
                 });
             }
@@ -982,18 +987,19 @@ class OrderServiceTest {
                 Payment.requestPayment(order);
                 order.cancel();
 
-                given(orderRepository.findWithDeliveryPayment(anyString()))
-                        .willReturn(Optional.of(order))
+                given(orderRepository.findWithDeliveryPaymentMember(anyString()))
                         .willReturn(Optional.of(order))
                         .willReturn(Optional.empty());
+                given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
 
                 //when 첫 번째 호출
                 orderService.deleteOrder(order.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(order));
                 });
 
@@ -1002,8 +1008,9 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should(times(3)).findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(times(2)).findWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
                     softly.check(() -> BDDMockito.then(orderRepository).should().delete(any()));
                 });
             }
@@ -1017,7 +1024,7 @@ class OrderServiceTest {
                 //given
                 order.cancel();
 
-                given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithDeliveryPaymentMember(anyString())).willReturn(Optional.of(order));
 
                 //when & then
                 thenThrownBy(() -> orderService.deleteOrder(order.getOrderNumber(), "id_D"))
@@ -1026,8 +1033,9 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should(never()).softDeleteOrderProductsByOrderId(any()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findWithDeliveryPayment(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
                 });
             }
@@ -1037,7 +1045,7 @@ class OrderServiceTest {
                 //given
                 order.cancel();
 
-                given(orderRepository.findWithDeliveryPayment(anyString())).willReturn(Optional.of(order));
+                given(orderRepository.findWithDeliveryPaymentMember(anyString())).willReturn(Optional.of(order));
                 willThrow(new RuntimeException("JDBC Soft DELETE Failed")).given(orderProductJdbcRepository).softDeleteOrderProductsByOrderId(anyLong());
 
                 //when & then
@@ -1047,8 +1055,9 @@ class OrderServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should().findWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(orderProductJdbcRepository).should().softDeleteOrderProductsByOrderId(anyLong()));
+                    softly.check(() -> BDDMockito.then(orderRepository).should(never()).findWithDeliveryPayment(any()));
                     softly.check(() -> BDDMockito.then(orderRepository).should(never()).delete(any()));
                 });
             }

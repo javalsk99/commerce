@@ -19,6 +19,7 @@ import lsk.commerce.domain.product.Movie;
 import lsk.commerce.dto.OrderProductDto;
 import lsk.commerce.dto.response.OrderPaymentResponse;
 import lsk.commerce.event.PaymentCompletedEvent;
+import lsk.commerce.exception.DataNotFoundException;
 import lsk.commerce.exception.NotResourceOwnerException;
 import lsk.commerce.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,7 +87,7 @@ class PaymentServiceTest {
     OrderProduct orderProduct3;
     Order singleOrder;
     Order multipleOrder;
-    String wrongOrderNumber = "lllIIllIO00O";
+    String wrongOrderNumber = "ll1lI1IlOO00";
     String wrongPaymentId = "lllIIIll00OOII1111llO0O0Il1Il100OOlI";
 
     @BeforeEach
@@ -132,14 +133,14 @@ class PaymentServiceTest {
             @Test
             void basic() {
                 //given
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
+                given(orderService.findOrderWithDeliveryPaymentMember(anyString())).willReturn(multipleOrder);
 
                 //when
                 paymentService.request(multipleOrder.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should().save(multipleOrder.getPayment()));
                 });
                 then(multipleOrder.getPayment())
@@ -154,16 +155,16 @@ class PaymentServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
+                given(orderService.findOrderWithDeliveryPaymentMember(anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber));
 
                 //when & then
                 thenThrownBy(() -> paymentService.request(wrongOrderNumber, "id_A"))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).save(any()));
                 });
             }
@@ -171,7 +172,7 @@ class PaymentServiceTest {
             @Test
             void notOwner() {
                 //given
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
+                given(orderService.findOrderWithDeliveryPaymentMember(anyString())).willReturn(multipleOrder);
 
                 //when & then
                 thenThrownBy(() -> paymentService.request(multipleOrder.getOrderNumber(), "id_D"))
@@ -180,7 +181,7 @@ class PaymentServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should(never()).save(any()));
                 });
             }
@@ -188,14 +189,14 @@ class PaymentServiceTest {
             @Test
             void alreadyRequest() {
                 //given
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willReturn(multipleOrder);
+                given(orderService.findOrderWithDeliveryPaymentMember(anyString())).willReturn(multipleOrder);
 
                 //when 첫 번째 호출
                 paymentService.request(multipleOrder.getOrderNumber(), "id_A");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should().findOrderWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should().save(multipleOrder.getPayment()));
                 });
                 then(multipleOrder.getPayment())
@@ -209,7 +210,7 @@ class PaymentServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithDeliveryPayment(anyString()));
+                    softly.check(() -> BDDMockito.then(orderService).should(times(2)).findOrderWithDeliveryPaymentMember(anyString()));
                     softly.check(() -> BDDMockito.then(paymentRepository).should().save(any()));
                 });
             }
@@ -368,12 +369,12 @@ class PaymentServiceTest {
                 //given
                 givenCustomData(multipleOrder.getOrderNumber());
 
-                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
+                given(orderService.findOrderWithAllExceptMember(anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + multipleOrder.getOrderNumber()));
 
                 //when & then
                 thenThrownBy(() -> paymentService.verifyAndComplete(paidPayment, "id_A"))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + multipleOrder.getOrderNumber());
 
                 //then
                 thenSoftly(softly -> {

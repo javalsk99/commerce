@@ -14,7 +14,7 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.util.InitialExtractor;
@@ -46,7 +46,7 @@ public abstract class Product {
     private Long id;
 
     @NotBlank
-    @Size(min = 12, max = 12)
+    @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "상품 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요")
     @Column(unique = true, length = 12)
     private String productNumber;
 
@@ -55,7 +55,7 @@ public abstract class Product {
     private List<CategoryProduct> categoryProducts = new ArrayList<>();
 
     @NotBlank
-    @Size(max = 50)
+    @Pattern(regexp = "^[A-Za-z가-힣0-9 !#&+,.:_-]{1,50}$", message = "상품 이름은 한글, 영문, 숫자, 공백, 특수문자(!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요")
     @Column(length = 50)
     private String name;
 
@@ -92,7 +92,7 @@ public abstract class Product {
 
         int restStock = this.stockQuantity - stock;
         if (restStock < 0) {
-            throw new IllegalArgumentException("재고가 부족합니다");
+            throw new IllegalArgumentException("재고가 부족합니다. productNumber: " + this.productNumber);
         }
 
         this.stockQuantity = restStock;
@@ -107,7 +107,7 @@ public abstract class Product {
 
         int restStock = this.stockQuantity + stock - newStock;
         if (restStock < 0) {
-            throw new IllegalArgumentException("재고가 부족합니다");
+            throw new IllegalArgumentException("재고가 부족합니다. productNumber: " + this.productNumber);
         }
 
         this.stockQuantity = restStock;

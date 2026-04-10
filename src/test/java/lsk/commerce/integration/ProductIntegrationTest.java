@@ -5,6 +5,7 @@ import lsk.commerce.domain.Category;
 import lsk.commerce.domain.Product;
 import lsk.commerce.dto.request.CategoryCreateRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.repository.CategoryRepository;
 import lsk.commerce.repository.ProductRepository;
 import lsk.commerce.service.CategoryProductService;
@@ -90,7 +91,7 @@ public class ProductIntegrationTest {
             }
 
             @Test
-            @DisplayName("상품 이름이 중복돼도 자식 필드가 다르면 다른 상품으로 등록된다")
+            @DisplayName("상품 이름이 중복되어도 자식 필드가 다르면 다른 상품으로 등록된다")
             void childFieldsAreDifferent() {
                 //given
                 String categoryName = categoryService.create(new CategoryCreateRequest("가요", null));
@@ -145,8 +146,8 @@ public class ProductIntegrationTest {
                     productService.register(request, List.of(categoryName));
                     em.flush();
                 })
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("이미 존재하는 상품입니다");
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("이미 존재하는 상품입니다. name: " + "BANG BANG");
 
                 System.out.println("================= WHEN END ===================");
             }

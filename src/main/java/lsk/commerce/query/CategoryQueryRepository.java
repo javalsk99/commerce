@@ -15,9 +15,9 @@ public class CategoryQueryRepository {
 
     protected Optional<CategoryQueryDto> findCategory(String categoryName) {
         return em.createQuery(
-                "select new lsk.commerce.query.dto.CategoryQueryDto(c.name)" +
-                        " from Category c" +
-                        " where c.name = :name", CategoryQueryDto.class)
+                        "select new lsk.commerce.query.dto.CategoryQueryDto(c.name)" +
+                                " from Category c" +
+                                " where c.name = :name", CategoryQueryDto.class)
                 .setParameter("name", categoryName)
                 .getResultList()
                 .stream()

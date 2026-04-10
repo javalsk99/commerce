@@ -82,7 +82,7 @@
               payment.getAmount().getTotal() == orderRequest.getTotalAmount();
       }
 
-  로그를 찍어서 앞에 로직이 다 정상적으로 통과돼서 리턴값 확인 - 주문 상품 종류가 1개인 경우 이름이 달라져서 생긴 문제
+  로그를 찍어서 앞에 로직이 다 정상적으로 통과되어서 리턴값 확인 - 주문 상품 종류가 1개인 경우 이름이 달라져서 생긴 문제
 
   book
   book 외 0건

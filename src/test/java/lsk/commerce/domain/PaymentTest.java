@@ -102,7 +102,7 @@ class PaymentTest {
                 //when & then
                 thenThrownBy(() -> Payment.requestPayment(canceldOrder))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("취소된 주문은 결제할 수 없습니다. OrderStatus: " + canceldOrder.getOrderStatus());
+                        .hasMessage("취소된 주문은 결제할 수 없습니다");
             }
 
             @ParameterizedTest
@@ -230,7 +230,7 @@ class PaymentTest {
                 //when & then
                 thenThrownBy(() -> canceledOrder.getPayment().complete(LocalDateTime.now()))
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessage("취소된 주문은 결제할 수 없습니다. OrderStatus: " + canceledOrder.getOrderStatus());
+                        .hasMessage("취소된 주문은 결제할 수 없습니다");
             }
 
             @ParameterizedTest

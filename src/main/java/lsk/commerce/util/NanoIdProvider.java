@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static lombok.AccessLevel.PRIVATE;

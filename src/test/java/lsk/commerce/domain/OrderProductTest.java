@@ -64,7 +64,7 @@ class OrderProductTest {
                 //when & then
                 thenThrownBy(() -> OrderProduct.createOrderProduct(album, 11))
                         .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("재고가 부족합니다");
+                        .hasMessage("재고가 부족합니다. productNumber: " + album.getProductNumber());
 
                 //then
                 then(album.getStockQuantity()).isEqualTo(10);

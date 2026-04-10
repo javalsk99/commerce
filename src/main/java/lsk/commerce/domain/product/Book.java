@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,14 +19,16 @@ import static lombok.AccessLevel.PUBLIC;
 @NoArgsConstructor(access = PUBLIC)
 public class Book extends Product {
 
-    @NotBlank @Size(max = 50)
+    @NotBlank
+    @Pattern(regexp = "^[A-Za-z가-힣 (),]{1,50}$", message = "작가는 한글, 영문, 공백, 특수문자((),)만 사용하여 1~50자 사이로 입력해 주세요")
     @Column(length = 50)
     private String author;
 
     @Column(length = 50)
     private String authorInitial;
 
-    @NotBlank @Size(min = 10, max = 13)
+    @NotBlank
+    @Pattern(regexp = "^(\\d{10}|\\d{13})$", message = "isbn은 숫자만 사용하여 10자 또는 13자로 입력해 주세요")
     @Column(length = 13)
     private String isbn;
 

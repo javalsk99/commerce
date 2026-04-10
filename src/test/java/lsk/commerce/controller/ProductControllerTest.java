@@ -11,6 +11,7 @@ import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
 import lsk.commerce.exception.DataNotFoundException;
+import lsk.commerce.exception.DuplicateResourceException;
 import lsk.commerce.query.ProductQueryService;
 import lsk.commerce.query.dto.ProductSearchCond;
 import lsk.commerce.service.CategoryProductService;
@@ -149,7 +150,7 @@ class ProductControllerTest {
                         .build();
                 String json = objectMapper.writeValueAsString(request);
 
-                given(productService.register(any(ProductCreateRequest.class), anyList())).willThrow(new IllegalArgumentException("이미 존재하는 상품입니다"));
+                given(productService.register(any(ProductCreateRequest.class), anyList())).willThrow(new DuplicateResourceException("이미 존재하는 상품입니다. name: " + "BANG BANG"));
 
                 //when & then
                 mvc.perform(post("/products")
@@ -157,9 +158,9 @@ class ProductControllerTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json)
                                 .param("categoryNames", "가요"))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.code").value("BAD_ARGUMENT"))
-                        .andExpect(jsonPath("$.message").value("이미 존재하는 상품입니다"))
+                        .andExpect(status().isConflict())
+                        .andExpect(jsonPath("$.code").value("DUPLICATE_RESOURCE"))
+                        .andExpect(jsonPath("$.message").value("이미 존재하는 상품입니다. name: " + "BANG BANG"))
                         .andDo(print());
 
                 //then
@@ -390,18 +391,18 @@ class ProductControllerTest {
             @Test
             void findProductByName_Failed_ProductNotFound() throws Exception {
                 //given
-                given(productService.findProduct(anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
+                given(productService.findProduct(anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"));
 
                 //when & then
-                mvc.perform(get("/products/{productNumber}", "lllIIllI00OO"))
+                mvc.perform(get("/products/{productNumber}", "lllIIIll00OO"))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"))
                         .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should().findProduct("lllIIllI00OO"));
+                    softly.check(() -> BDDMockito.then(productService).should().findProduct("lllIIIll00OO"));
                     softly.check(() -> BDDMockito.then(productService).should(never()).getProductDto(any(Product.class)));
                 });
             }
@@ -537,7 +538,7 @@ class ProductControllerTest {
                 ProductChangeRequest request = new ProductChangeRequest(20000, 8);
                 String json = objectMapper.writeValueAsString(request);
 
-                given(productService.changePriceAndStock(anyString(), any(ProductChangeRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다"));
+                given(productService.changePriceAndStock(anyString(), any(ProductChangeRequest.class))).willThrow(new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"));
 
                 //when & then
                 mvc.perform(patch("/products/{productNumber}", "lllIIIll00OO")
@@ -546,7 +547,7 @@ class ProductControllerTest {
                                 .content(json))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"))
                         .andDo(print());
 
                 //then

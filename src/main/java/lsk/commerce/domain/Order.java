@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lsk.commerce.dto.request.OrderProductRequest;
@@ -48,7 +48,7 @@ public class Order {
     private Long id;
 
     @NotBlank
-    @Size(min = 12, max = 12)
+    @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "주문 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요")
     @Column(unique = true, length = 12)
     private String orderNumber;
 
@@ -205,14 +205,14 @@ public class Order {
         if (this.getOrderStatus() == OrderStatus.CREATED) {
             throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다");
         } else if (this.getOrderStatus() == OrderStatus.PAID) {
-            throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다");
+            throw new IllegalStateException("배송이 완료되어야 삭제할 수 있습니다");
         }
 
         DeliveryStatus deliveryStatus = this.getDelivery().getDeliveryStatus();
         if (deliveryStatus == DeliveryStatus.WAITING) {
             throw new IllegalStateException("주문을 취소해야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
         } else if (deliveryStatus == DeliveryStatus.PREPARING || deliveryStatus == DeliveryStatus.SHIPPED) {
-            throw new IllegalStateException("배송이 완료돼야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
+            throw new IllegalStateException("배송이 완료되어야 삭제할 수 있습니다. DeliveryStatus: " + deliveryStatus);
         }
 
         if (this.getPayment() != null) {
@@ -262,7 +262,7 @@ public class Order {
 
         if (this.payment != null) {
             if (this.payment.getPaymentStatus() == PaymentStatus.COMPLETED) {
-                throw new IllegalStateException("결제 완료돼서 취소할 수 없습니다");
+                throw new IllegalStateException("결제 완료되어서 취소할 수 없습니다");
             }
 
             this.payment.canceled();

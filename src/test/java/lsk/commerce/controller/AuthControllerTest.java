@@ -101,7 +101,7 @@ class AuthControllerTest {
             @Test
             void wrongLoginIdOrPassword() throws Exception {
                 //given
-                MemberLoginRequest request = new MemberLoginRequest("id_B", "11111111");
+                MemberLoginRequest request = new MemberLoginRequest("id_B", "cdCD34#$");
                 String json = objectMapper.writeValueAsString(request);
 
                 given(authService.login(anyString(), anyString())).willThrow(new IllegalArgumentException("아이디 또는 비밀번호가 틀렸습니다"));

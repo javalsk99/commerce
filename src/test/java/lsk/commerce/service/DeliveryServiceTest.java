@@ -11,6 +11,7 @@ import lsk.commerce.domain.product.Album;
 import lsk.commerce.domain.product.Book;
 import lsk.commerce.domain.product.Movie;
 import lsk.commerce.event.DeliveryStartedEvent;
+import lsk.commerce.exception.DataNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ class DeliveryServiceTest {
     OrderProduct orderProduct2;
     OrderProduct orderProduct3;
     Order order;
-    String wrongOrderNumber = "lllIIllIO00O";
+    String wrongOrderNumber = "ll1lI1IlOO00";
 
     @BeforeEach
     void beforeEach() {
@@ -125,12 +126,12 @@ class DeliveryServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber));
 
                 //when & then
                 thenThrownBy(() -> deliveryService.startDelivery(wrongOrderNumber))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber);
 
                 //then
                 thenSoftly(softly -> {
@@ -220,12 +221,12 @@ class DeliveryServiceTest {
             @Test
             void orderNotFound() {
                 //given
-                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 주문입니다"));
+                given(orderService.findOrderWithDeliveryPayment(anyString())).willThrow(new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber));
 
                 //when & then
                 thenThrownBy(() -> deliveryService.completeDelivery(wrongOrderNumber))
-                        .isInstanceOf(IllegalArgumentException.class)
-                        .hasMessage("존재하지 않는 주문입니다");
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("존재하지 않는 주문입니다. orderNumber: " + wrongOrderNumber);
 
                 //then
                 BDDMockito.then(orderService).should().findOrderWithDeliveryPayment(anyString());

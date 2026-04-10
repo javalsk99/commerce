@@ -28,7 +28,9 @@
   [포트원 결제 api](https://github.com/portone-io/portone-sample?tab=readme-ov-file)  
   [Java JWT](https://github.com/jwtk/jjwt?tab=readme-ov-file#reading-a-jwt)  
   [asList() deprecated -> asInstanceOf(LIST)](https://github.com/orgs/assertj/discussions/3424)  
-  [비동기 timeout](https://github.com/spring-projects/spring-boot/issues/2900)
+  [비동기 timeout](https://github.com/spring-projects/spring-boot/issues/2900)  
+  [HandlerMethodValidationException 리스트에서의 인덱스 추출](https://github.com/spring-projects/spring-framework/issues/33271) (DTO는 FieldError)  
+  [HandlerMethodValidationException getAllValidationResults deprecated](https://github.com/spring-projects/spring-framework/issues/33271)
 
 
 - Stack Overflow  

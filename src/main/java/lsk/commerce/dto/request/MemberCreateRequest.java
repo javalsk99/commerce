@@ -31,5 +31,5 @@ public record MemberCreateRequest(
         @NotBlank(message = "상세 주소는 필수입니다")
         @Pattern(regexp = "^[A-Za-z가-힣0-9 ().,-]{1,100}$", message = "상세 주소는 한글, 영문, 숫자, 특수문자(().,-), 공백만 사용하여 1~100자 사이로 입력해 주세요")
         String detailAddress
-        ) {
+) {
 }

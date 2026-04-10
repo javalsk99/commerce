@@ -71,7 +71,7 @@
 
 ## 로직
 - 상품을 만들 때, 카테고리의 부모가 겹치면 부모 카테고리가 중복해서 저장되던 문제  
-  해결: stream().anyMatch()로 상품에 카테고리가 연결됐는지 확인하고 연결됐으면 루프를 벗어난다.
+  해결: stream().anyMatch()로 상품에 카테고리가 연결되었는지 확인하고 연결되면 루프를 벗어난다.
 
       public void addCategoryProduct(List<Category> categories) {
           for (Category category : categories) {

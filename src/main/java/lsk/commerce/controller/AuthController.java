@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "01. 인증", description = "관리자 계정 testId, testPassword")
+@Tag(name = "01. 인증", description = "관리자 계정 testId, abAB12!@")
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
@@ -39,9 +39,12 @@ public class AuthController {
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
-                                    @ExampleObject(name = "아이디 누락", value = "{\"code\": \"NOT_VALID\", \"message\": \"아이디는 필수입니다\"}"),
-                                    @ExampleObject(name = "비밀번호 누락", value = "{\"code\": \"NOT_VALID\", \"message\": \"비밀번호는 필수입니다\"}"),
-                                    @ExampleObject(name = "로그인 실패", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"아이디 또는 비밀번호가 틀렸습니다\"}")
+                                    @ExampleObject(name = "아이디 null", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"loginId\", \"message\": \"아이디는 필수입니다\"}]}"),
+                                    @ExampleObject(name = "아이디 빈 문자열 (공백 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"loginId\", \"message\": \"아이디는 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"loginId\", \"message\": \"아이디는 영문, 숫자, _만 사용하여 4~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "아이디 패턴 불일치", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"loginId\", \"message\": \"아이디는 영문, 숫자, _만 사용하여 4~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "아이디 null, 비밀번호 null", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"loginId\", \"message\": \"아이디는 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"password\", \"message\": \"비밀번호는 필수입니다\"}]}"),
+                                    @ExampleObject(name = "아이디 빈 문자열, 비밀번호 빈 문자열 (공백 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"loginId\", \"message\": \"아이디는 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"loginId\", \"message\": \"아이디는 영문, 숫자, _만 사용하여 4~20자 사이로 입력해 주세요\"}, {\"location\": \"BODY\", \"field\": \"password\", \"message\": \"비밀번호는 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"password\", \"message\": \"비밀번호는 영문, 숫자, 특수문자(!@#$%^&*()_+=-) 조합으로 8~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "로그인 실패", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"아이디 또는 비밀번호가 틀렸습니다\", \"errors\": null}")
                             }
                     )
             )

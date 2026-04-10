@@ -11,7 +11,7 @@
       }
 
   추가 문제: 부모 카테고리 이름이 없을 땐 select 쿼리가 한 번만 나오지만, 부모 카테고리 이름이 있을 때 select 쿼리가 중복으로 나온다.  
-  원인: 도메인에서는 Category parent로 넣어야 되지만, 컨트롤러에서는 Category로 넣을 수 없고 String으로 넣어야 돼서 조회를 추가로 해야 하는 문제
+  원인: 도메인에서는 Category parent로 넣어야 되지만, 컨트롤러에서는 Category로 넣을 수 없고 String으로 넣어야 되어서 조회를 추가로 해야 하는 문제
 
       if (request.getParentName() != null) {
           Category parentCategory = categoryService.findCategoryByName(request.getParentName());

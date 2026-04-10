@@ -59,7 +59,6 @@ public class Delivery {
         this.order = order;
     }
 
-    //주문을 결제해야 배송 준비가 시작돼서 결제 대기 상태 추가
     public Delivery(Member member) {
         validateMemberAddress(member);
 
@@ -89,7 +88,7 @@ public class Delivery {
         if (address == null) {
             throw new IllegalArgumentException("회원의 주소 정보가 없습니다");
         } else if (address.getBaseAddress() == null || address.getDetailAddress() == null || address.getZipcode() == null) {
-            throw new IllegalArgumentException("회원의 주소 정보가 잘못됐습니다. address.zipcode = " + address.getZipcode() +
+            throw new IllegalArgumentException("회원의 주소 정보가 잘못되었습니다. address.zipcode = " + address.getZipcode() +
                     ", address.baseAddress = " + address.getBaseAddress() + ", address.detailAddress = " + address.getDetailAddress());
         }
     }

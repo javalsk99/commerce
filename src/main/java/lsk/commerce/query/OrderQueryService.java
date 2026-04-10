@@ -26,7 +26,7 @@ public class OrderQueryService {
 
     public OrderQueryDto findOrder(String orderNumber, String loginId) {
         OrderQueryDto orderQueryDto = orderQueryRepository.findOrderByOrderNumber(orderNumber)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다"));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 주문입니다. orderNumber: " + orderNumber));
 
         if (!orderQueryDto.loginId().equals(loginId)) {
             throw new NotResourceOwnerException("주문의 주인이 아닙니다");

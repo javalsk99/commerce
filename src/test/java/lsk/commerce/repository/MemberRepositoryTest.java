@@ -1,8 +1,8 @@
 package lsk.commerce.repository;
 
 import jakarta.validation.ConstraintViolationException;
-import lsk.commerce.domain.Role;
 import lsk.commerce.domain.Member;
+import lsk.commerce.domain.Role;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;

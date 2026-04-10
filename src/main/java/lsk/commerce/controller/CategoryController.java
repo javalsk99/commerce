@@ -48,8 +48,8 @@ public class CategoryController {
     @Operation(
             summary = "카테고리 생성",
             description = "**관리자**만 생성할 수 있습니다. \n\n" +
-                    "**카테고리 이름**: (필수, 중복 불가) 한글, 영문, 숫자, _만 사용하여 1~20자 사이로 입력해 주세요. \n\n" +
-                    "**부모 카테고리 이름**: 한글, 영문, 숫자, _만 사용하여 1~20자 사이로 입력해 주세요. \n\n" +
+                    "**카테고리 이름**: (필수, 중복 불가) 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요. \n\n" +
+                    "**부모 카테고리 이름**: 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요. \n\n" +
                     "**부모 카테고리 이름**은 존재하는 카테고리 이름이어야 합니다. \n\n" +
                     "**최상위 카테고리**를 만들 때는 **부모 카테고리 이름**을 지워주세요."
     )
@@ -60,9 +60,11 @@ public class CategoryController {
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
-                                    @ExampleObject(name = "카테고리 이름 누락", value = "{\"code\": \"NOT_VALID\", \"message\": \"카테고리 이름은 필수입니다\"}"),
-                                    @ExampleObject(name = "카테고리 이름 입력 오류", value = "{\"code\": \"NOT_VALID\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, _만 사용하여 1~20자 사이로 입력해 주세요\"}"),
-                                    @ExampleObject(name = "부모 카테고리 이름 입력 오류", value = "{\"code\": \"NOT_VALID\", \"message\": \"부모 카테고리 이름은 한글, 영문, 숫자, _만 사용하여 1~20자 사이로 입력해 주세요\"}")
+                                    @ExampleObject(name = "카테고리 이름 null", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"name\", \"message\": \"카테고리 이름은 필수입니다\"}]}"),
+                                    @ExampleObject(name = "카테고리 이름 빈 문자열 (공백 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"name\", \"message\": \"카테고리 이름은 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"name\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "카테고리 이름 패턴 불일치", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"name\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "부모 카테고리 이름 패턴 불일치 (빈 문자열, 공백 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"parentName\", \"message\": \"부모 카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "카테고리 이름 빈 문자열, 부모 카테고리 이름 패턴 불일치", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"name\", \"message\": \"카테고리 이름은 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"name\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}, {\"location\": \"BODY\", \"field\": \"parentName\", \"message\": \"부모 카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}")
                             }
                     )
             ),
@@ -70,14 +72,14 @@ public class CategoryController {
                     responseCode = "404",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
-                            examples = @ExampleObject(name = "존재하지 않는 부모 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\"}")
+                            examples = @ExampleObject(name = "존재하지 않는 부모 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\", \"errors\": null}")
                     )
             ),
             @ApiResponse(
                     responseCode = "409",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
-                            examples = @ExampleObject(name = "이름 중복", value = "{\"code\": \"DUPLICATE_RESOURCE\", \"message\": \"이미 존재하는 카테고리입니다. name: 가요_001\"}")
+                            examples = @ExampleObject(name = "이름 중복", value = "{\"code\": \"DUPLICATE_RESOURCE\", \"message\": \"이미 존재하는 카테고리입니다. name: 가요_001\", \"errors\": null}")
                     )
             )
     })
@@ -104,10 +106,17 @@ public class CategoryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200"),
             @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResult.class),
+                            examples = @ExampleObject(name = "카테고리 이름 빈 문자열", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"categoryName\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}")
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
-                            examples = @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\"}")
+                            examples = @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\", \"errors\": null}")
                     )
             )
     })
@@ -115,7 +124,7 @@ public class CategoryController {
     @GetMapping("/categories/{categoryName}")
     public ResponseEntity<Result<CategoryQueryDto>> findCategory(
             @Parameter(example = "가요")
-            @Pattern(regexp = "^[A-Za-z가-힣0-9_]{1,20}$")
+            @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요")
             @PathVariable("categoryName") String categoryName
     ) {
         CategoryQueryDto categoryQueryDto = categoryQueryService.findCategory(categoryName);
@@ -125,7 +134,7 @@ public class CategoryController {
     @Operation(
             summary = "부모 카테고리 변경",
             description = "**관리자**만 변경할 수 있습니다. \n\n" +
-                    "**부모 카테고리 이름**: (필수) 한글, 영문, 숫자, _만 사용하여 1~20자 사이로 입력해 주세요. \n\n" +
+                    "**부모 카테고리 이름**: (필수) 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요. \n\n" +
                     "**부모 카테고리 이름**은 존재하는 카테고리 이름이어야 합니다. \n\n" +
                     "**자식 카테고리**를 부모 카테고리로 변경할 수 없습니다. \n\n" +
                     "본인을 부모 카테고리로 변경하면 변경되지 않고 성공합니다."
@@ -136,7 +145,10 @@ public class CategoryController {
                     responseCode = "400",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
-                            examples = @ExampleObject(name = "자식 카테고리 선택", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"자식을 부모로 설정할 수 없습니다\"}")
+                            examples = {
+                                    @ExampleObject(name = "카테고리 이름 공백 (패턴 불일치 포함), 부모 카테고리 이름 빈 문자열", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"categoryName\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}, {\"location\": \"BODY\", \"field\": \"parentName\", \"message\": \"부모 카테고리 이름은 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"parentName\", \"message\": \"부모 카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "자식 카테고리 선택", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"자식을 부모로 설정할 수 없습니다\", \"errors\": null}")
+                            }
                     )
             ),
             @ApiResponse(
@@ -144,8 +156,8 @@ public class CategoryController {
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
-                                    @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요_001\"}"),
-                                    @ExampleObject(name = "존재하지 않는 부모 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: \"}")
+                                    @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요_001\", \"errors\": null}"),
+                                    @ExampleObject(name = "존재하지 않는 부모 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\", \"errors\": null}")
                             }
                     )
             )
@@ -154,7 +166,7 @@ public class CategoryController {
     @PatchMapping("/categories/{categoryName}")
     public ResponseEntity<Result<CategoryResponse>> changeParentCategory(
             @Parameter(example = "가요_001")
-            @Pattern(regexp = "^[A-Za-z가-힣0-9_]{1,20}$")
+            @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요")
             @PathVariable("categoryName") String categoryName,
             @RequestBody @Valid CategoryChangeParentRequest request) {
         Category category = categoryService.changeParentCategory(categoryName, request);
@@ -176,8 +188,9 @@ public class CategoryController {
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
-                                    @ExampleObject(name = "자식 카테고리 보유", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"자식 카테고리가 있어서 삭제할 수 없습니다\"}"),
-                                    @ExampleObject(name = "상품 보유", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"카테고리에 상품이 있어서 삭제할 수 없습니다\"}")
+                                    @ExampleObject(name = "카테고리 이름 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"categoryName\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "자식 카테고리 보유", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"자식 카테고리가 있어서 삭제할 수 없습니다\", \"errors\": null}"),
+                                    @ExampleObject(name = "상품 보유", value = "{\"code\": \"BAD_ARGUMENT\", \"message\": \"카테고리에 상품이 있어서 삭제할 수 없습니다\", \"errors\": null}")
                             }
                     )
             ),
@@ -186,7 +199,7 @@ public class CategoryController {
     @DeleteMapping("/categories/{categoryName}")
     public ResponseEntity<Result<String>> delete(
             @Parameter(example = "가요")
-            @Pattern(regexp = "^[A-Za-z가-힣0-9_]{1,20}$")
+            @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요")
             @PathVariable("categoryName") String categoryName
     ) {
         categoryService.deleteCategory(categoryName);
@@ -201,12 +214,22 @@ public class CategoryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200"),
             @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResult.class),
+                            examples = {
+                                    @ExampleObject(name = "카테고리 이름 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"categoryName\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}"),
+                                    @ExampleObject(name = "상품 번호 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"productNumber\", \"message\": \"상품 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요\"}]}")
+                            }
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
-                                    @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\"}"),
-                                    @ExampleObject(name = "존재하지 않는 상품", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 상품입니다. name: 9fyd3T9RxFPZ\"}")
+                                    @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\", \"errors\": null}"),
+                                    @ExampleObject(name = "존재하지 않는 상품", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 상품입니다. productNumber: WxgG3CzGZhAZ\", \"errors\": null}")
                             }
                     )
             )
@@ -215,9 +238,10 @@ public class CategoryController {
     @DeleteMapping("/categories/{categoryName}/{productNumber}")
     public ResponseEntity<Result<CategoryDisconnectResponse>> disconnectProduct(
             @Parameter(example = "가요_001")
-            @Pattern(regexp = "^[A-Za-z가-힣0-9_]{1,20}$")
+            @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요")
             @PathVariable("categoryName") String categoryName,
-            @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "9fyd3T9RxFPZ")
+            @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
+            @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "상품 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요")
             @PathVariable("productNumber") String productNumber) {
         Category category = categoryProductService.disconnect(categoryName, productNumber);
         CategoryDisconnectResponse categoryDisconnectResponse = categoryService.getCategoryDisconnectResponse(category);
@@ -228,10 +252,17 @@ public class CategoryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200"),
             @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResult.class),
+                            examples = @ExampleObject(name = "카테고리 이름 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"categoryName\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}")
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
-                            examples = @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\"}")
+                            examples = @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: 가요\", \"errors\": null}")
                     )
             )
     })
@@ -239,7 +270,7 @@ public class CategoryController {
     @DeleteMapping("/categories/{categoryName}/products")
     public ResponseEntity<Result<CategoryDisconnectResponse>> disconnectProducts(
             @Parameter(example = "가요_001")
-            @Pattern(regexp = "^[A-Za-z가-힣0-9_]{1,20}$")
+            @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요")
             @PathVariable("categoryName") String categoryName
     ) {
         Category category = categoryProductService.disconnectAll(categoryName);

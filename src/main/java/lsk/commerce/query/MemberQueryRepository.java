@@ -59,7 +59,7 @@ public class MemberQueryRepository {
         }
 
         if (name.matches(".*[ㄱ-ㅎ].*")) {
-            return member.initial.contains(name);
+            return member.initial.containsIgnoreCase(name);
         }
 
         return member.name.containsIgnoreCase(name);

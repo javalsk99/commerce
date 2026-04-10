@@ -19,9 +19,9 @@ public class PaymentRepository {
 
     public Optional<Payment> findWithOrder(String paymentId) {
         return em.createQuery(
-                "select p from Payment p" +
-                        " join fetch p.order" +
-                        " where p.paymentId = :paymentId", Payment.class)
+                        "select p from Payment p" +
+                                " join fetch p.order" +
+                                " where p.paymentId = :paymentId", Payment.class)
                 .setParameter("paymentId", paymentId)
                 .getResultList()
                 .stream()

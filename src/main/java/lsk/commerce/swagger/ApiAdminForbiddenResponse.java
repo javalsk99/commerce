@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
         responseCode = "403",
         content = @Content(
                 schema = @Schema(implementation = ErrorResult.class),
-                examples = @ExampleObject(name = "등급 부족", value = "{\"code\": \"NOT_ADMIN\", \"message\": \"관리자만 접근할 수 있습니다\"}")
+                examples = @ExampleObject(name = "등급 부족", value = "{\"code\": \"NOT_ADMIN\", \"message\": \"관리자만 접근할 수 있습니다\", \"errors\": null}")
         )
 )
 public @interface ApiAdminForbiddenResponse {
