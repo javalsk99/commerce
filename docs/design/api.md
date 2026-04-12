@@ -1,53 +1,52 @@
 # API 명세
-![api](images/API_명세.PNG)
+![api_01](images/API_명세서_01.PNG)
+![api_02](images/API_명세서_02.PNG)
 - Auth  
   POST /login 로그인  
-  POST /logout 로그아웃  
-  GET /web/login 웹 로그인
-
-
-- Category  
-  GET /categories 카테고리 목록 조회  
-  POST /categories 카테고리 등록  
-  GET /categories/{categoryName} 카테고리 조회  
-  POST /categories/{categoryName} 카테고리 수정  
-  DELETE /categories/{categoryName} 카테고리 삭제  
-  POST /categories/{categoryName}/{productName} 카테고리에 소속된 상품 제거  
-  POST /categories/{categoryName}/products 카테고리에 소속된 상품들 제거
+  POST /logout 로그아웃
 
 
 - Member  
   GET /members 회원 검색  
   POST /members 회원 가입  
-  GET /members/{memberLoginId} 회원 조회  
+  GET /members/{memberLoginId} 회원 상세 조회  
   DELETE /members/{memberLoginId} 회원 삭제  
-  POST /members/{memberLoginId}/password 회원 비밀번호 수정  
-  POST /members/{memberLoginId}/address 회원 주소 수정
+  PATCH /members/{memberLoginId}/address 주소 수정  
+  POST /members/{memberLoginId}/password 비밀번호 수정
+
+
+- Category  
+  GET /categories 카테고리 목록 조회  
+  POST /categories 카테고리 생성  
+  GET /categories/{categoryName} 카테고리 상세 조회  
+  DELETE /categories/{categoryName} 카테고리 삭제  
+  PATCH /categories/{categoryName} 부모 카테고리 변경  
+  DELETE /categories/{categoryName}/{productNumber} 상품과 연결 해제  
+  DELETE /categories/{categoryName}/products 모든 상품과 연결 해제
+
+
+- Product  
+  GET /products 상품 검색  
+  POST /products 상품 생성  
+  GET /products/{productNumber} 상품 상세 조회  
+  DELETE /products/{productNumber} 상품 삭제  
+  PATCH /products/{productNumber} 상품 수정  
+  PATCH /products/{productNumber}/{categoryName} 카테고리완 연결
 
 
 - Order  
   GET /orders 주문 검색  
   POST /orders 주문 생성  
-  GET /orders/{orderNumber} 주문 조회  
-  POST /orders/{orderNumber} 주문 수정  
+  GET /orders/{orderNumber} 주문 상세 조회  
   DELETE /orders/{orderNumber} 주문 삭제  
-  POST /orders/{orderNumber} 주문 취소  
-  POST /orders/{orderNumber}/payments 결제 요청
+  PATCH /orders/{orderNumber} 주문 수정  
+  PATCH /orders/{orderNumber}/cancel 주문 취소  
 
 
 - Payment  
-  GET /api/payments 결제 화면  
-  GET /api/payments/{orderNumber} 주문 정보 전달  
-  POST /api/payments/complete 결제 완료 처리
+  POST /payments/orders/{orderNumber} 결제 요청
+  GET /payments/{orderNumber} 결제 조회 및 결제 진행
 
-
-- Product  
-  GET /products 상품 검색  
-  POST /products 상품 등록  
-  GET /products/{productName} 상품 조회  
-  POST /products/{productName} 상품 수정  
-  DELETE /products/{productName} 상품 삭제  
-  POST /products/{productName}/{categoryName} 카테고리에 등록
 
 ### 변경 이력
 - 주문 수정, 취소 추가  
@@ -84,3 +83,23 @@
 
 - 주문 검색 추가, 회원과 상품 목록 조회를 검색으로 변경, 카테고리로 상품 조회를 상품 검색에 포함  
   검색 조건을 사용하지 않으면 전체 조회로 사용할 수 있고, 검색 조건을 사용하면 세부 조회가 가능하다.
+
+
+- {productName} -> {productNumber} 변경  
+  유니크 키로 변경
+
+
+- Swagger 추가로 인한 /web/login 삭제
+
+
+- /members/{memberLoginId}/address, /categories/{categoryName}, /products/{productNumber}, /products/{productNumber}/{categoryName}, /orders/{orderNumber}, /orders/{orderNumber}/cancel  
+  멱등성을 위해 POST에서 PATCH로 변경
+
+
+- /categories/{categoryName}/{productNumber}, /categories/{categoryName}/products  
+  카테고리 상품이 삭제되므로 POST에서 DELETE로 변경
+
+
+- /payments/orders/{orderNumber}  
+  결제 요청이므로 주문에서 결제로 위치 이동
+

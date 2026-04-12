@@ -31,3 +31,16 @@
 
 
 - 회원, 상품에서 initial 추가
+
+
+- 상품에서 상품 번호 product_number 추가
+
+
+- 회원 등급을 grade -> role로 변경
+
+
+- 주문 상품에서 count -> quantity로 변경
+
+
+- 주소를 city, street, zipcode -> zipcode, base_address, detail_address로 변경
+

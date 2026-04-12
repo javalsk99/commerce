@@ -1,5 +1,6 @@
 # 시스템 아키텍처
 ![architecture](images/시스템_아키텍처.PNG)
+
 코드 작성 후, Git 저장소에 커밋한다.  
 GitHub로 push되면 GitHub Actions 트리거가 작동해서 애플리케이션을 빌드 및 테스트한다.  
 Docker 이미지를 빌드해서 Docker Hub에 push한다.  
