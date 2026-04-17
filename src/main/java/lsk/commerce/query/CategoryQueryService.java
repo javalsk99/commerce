@@ -17,11 +17,11 @@ public class CategoryQueryService {
     private final CategoryQueryRepository categoryQueryRepository;
     private final CategoryProductQueryRepository categoryProductQueryRepository;
 
-    public CategoryQueryDto findCategory(String categoryName) {
-        CategoryQueryDto categoryQueryDto = categoryQueryRepository.findCategory(categoryName)
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
+    public CategoryQueryDto findCategory(String categoryNumber) {
+        CategoryQueryDto categoryQueryDto = categoryQueryRepository.findCategory(categoryNumber)
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. categoryNumber: " + categoryNumber));
 
-        List<CategoryProductQueryDto> categoryProductQueryDtoList = categoryProductQueryRepository.findCategoryProductsByCategoryName(categoryName);
+        List<CategoryProductQueryDto> categoryProductQueryDtoList = categoryProductQueryRepository.findCategoryProductsByCategoryName(categoryNumber);
 
         return categoryQueryDto.toBuilder()
                 .categoryProductQueryDtoList(categoryProductQueryDtoList)

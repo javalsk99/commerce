@@ -7,6 +7,7 @@ import lsk.commerce.domain.Product;
 import lsk.commerce.domain.product.Album;
 import lsk.commerce.dto.request.ProductChangeRequest;
 import lsk.commerce.dto.request.ProductCreateRequest;
+import lsk.commerce.dto.response.CategoryNameResponse;
 import lsk.commerce.dto.response.ProductDetailResponse;
 import lsk.commerce.dto.response.ProductNameWithCategoryNameResponse;
 import lsk.commerce.dto.response.ProductResponse;
@@ -87,6 +88,9 @@ class ProductControllerTest {
             @Test
             void basic() throws Exception {
                 //given
+                Category parentCategory = Category.createCategory(null, "가요");
+                Category childCategory = Category.createCategory(parentCategory, "댄스");
+
                 ProductCreateRequest request = ProductCreateRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
@@ -104,14 +108,14 @@ class ProductControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json)
-                                .param("categoryNames", "가요,댄스"))
+                                .param("categoryNumbers", parentCategory.getCategoryNumber(), childCategory.getCategoryNumber()))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data").value("BANG BANG"))
                         .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
-                BDDMockito.then(productService).should().register(request, List.of("가요", "댄스"));
+                BDDMockito.then(productService).should().register(request, List.of(parentCategory.getCategoryNumber(), childCategory.getCategoryNumber()));
             }
         }
 
@@ -119,8 +123,8 @@ class ProductControllerTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("invalidCreateRequestCategoryNamesProvider")
-            void invalidInput(ProductCreateRequest request, String categoryName) throws Exception {
+            @MethodSource("invalidCreateRequestCategoryNumbersProvider")
+            void invalidInput(ProductCreateRequest request, String categoryNumber) throws Exception {
                 //given
                 String json = objectMapper.writeValueAsString(request);
 
@@ -129,7 +133,7 @@ class ProductControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json)
-                                .param("categoryNames", categoryName))
+                                .param("categoryNumbers", categoryNumber))
                         .andExpect(status().isBadRequest())
                         .andDo(print());
 
@@ -140,6 +144,8 @@ class ProductControllerTest {
             @Test
             void register_Failed_DuplicateProduct() throws Exception {
                 //given
+                Category category = Category.createCategory(null, "가요");
+
                 ProductCreateRequest request = ProductCreateRequest.builder()
                         .name("BANG BANG")
                         .price(15000)
@@ -157,14 +163,14 @@ class ProductControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(json)
-                                .param("categoryNames", "가요"))
+                                .param("categoryNumbers", category.getCategoryNumber()))
                         .andExpect(status().isConflict())
                         .andExpect(jsonPath("$.code").value("DUPLICATE_RESOURCE"))
                         .andExpect(jsonPath("$.message").value("이미 존재하는 상품입니다. name: " + "BANG BANG"))
                         .andDo(print());
 
                 //then
-                BDDMockito.then(productService).should().register(request, List.of("가요"));
+                BDDMockito.then(productService).should().register(request, List.of(category.getCategoryNumber()));
             }
 
             @Test
@@ -194,84 +200,84 @@ class ProductControllerTest {
                 BDDMockito.then(productService).should(never()).register(any(), any());
             }
 
-            static Stream<Arguments> invalidCreateRequestCategoryNamesProvider() {
+            static Stream<Arguments> invalidCreateRequestCategoryNumbersProvider() {
                 return Stream.of(
                         argumentSet("productName null",
                                 ProductCreateRequest.builder()
                                         .price(15000).stockQuantity(10)
                                         .dtype("A").artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "가요"
+                                "dkfNUH46n3Jh"
                         ),
                         argumentSet("price null",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").stockQuantity(10)
                                         .dtype("A").artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "가요"
+                                "dkfNUH46n3Jh"
                         ),
                         argumentSet("stockQuantity null",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000)
                                         .dtype("A").artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "가요"
+                                "dkfNUH46n3Jh"
                         ),
                         argumentSet("dtype null",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "가요"
+                                "dkfNUH46n3Jh"
                         ),
                         argumentSet("dtype 빈 문자열",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .dtype("").artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "가요"
+                                "dkfNUH46n3Jh"
                         ),
                         argumentSet("dtype 공백",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .dtype(" ").artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "가요"
+                                "dkfNUH46n3Jh"
                         ),
                         argumentSet("dtype 1자 초과",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .dtype("a".repeat(2)).artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "가요"
+                                "dkfNUH46n3Jh"
                         ),
-                        argumentSet("categoryName null",
+                        argumentSet("categoryNumber null",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .dtype("A").artist("IVE").studio("STARSHIP")
                                         .build(),
                                 null
                         ),
-                        argumentSet("categoryName 빈 문자열",
+                        argumentSet("categoryNumber 빈 문자열",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .dtype("A").artist("IVE").studio("STARSHIP")
                                         .build(),
                                 ""
                         ),
-                        argumentSet("categoryName 공백",
+                        argumentSet("categoryNumber 공백",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .dtype("A").artist("IVE").studio("STARSHIP")
                                         .build(),
                                 " "
                         ),
-                        argumentSet("categoryName 20자 초과",
+                        argumentSet("categoryNumber 12자 초과",
                                 ProductCreateRequest.builder()
                                         .name("BANG BANG").price(15000).stockQuantity(10)
                                         .dtype("A").artist("IVE").studio("STARSHIP")
                                         .build(),
-                                "a".repeat(21)
+                                "a".repeat(13)
                         )
                 );
             }
@@ -353,7 +359,43 @@ class ProductControllerTest {
         class SuccessCase {
 
             @Test
-            void basic() throws Exception {
+            void withCategory() throws Exception {
+                //given
+                Album album = Album.builder()
+                        .name("BANG BANG")
+                        .price(15000)
+                        .stockQuantity(10)
+                        .artist("IVE")
+                        .studio("STARSHIP")
+                        .build();
+                Category category = Category.createCategory(null, "가요");
+                ReflectionTestUtils.setField(category, "id", 1L);
+                album.connectCategory(category);
+                ProductDetailResponse productResponse = ProductDetailResponse.from(album);
+
+                given(productService.findProductWithCategoryProductCategory(anyString())).willReturn(album);
+                given(productService.getProductDto(any(Product.class))).willReturn(productResponse);
+
+                //when & then
+                mvc.perform(get("/products/{productNumber}", productNumber))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.data.name").value("BANG BANG"))
+                        .andExpect(jsonPath("$.data.dtype").value("A"))
+                        .andExpect(jsonPath("$.data.artist").value("IVE"))
+                        .andExpect(jsonPath("$.data.studio").value("STARSHIP"))
+                        .andExpect(jsonPath("$.data.categoryNameResponseList[0].categoryName").value("가요"))
+                        .andExpect(jsonPath("$.count").value(1))
+                        .andDo(print());
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProductCategory(productNumber));
+                    softly.check(() -> BDDMockito.then(productService).should().getProductDto(album));
+                });
+            }
+
+            @Test
+            void withoutCategory() throws Exception {
                 //given
                 Album album = Album.builder()
                         .name("BANG BANG")
@@ -364,7 +406,7 @@ class ProductControllerTest {
                         .build();
                 ProductDetailResponse productResponse = ProductDetailResponse.from(album);
 
-                given(productService.findProduct(anyString())).willReturn(album);
+                given(productService.findProductWithCategoryProductCategory(anyString())).willReturn(album);
                 given(productService.getProductDto(any(Product.class))).willReturn(productResponse);
 
                 //when & then
@@ -374,12 +416,13 @@ class ProductControllerTest {
                         .andExpect(jsonPath("$.data.dtype").value("A"))
                         .andExpect(jsonPath("$.data.artist").value("IVE"))
                         .andExpect(jsonPath("$.data.studio").value("STARSHIP"))
+                        .andExpect(jsonPath("$.data.categoryNameResponseList").isEmpty())
                         .andExpect(jsonPath("$.count").value(1))
                         .andDo(print());
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should().findProduct(productNumber));
+                    softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProductCategory(productNumber));
                     softly.check(() -> BDDMockito.then(productService).should().getProductDto(album));
                 });
             }
@@ -391,7 +434,7 @@ class ProductControllerTest {
             @Test
             void findProductByName_Failed_ProductNotFound() throws Exception {
                 //given
-                given(productService.findProduct(anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"));
+                given(productService.findProductWithCategoryProductCategory(anyString())).willThrow(new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"));
 
                 //when & then
                 mvc.perform(get("/products/{productNumber}", "lllIIIll00OO"))
@@ -402,7 +445,7 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(productService).should().findProduct("lllIIIll00OO"));
+                    softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProductCategory("lllIIIll00OO"));
                     softly.check(() -> BDDMockito.then(productService).should(never()).getProductDto(any(Product.class)));
                 });
             }
@@ -645,7 +688,7 @@ class ProductControllerTest {
                         .studio("STARSHIP")
                         .build();
                 Category category1 = Category.createCategory(null, "가요");
-                Category.createCategory(category1, "댄스");
+                Category category2 = Category.createCategory(category1, "댄스");
 
                 ReflectionTestUtils.setField(category1, "id", 1L);
 
@@ -657,7 +700,7 @@ class ProductControllerTest {
                 given(productService.getProductWithCategoryDto(any(Product.class))).willReturn(productNameWithCategoryNameResponse);
 
                 //when & then
-                mvc.perform(patch("/products/{productNumber}/{categoryName}", productNumber, "댄스"))
+                mvc.perform(patch("/products/{productNumber}/{categoryNumber}", productNumber, category2.getCategoryNumber()))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.name").value("BANG BANG"))
                         .andExpect(jsonPath("$.data.categoryNameResponseList[0].categoryName").value("가요"))
@@ -667,7 +710,7 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should().connect(productNumber, "댄스"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should().connect(productNumber, category2.getCategoryNumber()));
                     softly.check(() -> BDDMockito.then(productService).should().getProductWithCategoryDto(album));
                 });
             }
@@ -683,7 +726,7 @@ class ProductControllerTest {
                         .studio("STARSHIP")
                         .build();
                 Category category1 = Category.createCategory(null, "가요");
-                Category.createCategory(category1, "댄스");
+                Category category2 = Category.createCategory(category1, "댄스");
 
                 ReflectionTestUtils.setField(category1, "id", 1L);
 
@@ -695,7 +738,7 @@ class ProductControllerTest {
                 given(productService.getProductWithCategoryDto(any(Product.class))).willReturn(productNameWithCategoryNameResponse);
 
                 //when & then 첫 번째 요청
-                mvc.perform(patch("/products/{productNumber}/{categoryName}", productNumber, "댄스"))
+                mvc.perform(patch("/products/{productNumber}/{categoryNumber}", productNumber, category2.getCategoryNumber()))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.name").value("BANG BANG"))
                         .andExpect(jsonPath("$.data.categoryNameResponseList[0].categoryName").value("가요"))
@@ -705,12 +748,12 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should().connect(productNumber, "댄스"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should().connect(productNumber, category2.getCategoryNumber()));
                     softly.check(() -> BDDMockito.then(productService).should().getProductWithCategoryDto(album));
                 });
 
                 //when & then 두 번째 요청
-                mvc.perform(patch("/products/{productNumber}/{categoryName}", productNumber, "댄스"))
+                mvc.perform(patch("/products/{productNumber}/{categoryNumber}", productNumber, category2.getCategoryNumber()))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.data.name").value("BANG BANG"))
                         .andExpect(jsonPath("$.data.categoryNameResponseList[0].categoryName").value("가요"))
@@ -720,14 +763,14 @@ class ProductControllerTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should(times(2)).connect(productNumber, "댄스"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should(times(2)).connect(productNumber, category2.getCategoryNumber()));
                     softly.check(() -> BDDMockito.then(productService).should(times(2)).getProductWithCategoryDto(album));
                 });
             }
 
             private static ProductNameWithCategoryNameResponse getProductNameWithCategoryNameResponse() {
-                ProductNameWithCategoryNameResponse.CategoryNameResponse categoryNameResponse1 = new ProductNameWithCategoryNameResponse.CategoryNameResponse("가요");
-                ProductNameWithCategoryNameResponse.CategoryNameResponse categoryNameResponse2 = new ProductNameWithCategoryNameResponse.CategoryNameResponse("댄스");
+                CategoryNameResponse categoryNameResponse1 = new CategoryNameResponse("가요");
+                CategoryNameResponse categoryNameResponse2 = new CategoryNameResponse("댄스");
                 return new ProductNameWithCategoryNameResponse("BANG BANG", List.of(categoryNameResponse1, categoryNameResponse2));
             }
         }
@@ -746,17 +789,17 @@ class ProductControllerTest {
                         .studio("STARSHIP")
                         .build();
 
-                given(categoryProductService.connect(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + "록"));
+                given(categoryProductService.connect(anyString(), anyString())).willThrow(new DataNotFoundException("존재하지 않는 카테고리입니다. categoryNumber: " + "llII11OO00OO"));
 
                 //when & then
-                mvc.perform(patch("/products/{productNumber}/{categoryName}", productNumber, "록"))
+                mvc.perform(patch("/products/{productNumber}/{categoryNumber}", productNumber, "llII11OO00OO"))
                         .andExpect(status().isNotFound())
                         .andExpect(jsonPath("$.code").value("NOT_FOUND"))
-                        .andExpect(jsonPath("$.message").value("존재하지 않는 카테고리입니다. name: " + "록"))
+                        .andExpect(jsonPath("$.message").value("존재하지 않는 카테고리입니다. categoryNumber: " + "llII11OO00OO"))
                         .andDo(print());
 
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryProductService).should().connect(productNumber, "록"));
+                    softly.check(() -> BDDMockito.then(categoryProductService).should().connect(productNumber, "llII11OO00OO"));
                     softly.check(() -> BDDMockito.then(productService).should(never()).getProductWithCategoryDto(any()));
                 });
             }

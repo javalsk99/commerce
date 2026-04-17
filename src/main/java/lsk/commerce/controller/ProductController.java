@@ -54,7 +54,7 @@ public class ProductController {
             summary = "상품 생성",
             description = "**관리자**만 생성할 수 있습니다. \n\n" +
                     "**카테고리 이름**은 한 개 이상 넣어주세요. \n\n" +
-                    "**상품 이름**: (필수) 한글, 영문, 숫자, 공백, 특수문자(!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요. \n\n" +
+                    "**상품 이름**: (필수) 한글, 영문, 숫자, 공백, 특수문자(()!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요. \n\n" +
                     "**상품 가격**: (필수) 100원 이상이어야 합니다. \n\n" +
                     "**재고**: (필수) 0개 이상이어야 합니다. \n\n" +
                     "**dtype**필드에 (필수) 앨범은 **A**, 책은 **B**, 영화는 **M**을 입력해 주세요. \n\n" +
@@ -78,9 +78,9 @@ public class ProductController {
                     content = @Content(
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
-                                    @ExampleObject(name = "카테고리 이름 미입력", value = "{\"code\": \"BAD_PARAMETER\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"QUERY\", \"field\": \"categoryNames\", \"message\": \"필수 파라미터가 누락되었습니다\"}]}", description = "'lsk-commerce.shop/products' \n\n 'lsk-commerce.shop/products?'"),
-                                    @ExampleObject(name = "카테고리 이름 값 미입력", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"QUERY\", \"field\": \"categoryNames\", \"message\": \"카테고리 이름은 1개 이상 입력해 주세요\"}]}", description = "'lsk-commerce.shop/products?categoryNames' \n\n 'lsk-commerce.shop/products?categoryNames='"),
-                                    @ExampleObject(name = "첫 번째 카테고리 이름 공백", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"QUERY\", \"field\": \"categoryNames[0]\", \"message\": \"카테고리 이름은 필수입니다\"}, {\"location\": \"QUERY\",\"field\": \"categoryNames[0]\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}", description = "'lsk-commerce.shop/product?categoryNames= '"),
+                                    @ExampleObject(name = "카테고리 번호 미입력", value = "{\"code\": \"BAD_PARAMETER\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"QUERY\", \"field\": \"categoryNames\", \"message\": \"필수 파라미터가 누락되었습니다\"}]}", description = "'lsk-commerce.shop/products' \n\n 'lsk-commerce.shop/products?'"),
+                                    @ExampleObject(name = "카테고리 번호 값 미입력", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"QUERY\", \"field\": \"categoryNames\", \"message\": \"카테고리 번호는 1개 이상 입력해 주세요\"}]}", description = "'lsk-commerce.shop/products?categoryNames' \n\n 'lsk-commerce.shop/products?categoryNames='"),
+                                    @ExampleObject(name = "첫 번째 카테고리 번호 공백", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"QUERY\", \"field\": \"categoryNames[0]\", \"message\": \"카테고리 번호는 필수입니다\"}, {\"location\": \"QUERY\",\"field\": \"categoryNames[0]\", \"message\": \"카테고리 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요\"}]}", description = "'lsk-commerce.shop/product?categoryNames= '"),
                                     @ExampleObject(name = "dtype 빈 문자열", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"BODY\", \"field\": \"dtype\", \"message\": \"dtype은 필수입니다\"}, {\"location\": \"BODY\", \"field\": \"dtype\", \"message\": \"dtype은 A, B, M만 사용하여 한 글자로 입력해 주세요\"}, {\"location\": \"BODY\", \"field\": \"validFields\", \"message\": \"dtype이 A면 artist, studio B면 author, isbn M이면 actor, director만 입력해 주세요\"}]}")
                             }
                     )
@@ -105,13 +105,13 @@ public class ProductController {
     public ResponseEntity<Result<String>> create(
             @Parameter(
                     example = "가요_001, 가요_002",
-                    description = "현재 Swagger UI 라이브러리 버그로 인해 categoryNames를 추가하지 않고 전송하면 브라우저단에서 요청이 차단되는 현상이 있습니다. \n\n" +
-                            "categoryNames를 추가하고 지우면 이 문제가 해결되지만 입력에서 막혀 Postman에서 전송해야 아래의 예시처럼 나옵니다."
+                    description = "현재 Swagger UI 라이브러리 버그로 인해 categoryNumbers를 추가하지 않고 전송하면 브라우저단에서 요청이 차단되는 현상이 있습니다. \n\n" +
+                            "categoryNumbers를 추가하고 지우면 이 문제가 해결되지만 입력에서 막혀 Postman에서 전송해야 아래의 예시처럼 나옵니다."
             )
-            @RequestParam @NotEmpty(message = "카테고리 이름은 1개 이상 입력해 주세요") List<@NotBlank(message = "카테고리 이름은 필수입니다") @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요") String> categoryNames,
+            @RequestParam @NotEmpty(message = "카테고리 번호는 1개 이상 입력해 주세요") List<@NotBlank(message = "카테고리 번호는 필수입니다") @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "카테고리 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요") String> categoryNumbers,
             @RequestBody @Valid ProductCreateRequest request
     ) {
-        productService.register(request, categoryNames);
+        productService.register(request, categoryNumbers);
         return ResponseEntity.ok(new Result<>(request.name(), 1));
     }
 
@@ -170,7 +170,7 @@ public class ProductController {
             @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "상품 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요")
             @PathVariable("productNumber") String productNumber
     ) {
-        Product product = productService.findProduct(productNumber);
+        Product product = productService.findProductWithCategoryProductCategory(productNumber);
         ProductDetailResponse productDetailResponse = productService.getProductDto(product);
         return ResponseEntity.ok(new Result<>(productDetailResponse, 1));
     }
@@ -248,7 +248,7 @@ public class ProductController {
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
                                     @ExampleObject(name = "상품 번호 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"productNumber\", \"message\": \"상품 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요\"}]}"),
-                                    @ExampleObject(name = "카테고리 이름 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"categoryName\", \"message\": \"카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요\"}]}")
+                                    @ExampleObject(name = "카테고리 번호 공백 (패턴 불일치 포함)", value = "{\"code\": \"NOT_VALID\", \"message\": \"입력값이 잘못되었습니다\", \"errors\": [{\"location\": \"PATH\", \"field\": \"categoryName\", \"message\": \"카테고리 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요\"}]}")
                             }
                     )
             ),
@@ -258,22 +258,22 @@ public class ProductController {
                             schema = @Schema(implementation = ErrorResult.class),
                             examples = {
                                     @ExampleObject(name = "존재하지 않는 상품", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 상품입니다. productNumber: WxgG3CzGZhAZ\", \"errors\": null}"),
-                                    @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. name: Java\", \"errors\": null}")
+                                    @ExampleObject(name = "존재하지 않는 카테고리", value = "{\"code\": \"NOT_FOUND\", \"message\": \"존재하지 않는 카테고리입니다. categoryNumber: LVjBKQYeuJQP\", \"errors\": null}")
                             }
                     )
             )
     })
     @ApiAdminForbiddenResponse
-    @PatchMapping("/products/{productNumber}/{categoryName}")
+    @PatchMapping("/products/{productNumber}/{categoryNumber}")
     public ResponseEntity<Result<ProductNameWithCategoryNameResponse>> connectCategory(
             @Parameter(description = "**12**자리의 상품 번호를 입력해 주세요.", example = "WxgG3CzGZhAZ")
             @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "상품 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요")
             @PathVariable("productNumber") String productNumber,
-            @Parameter(example = "Java")
-            @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요")
-            @PathVariable("categoryName") String categoryName
+            @Parameter(description = "**12**자리의 카테고리 번호를 입력해 주세요.", example = "LVjBKQYeuJQP")
+            @Pattern(regexp = "^[A-Za-z0-9]{12}$", message = "카테고리 번호는 영문, 숫자만 사용하여 12자로 입력해 주세요")
+            @PathVariable("categoryNumber") String categoryNumber
     ) {
-        Product product = categoryProductService.connect(productNumber, categoryName);
+        Product product = categoryProductService.connect(productNumber, categoryNumber);
         ProductNameWithCategoryNameResponse productWithCategoryResponse = productService.getProductWithCategoryDto(product);
         return ResponseEntity.ok(new Result<>(productWithCategoryResponse, 1));
     }

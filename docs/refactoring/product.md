@@ -25,6 +25,10 @@
   일부 필드만 변경해서 update보다 change가 잘 어울려서 updateProduct에서 변경했다.
 
 
+- findProduct  
+  카테고리 조회까지 추가하기 위해 카테고리 Fetch Join을 추가했다.
+
+
 ## ProductService
 - register  
   유지보수의 효율을 위해 파라미터를 엔티티에서 DTO로 변경했다.

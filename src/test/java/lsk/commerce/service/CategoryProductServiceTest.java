@@ -113,7 +113,7 @@ class CategoryProductServiceTest {
             @Test
             void basic() {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category1);
                 given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
 
                 //when
@@ -121,7 +121,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should().delete(captor.capture()));
                 });
@@ -137,7 +137,7 @@ class CategoryProductServiceTest {
                 //given
                 CategoryProduct categoryProduct = album1.getCategoryProducts().getFirst();
 
-                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category1);
                 given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
 
                 //when 첫 번째 호출
@@ -145,7 +145,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should().delete(categoryProduct));
                 });
@@ -155,7 +155,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should(times(2)).findProductWithCategoryProduct(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should().delete(any()));
                 });
@@ -168,7 +168,7 @@ class CategoryProductServiceTest {
             @Test
             void categoryNotFound() {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
 
                 //when & then
                 thenThrownBy(() -> categoryProductService.disconnect("록", productNumber))
@@ -177,7 +177,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should(never()).findProductWithCategoryProduct(any()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(never()).delete(any()));
                 });
@@ -186,7 +186,7 @@ class CategoryProductServiceTest {
             @Test
             void productNotFound() {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willReturn(category2);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category2);
                 given(productService.findProductWithCategoryProduct(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 상품입니다. productNumber: " + "lllIIIll00OO"));
 
                 //when & then
@@ -196,7 +196,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(never()).delete(any()));
                 });
@@ -213,7 +213,7 @@ class CategoryProductServiceTest {
             @Test
             void basic() {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category1);
                 given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(category1.getCategoryProducts());
 
                 //when
@@ -221,7 +221,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should().findAllWithProductByCategory(any()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(times(2)).delete(captor.capture()));
                 });
@@ -236,7 +236,7 @@ class CategoryProductServiceTest {
             @Test
             void shouldIgnoreDisconnectAll_WhenCategoryProductsIsEmpty() {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willReturn(category4);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category4);
                 given(categoryProductRepository.findAllWithProductByCategory(any())).willReturn(Collections.emptyList());
 
                 //when & then
@@ -244,7 +244,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should().findAllWithProductByCategory(any()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(never()).delete(any()));
                 });
@@ -253,7 +253,7 @@ class CategoryProductServiceTest {
             @Test
             void idempotency() {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willReturn(category1);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category1);
                 given(categoryProductRepository.findAllWithProductByCategory(any()))
                         .willReturn(category1.getCategoryProducts())
                         .willReturn(Collections.emptyList());
@@ -263,7 +263,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should().findAllWithProductByCategory(any()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(times(2)).delete(captor.capture()));
                 });
@@ -279,7 +279,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(times(2)).findAllWithProductByCategory(any()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(times(2)).delete(any()));
                 });
@@ -292,7 +292,7 @@ class CategoryProductServiceTest {
             @Test
             void categoryNotFound() {
                 //given
-                given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
 
                 //when & then
                 thenThrownBy(() -> categoryProductService.disconnectAll("록"))
@@ -301,7 +301,7 @@ class CategoryProductServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(never()).findAllWithProductByCategory(any()));
                     softly.check(() -> BDDMockito.then(categoryProductRepository).should(never()).delete(any()));
                 });
@@ -319,7 +319,7 @@ class CategoryProductServiceTest {
             void basic() {
                 //given
                 given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-                given(categoryService.findCategoryByName(anyString())).willReturn(category3);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category3);
 
                 //when
                 categoryProductService.connect(productNumber, "발라드");
@@ -327,7 +327,7 @@ class CategoryProductServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.then(album1.getCategoryProducts())
                             .hasSize(3)
                             .extracting("category.name")
@@ -339,7 +339,7 @@ class CategoryProductServiceTest {
             void idempotency() {
                 //given
                 given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-                given(categoryService.findCategoryByName(anyString())).willReturn(category3);
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willReturn(category3);
 
                 //when 첫 번째 호출
                 categoryProductService.connect(productNumber, "발라드");
@@ -347,7 +347,7 @@ class CategoryProductServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.then(album1.getCategoryProducts())
                             .hasSize(3)
                             .extracting("category.name")
@@ -360,7 +360,7 @@ class CategoryProductServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productService).should(times(2)).findProductWithCategoryProduct(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should(times(2)).findCategoryByCategoryNumber(anyString()));
                     softly.then(album1.getCategoryProducts())
                             .hasSize(3)
                             .extracting("category.name")
@@ -385,7 +385,7 @@ class CategoryProductServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryService).should(never()).findCategoryByName(any()));
+                    softly.check(() -> BDDMockito.then(categoryService).should(never()).findCategoryByCategoryNumber(any()));
                 });
             }
 
@@ -393,7 +393,7 @@ class CategoryProductServiceTest {
             void categoryNotFound() {
                 //given
                 given(productService.findProductWithCategoryProduct(anyString())).willReturn(album1);
-                given(categoryService.findCategoryByName(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
+                given(categoryService.findCategoryByCategoryNumber(anyString())).willThrow(new IllegalArgumentException("존재하지 않는 카테고리입니다. name: " + "록"));
 
                 //when & then
                 thenThrownBy(() -> categoryProductService.connect(productNumber, "록"))
@@ -403,7 +403,7 @@ class CategoryProductServiceTest {
                 //then
                 thenSoftly(softly -> {
                     softly.check(() -> BDDMockito.then(productService).should().findProductWithCategoryProduct(anyString()));
-                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByName(anyString()));
+                    softly.check(() -> BDDMockito.then(categoryService).should().findCategoryByCategoryNumber(anyString()));
                     softly.then(album1.getCategoryProducts())
                             .hasSize(2)
                             .extracting("category.name")

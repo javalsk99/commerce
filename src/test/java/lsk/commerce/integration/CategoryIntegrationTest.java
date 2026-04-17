@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 
@@ -49,21 +50,49 @@ public class CategoryIntegrationTest {
     class Create {
 
         @Nested
-        class FailureCase {
+        class SuccessCase {
 
             @Test
-            @DisplayName("부모 카테고리의 이름이 달라도 같은 이름으로 생성할 수 없다")
-            void duplicateCreate() {
+            @DisplayName("부모 카테고리 번호가 다르면 같은 이름으로 생성할 수 있다")
+            void notDuplicateCreate_WhenParentNumberIsDifferent() {
                 //given
-                String parentName1 = categoryService.create(new CategoryCreateRequest("가요", null));
-                String parentName2 = categoryService.create(new CategoryCreateRequest("컴퓨터/IT", null));
+                String parentNumber1 = categoryService.create(new CategoryCreateRequest("가요", null));
+                String parentNumber2 = categoryService.create(new CategoryCreateRequest("컴퓨터/IT", null));
 
-                categoryService.create(new CategoryCreateRequest("댄스", parentName1));
+                categoryService.create(new CategoryCreateRequest("댄스", parentNumber1));
 
                 em.flush();
                 em.clear();
 
-                CategoryCreateRequest request = new CategoryCreateRequest("댄스", parentName2);
+                CategoryCreateRequest request = new CategoryCreateRequest("댄스", parentNumber2);
+
+                System.out.println("================= WHEN START =================");
+
+                //when & then
+                thenNoException().isThrownBy(() -> {
+                    categoryService.create(request);
+                    em.flush();
+                });
+
+                System.out.println("================= WHEN END ===================");
+            }
+        }
+
+        @Nested
+        class FailureCase {
+
+            @Test
+            @DisplayName("부모 카테고리 번호가 같으면 같은 이름으로 생성할 수 없다")
+            void duplicateCreate_WhenParentNumberIsSame() {
+                //given
+                String parentNumber = categoryService.create(new CategoryCreateRequest("가요", null));
+
+                categoryService.create(new CategoryCreateRequest("댄스", parentNumber));
+
+                em.flush();
+                em.clear();
+
+                CategoryCreateRequest request = new CategoryCreateRequest("댄스", parentNumber);
 
                 System.out.println("================= WHEN START =================");
 
@@ -90,9 +119,9 @@ public class CategoryIntegrationTest {
             @DisplayName("상품과 연결된 카테고리는 삭제할 수 없다")
             void hasProduct() {
                 //given
-                String categoryName = categoryService.create(new CategoryCreateRequest("댄스", null));
+                String categoryNumber = categoryService.create(new CategoryCreateRequest("댄스", null));
 
-                productService.register(createRequest("BANG BANG"), List.of(categoryName));
+                productService.register(createRequest("BANG BANG"), List.of(categoryNumber));
 
                 em.flush();
                 em.clear();
@@ -101,7 +130,7 @@ public class CategoryIntegrationTest {
 
                 //when
                 thenThrownBy(() -> {
-                    categoryService.deleteCategory(categoryName);
+                    categoryService.deleteCategory(categoryNumber);
                     em.flush();
                 })
                         .isInstanceOf(IllegalStateException.class)
@@ -122,10 +151,10 @@ public class CategoryIntegrationTest {
             @DisplayName("카테고리의 모든 상품들의 연결 제거 시, 상품들과 연결이 끊긴다")
             void disconnectAll() {
                 //given
-                String categoryName = categoryService.create(new CategoryCreateRequest("가요", null));
+                String categoryNumber = categoryService.create(new CategoryCreateRequest("가요", null));
 
-                productService.register(createRequest("BANG BANG"), List.of(categoryName));
-                productService.register(createRequest("BLACKHOLE"), List.of(categoryName));
+                productService.register(createRequest("BANG BANG"), List.of(categoryNumber));
+                productService.register(createRequest("BLACKHOLE"), List.of(categoryNumber));
 
                 em.flush();
                 em.clear();
@@ -133,7 +162,7 @@ public class CategoryIntegrationTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                categoryProductService.disconnectAll(categoryName);
+                categoryProductService.disconnectAll(categoryNumber);
 
                 em.flush();
                 em.clear();
@@ -141,7 +170,7 @@ public class CategoryIntegrationTest {
                 System.out.println("================= WHEN END ===================");
 
                 //then
-                Category category = categoryRepository.findWithChild(categoryName)
+                Category category = categoryRepository.findWithChild(categoryNumber)
                         .orElseThrow(() -> new AssertionError("카테고리가 저장되지 않았습니다"));
                 List<Product> products = productRepository.findAll();
 

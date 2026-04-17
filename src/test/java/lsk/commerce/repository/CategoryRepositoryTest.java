@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenNoException;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -69,6 +70,26 @@ class CategoryRepositoryTest {
                     softly.then(findCategory.getChildren()).isEmpty();
                 });
             }
+
+            @Test
+            void existsName_WhenOtherParent() {
+                //given
+                Category parentCategory = Category.createCategory(null, "가요");
+                Category category1 = Category.createCategory(null, "댄스");
+                em.persist(parentCategory);
+                em.persist(category1);
+                em.flush();
+                em.clear();
+
+                Category category2 = Category.createCategory(parentCategory, "댄스");
+
+                System.out.println("================= WHEN START =================");
+
+                //when & then
+                thenNoException().isThrownBy(() -> categoryRepository.save(category2));
+
+                System.out.println("================= WHEN END ===================");
+            }
         }
 
         @Nested
@@ -84,10 +105,10 @@ class CategoryRepositoryTest {
             }
 
             @Test
-            void existsLoginId() {
+            void existsName_WhenSameParent() {
                 //given
                 Category parentCategory = Category.createCategory(null, "가요");
-                Category category1 = Category.createCategory(null, "댄스");
+                Category category1 = Category.createCategory(parentCategory, "댄스");
                 em.persist(parentCategory);
                 em.persist(category1);
                 em.flush();
@@ -119,11 +140,9 @@ class CategoryRepositoryTest {
     private abstract class Setup {
 
         Long categoryId1;
-        Long categoryId2;
         Long categoryId3;
-        String name1;
-        String name2;
-        String name3;
+        String categoryNumber1;
+        String categoryNumber2;
         Album album1;
         Album album2;
 
@@ -133,11 +152,11 @@ class CategoryRepositoryTest {
             Category childCategory1 = Category.createCategory(parentCategory, "댄스");
             Category childCategory2 = Category.createCategory(parentCategory, "발라드");
             categoryId1 = em.persistAndGetId(parentCategory, Long.class);
-            categoryId2 = em.persistAndGetId(childCategory1, Long.class);
+            em.persistAndGetId(childCategory1, Long.class);
             categoryId3 = em.persistAndGetId(childCategory2, Long.class);
-            name1 = parentCategory.getName();
-            name2 = childCategory1.getName();
-            name3 = childCategory2.getName();
+
+            categoryNumber1 = parentCategory.getCategoryNumber();
+            categoryNumber2 = childCategory1.getCategoryNumber();
 
             album1 = Album.builder().name("BANG BANG").price(15000).stockQuantity(10).artist("IVE").studio("STARSHIP").build();
             album2 = Album.builder().name("타임 캡슐").price(15000).stockQuantity(10).artist("다비치").studio("씨에이엠위더스").build();
@@ -162,7 +181,7 @@ class CategoryRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                Optional<Category> findCategory = categoryRepository.findWithChild(name1);
+                Optional<Category> findCategory = categoryRepository.findWithChild(categoryNumber1);
 
                 System.out.println("================= WHEN END ===================");
 
@@ -179,6 +198,52 @@ class CategoryRepositoryTest {
                             .extracting("product.name")
                             .containsExactlyInAnyOrder("BANG BANG", "타임 캡슐");
                 });
+            }
+
+            @Test
+            void withParent_WhenParentNumberIsNull() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                List<Category> categories = categoryRepository.findWithParent("댄스", null);
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                then(categories)
+                        .extracting("name")
+                        .containsExactly("댄스");
+            }
+
+            @Test
+            void withParent() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                List<Category> categories = categoryRepository.findWithParent("댄스", categoryNumber1);
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                then(categories)
+                        .hasSize(2)
+                        .extracting("name")
+                        .containsExactlyInAnyOrder("가요", "댄스");
+            }
+
+            @Test
+            void withParent_WhenCategoryNameDoesNotExists() {
+                System.out.println("================= WHEN START =================");
+
+                //when
+                List<Category> categories = categoryRepository.findWithParent("록", categoryNumber1);
+
+                System.out.println("================= WHEN END ===================");
+
+                //then
+                then(categories)
+                        .extracting("name")
+                        .containsExactly("가요");
             }
 
             @Test
@@ -202,14 +267,14 @@ class CategoryRepositoryTest {
             }
 
             @Test
-            void byNameSet() {
+            void byNumberSet() {
                 //given
-                Set<String> nameSet = Set.of("가요", "댄스");
+                Set<String> numberSet = Set.of(categoryNumber1, categoryNumber2);
 
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<Category> categories = categoryRepository.findByNameSet(nameSet);
+                List<Category> categories = categoryRepository.findByNumberSet(numberSet);
 
                 System.out.println("================= WHEN END ===================");
 
@@ -227,12 +292,12 @@ class CategoryRepositoryTest {
             @Test
             void byNameSet_ShouldReturnExisting_WhenNamesNotFound() {
                 //given
-                Set<String> nameSet = Set.of("가요", "록");
+                Set<String> numberSet = Set.of(categoryNumber1, "llII11OO00OO");
 
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<Category> categories = categoryRepository.findByNameSet(nameSet);
+                List<Category> categories = categoryRepository.findByNumberSet(numberSet);
 
                 System.out.println("================= WHEN END ===================");
 
@@ -321,60 +386,6 @@ class CategoryRepositoryTest {
                         .hasMessageContaining("category_product");
 
                 System.out.println("================= WHEN END ===================");
-            }
-        }
-    }
-
-    @Nested
-    class ExistsByCategoryNames extends Setup {
-
-        @Nested
-        class SuccessCase {
-
-            @Test
-            void withoutParent() {
-                System.out.println("================= WHEN START =================");
-
-                //when
-                List<Category> categories = categoryRepository.existsByCategoryNames(name2, null);
-
-                System.out.println("================= WHEN END ===================");
-
-                //then
-                then(categories)
-                        .extracting("name")
-                        .containsExactly("댄스");
-            }
-
-            @Test
-            void withParent() {
-                System.out.println("================= WHEN START =================");
-
-                //when
-                List<Category> categories = categoryRepository.existsByCategoryNames(name2, name1);
-
-                System.out.println("================= WHEN END ===================");
-
-                //then
-                then(categories)
-                        .hasSize(2)
-                        .extracting("name")
-                        .containsExactlyInAnyOrder("가요", "댄스");
-            }
-
-            @Test
-            void shouldReturnExisting_WhenCategoryNameDoesNotExists() {
-                System.out.println("================= WHEN START =================");
-
-                //when
-                List<Category> categories = categoryRepository.existsByCategoryNames("록", name1);
-
-                System.out.println("================= WHEN END ===================");
-
-                //then
-                then(categories)
-                        .extracting("name")
-                        .containsExactly("가요");
             }
         }
     }

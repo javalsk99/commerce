@@ -84,14 +84,14 @@ class CategoryServiceTest {
                 //given
                 CategoryCreateRequest request = new CategoryCreateRequest("컴퓨터/IT", null);
 
-                given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(Collections.emptyList());
+                given(categoryRepository.findWithParent(anyString(), any())).willReturn(Collections.emptyList());
 
                 //when
                 categoryService.create(request);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), any()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithParent(anyString(), any()));
                     softly.check(() -> BDDMockito.then(categoryRepository).should().save(argThat(c ->
                             c.getName().equals("컴퓨터/IT") && c.getParent() == null)));
                 });
@@ -100,18 +100,36 @@ class CategoryServiceTest {
             @Test
             void childCategory() {
                 //given
-                CategoryCreateRequest request = new CategoryCreateRequest("프로그래밍 언어", "컴퓨터/IT");
+                CategoryCreateRequest request = new CategoryCreateRequest("프로그래밍 언어", category1.getCategoryNumber());
 
-                given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(categories1);
+                given(categoryRepository.findWithParent(anyString(), anyString())).willReturn(categories1);
 
                 //when
                 categoryService.create(request);
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithParent(anyString(), anyString()));
                     softly.check(() -> BDDMockito.then(categoryRepository).should().save(argThat(c ->
                             c.getName().equals("프로그래밍 언어") && c.getParent().getName().equals("컴퓨터/IT"))));
+                });
+            }
+
+            @Test
+            void existsName_WhenParentNumberIsDifferent() {
+                //given
+                CategoryCreateRequest request = new CategoryCreateRequest("Java", category1.getCategoryNumber());
+
+                given(categoryRepository.findWithParent(anyString(), any())).willReturn(categories1);
+
+                //when & then
+                categoryService.create(request);
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithParent(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().save(argThat(c ->
+                            c.getName().equals("Java") && c.getParent().getName().equals("컴퓨터/IT"))));
                 });
             }
         }
@@ -120,11 +138,30 @@ class CategoryServiceTest {
         class FailureCase {
 
             @Test
-            void existsName() {
+            void childCategory_ParentNotFound() {
+                //given
+                CategoryCreateRequest request = new CategoryCreateRequest("프로그래밍 언어", "llII11OO00OO");
+
+                given(categoryRepository.findWithParent(anyString(), anyString())).willReturn(Collections.emptyList());
+
+                //when & then
+                thenThrownBy(() -> categoryService.create(request))
+                        .isInstanceOf(DataNotFoundException.class)
+                        .hasMessage("부모 카테고리가 존재하지 않습니다. parentNumber: " + "llII11OO00OO");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithParent(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(never()).save(any()));
+                });
+            }
+
+            @Test
+            void existsName_WhenParentNumberIsSameNull() {
                 //given
                 CategoryCreateRequest request = new CategoryCreateRequest("컴퓨터/IT", null);
 
-                given(categoryRepository.existsByCategoryNames(anyString(), any())).willReturn(categories1);
+                given(categoryRepository.findWithParent(anyString(), any())).willReturn(categories1);
 
                 //when & then
                 thenThrownBy(() -> categoryService.create(request))
@@ -133,26 +170,45 @@ class CategoryServiceTest {
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), any()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithParent(anyString(), any()));
                     softly.check(() -> BDDMockito.then(categoryRepository).should(never()).save(any()));
                 });
             }
 
             @Test
-            void childCategory_ParentNotFound() {
+            void childCategory_WithSameNameAsParent() {
                 //given
-                CategoryCreateRequest request = new CategoryCreateRequest("프로그래밍 언어", "컴퓨터/IT");
+                CategoryCreateRequest request = new CategoryCreateRequest("컴퓨터/IT", category1.getCategoryNumber());
 
-                given(categoryRepository.existsByCategoryNames(anyString(), anyString())).willReturn(Collections.emptyList());
+                given(categoryRepository.findWithParent(anyString(), anyString())).willReturn(categories1);
 
                 //when & then
                 thenThrownBy(() -> categoryService.create(request))
-                        .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "컴퓨터/IT");
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("부모 카테고리와 같은 이름입니다. name: " + "컴퓨터/IT");
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().existsByCategoryNames(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithParent(anyString(), anyString()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should(never()).save(any()));
+                });
+            }
+
+            @Test
+            void existsName_WhenParentNumberIsSame() {
+                //given
+                CategoryCreateRequest request = new CategoryCreateRequest("프로그래밍 언어", category1.getCategoryNumber());
+
+                given(categoryRepository.findWithParent(anyString(), any())).willReturn(List.of(category1, category2));
+
+                //when & then
+                thenThrownBy(() -> categoryService.create(request))
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("이미 존재하는 카테고리입니다. name: " + "프로그래밍 언어");
+
+                //then
+                thenSoftly(softly -> {
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findWithParent(anyString(), any()));
                     softly.check(() -> BDDMockito.then(categoryRepository).should(never()).save(any()));
                 });
             }
@@ -171,42 +227,10 @@ class CategoryServiceTest {
                 given(categoryRepository.findAll()).willReturn(categories1);
 
                 //when
-                categoryService.findCategoryByName("컴퓨터/IT");
+                categoryService.findCategoryByCategoryNumber(category1.getCategoryNumber());
 
                 //then
                 BDDMockito.then(categoryRepository).should().findAll();
-            }
-
-            @Test
-            void byNames() {
-                //given
-                given(categoryRepository.findAll()).willReturn(categories2);
-
-                //when
-                List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
-                    softly.then(categories)
-                            .extracting("name")
-                            .containsExactlyInAnyOrder("컴퓨터/IT", "프로그래밍 언어");
-                });
-            }
-
-            @Test
-            void byNames_IgnoreDuplicateNames() {
-                //given
-                given(categoryRepository.findAll()).willReturn(categories1);
-
-                //when
-                List<Category> categories = categoryService.findCategoryByNames("컴퓨터/IT", "컴퓨터/IT");
-
-                //then
-                thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().findAll());
-                    softly.then(categories.size()).isEqualTo(1);
-                });
             }
 
             @Test
@@ -215,7 +239,7 @@ class CategoryServiceTest {
                 given(categoryRepository.findAll()).willReturn(categories2);
 
                 //when
-                List<Category> categories = categoryService.findCategories();
+                List<Category> categories = categoryService.findRootCategories();
 
                 //then
                 thenSoftly(softly -> {
@@ -236,23 +260,9 @@ class CategoryServiceTest {
                 given(categoryRepository.findAll()).willReturn(categories1);
 
                 //when & then
-                thenThrownBy(() -> categoryService.findCategoryByName("프로그래밍 언어"))
+                thenThrownBy(() -> categoryService.findCategoryByCategoryNumber(category2.getCategoryNumber()))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
-
-                //then
-                BDDMockito.then(categoryRepository).should().findAll();
-            }
-
-            @Test
-            void byNames_CategoryNotFound() {
-                //given
-                given(categoryRepository.findAll()).willReturn(categories1);
-
-                //when & then
-                thenThrownBy(() -> categoryService.findCategoryByNames("컴퓨터/IT", "프로그래밍 언어"))
-                        .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "프로그래밍 언어");
+                        .hasMessage("존재하지 않는 카테고리입니다. categoryNumber: " + category2.getCategoryNumber());
 
                 //then
                 BDDMockito.then(categoryRepository).should().findAll();
@@ -269,12 +279,12 @@ class CategoryServiceTest {
             @Test
             void basic() {
                 //given
-                CategoryChangeParentRequest request = new CategoryChangeParentRequest("프로그래밍 언어");
+                CategoryChangeParentRequest request = new CategoryChangeParentRequest(category2.getCategoryNumber());
 
                 given(categoryRepository.findAll()).willReturn(categories2);
 
                 //when
-                categoryService.changeParentCategory("Python", request);
+                categoryService.changeParentCategory(category3.getCategoryNumber(), request);
 
                 //then
                 thenSoftly(softly -> {
@@ -287,12 +297,12 @@ class CategoryServiceTest {
             @Test
             void hasChild() {
                 //given
-                CategoryChangeParentRequest request = new CategoryChangeParentRequest("Python");
+                CategoryChangeParentRequest request = new CategoryChangeParentRequest(category4.getCategoryNumber());
 
                 given(categoryRepository.findAll()).willReturn(categories2);
 
                 //when
-                categoryService.changeParentCategory("프로그래밍 언어", request);
+                categoryService.changeParentCategory(category2.getCategoryNumber(), request);
 
                 //then
                 thenSoftly(softly -> {
@@ -310,34 +320,34 @@ class CategoryServiceTest {
         class FailureCase {
 
             @ParameterizedTest
-            @MethodSource("nameProvider")
-            void categoryNotFound(String name) {
+            @MethodSource("numberProvider")
+            void categoryNotFound(String categoryNumber) {
                 //given
-                CategoryChangeParentRequest request1 = new CategoryChangeParentRequest("프로그래밍 언어");
-                CategoryChangeParentRequest request2 = new CategoryChangeParentRequest(name);
+                CategoryChangeParentRequest request1 = new CategoryChangeParentRequest(category2.getCategoryNumber());
+                CategoryChangeParentRequest request2 = new CategoryChangeParentRequest(categoryNumber);
 
                 given(categoryRepository.findAll()).willReturn(List.of(category2, category3));
 
                 //when & then
                 thenSoftly(softly -> {
-                    softly.thenThrownBy(() -> categoryService.changeParentCategory(name, request1))
+                    softly.thenThrownBy(() -> categoryService.changeParentCategory(categoryNumber, request1))
                             .isInstanceOf(DataNotFoundException.class)
-                            .hasMessage("존재하지 않는 카테고리입니다. name: " + name);
-                    softly.thenThrownBy(() -> categoryService.changeParentCategory("Java", request2))
+                            .hasMessage("존재하지 않는 카테고리입니다. categoryNumber: " + categoryNumber);
+                    softly.thenThrownBy(() -> categoryService.changeParentCategory(category3.getCategoryNumber(), request2))
                             .isInstanceOf(DataNotFoundException.class)
-                            .hasMessage("존재하지 않는 카테고리입니다. name: " + name);
+                            .hasMessage("부모 카테고리가 존재하지 않습니다. parentNumber: " + categoryNumber);
                 });
 
                 //then
                 BDDMockito.then(categoryRepository).should(times(2)).findAll();
             }
 
-            static Stream<Arguments> nameProvider() {
+            static Stream<Arguments> numberProvider() {
                 return Stream.of(
-                        argumentSet("카테고리 이름 null", (Object) null),
-                        argumentSet("카테고리 이름 빈 문자열", ""),
-                        argumentSet("카테고리 이름 공백", " "),
-                        argumentSet("존재하지 않는 카테고리 이름", "C++")
+                        argumentSet("카테고리 번호 null", (Object) null),
+                        argumentSet("카테고리 번호 빈 문자열", ""),
+                        argumentSet("카테고리 번호 공백", " "),
+                        argumentSet("존재하지 않는 카테고리 번호", "llII11OO00OO")
                 );
             }
         }
@@ -506,14 +516,14 @@ class CategoryServiceTest {
             @Test
             void basic() {
                 //given
-                given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category3, category4));
+                given(categoryRepository.findByNumberSet(anySet())).willReturn(List.of(category3, category4));
 
                 //when
-                List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python"));
+                List<Category> categories = categoryService.validateAndGetCategories(List.of(category3.getCategoryNumber(), category4.getCategoryNumber()));
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().findByNameSet(anySet()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findByNumberSet(anySet()));
                     softly.then(categories)
                             .extracting("name")
                             .containsExactlyInAnyOrder("Java", "Python");
@@ -521,16 +531,16 @@ class CategoryServiceTest {
             }
 
             @Test
-            void ignoreDuplicateNames() {
+            void ignoreDuplicateNumbers() {
                 //given
-                given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category3, category4));
+                given(categoryRepository.findByNumberSet(anySet())).willReturn(List.of(category3, category4));
 
                 //when
-                List<Category> categories = categoryService.validateAndGetCategories(List.of("Java", "Python", "Java"));
+                List<Category> categories = categoryService.validateAndGetCategories(List.of(category3.getCategoryNumber(), category4.getCategoryNumber(), category3.getCategoryNumber()));
 
                 //then
                 thenSoftly(softly -> {
-                    softly.check(() -> BDDMockito.then(categoryRepository).should().findByNameSet(anySet()));
+                    softly.check(() -> BDDMockito.then(categoryRepository).should().findByNumberSet(anySet()));
                     softly.then(categories)
                             .extracting("name")
                             .containsExactlyInAnyOrder("Java", "Python");
@@ -544,15 +554,15 @@ class CategoryServiceTest {
             @Test
             void sizeMismatch() {
                 //given
-                given(categoryRepository.findByNameSet(anySet())).willReturn(List.of(category2, category3, category4));
+                given(categoryRepository.findByNumberSet(anySet())).willReturn(List.of(category2, category3, category4));
 
                 //when & then
-                thenThrownBy(() -> categoryService.validateAndGetCategories(List.of("Java", "Python")))
+                thenThrownBy(() -> categoryService.validateAndGetCategories(List.of(category3.getCategoryNumber(), category4.getCategoryNumber())))
                         .isInstanceOf(DataNotFoundException.class)
                         .hasMessage("존재하지 않는 카테고리가 있습니다");
 
                 //then
-                BDDMockito.then(categoryRepository).should().findByNameSet(anySet());
+                BDDMockito.then(categoryRepository).should().findByNumberSet(anySet());
             }
         }
     }

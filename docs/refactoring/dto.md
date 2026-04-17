@@ -139,3 +139,11 @@
 - ErrorResult  
   클라이언트의 잘못된 입력으로 발생하는 예외가 어떤 부분에서 발생했는지 알리기 위해 확장했다.
 
+
+- CategoryNameResponse  
+  ProductNameWithCategoryNameResponse에서만 사용하던 DTO를 ProductDetailResponse에서도 사용하므로 Inner Class에서 독립했다.
+
+
+- ProductDetailResponse  
+  연결된 카테고리 목록을 확인하기 위해 확장했다.
+

@@ -13,12 +13,12 @@ public class CategoryQueryRepository {
 
     private final EntityManager em;
 
-    protected Optional<CategoryQueryDto> findCategory(String categoryName) {
+    protected Optional<CategoryQueryDto> findCategory(String categoryNumber) {
         return em.createQuery(
-                        "select new lsk.commerce.query.dto.CategoryQueryDto(c.name)" +
+                        "select new lsk.commerce.query.dto.CategoryQueryDto(c.name, c.categoryNumber)" +
                                 " from Category c" +
-                                " where c.name = :name", CategoryQueryDto.class)
-                .setParameter("name", categoryName)
+                                " where c.categoryNumber = :categoryNumber", CategoryQueryDto.class)
+                .setParameter("categoryNumber", categoryNumber)
                 .getResultList()
                 .stream()
                 .findFirst();

@@ -13,13 +13,13 @@ public class CategoryProductQueryRepository {
 
     private final EntityManager em;
 
-    protected List<CategoryProductQueryDto> findCategoryProductsByCategoryName(String categoryName) {
+    protected List<CategoryProductQueryDto> findCategoryProductsByCategoryName(String categoryNumber) {
         return em.createQuery(
-                        "select new lsk.commerce.query.dto.CategoryProductQueryDto(cp.category.name, p.name, p.productNumber)" +
+                        "select new lsk.commerce.query.dto.CategoryProductQueryDto(cp.category.categoryNumber, p.name, p.productNumber)" +
                                 " from CategoryProduct cp" +
                                 " join cp.product p" +
-                                " where cp.category.name = :name", CategoryProductQueryDto.class)
-                .setParameter("name", categoryName)
+                                " where cp.category.categoryNumber = :categoryNumber", CategoryProductQueryDto.class)
+                .setParameter("categoryNumber", categoryNumber)
                 .getResultList();
     }
 }

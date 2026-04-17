@@ -19,15 +19,26 @@ public class CategoryRepository {
         em.persist(category);
     }
 
-    public Optional<Category> findWithChild(String categoryName) {
+    public Optional<Category> findWithChild(String categoryNumber) {
         return em.createQuery(
                         "select c from Category c" +
                                 " left join fetch c.children" +
-                                " where c.name = :name", Category.class)
-                .setParameter("name", categoryName)
+                                " where c.categoryNumber = :categoryNumber", Category.class)
+                .setParameter("categoryNumber", categoryNumber)
                 .getResultList()
                 .stream()
                 .findFirst();
+    }
+
+    public List<Category> findWithParent(String categoryName, String parentNumber) {
+        return em.createQuery(
+                        "select c from Category c" +
+                                " left join fetch c.parent" +
+                                " where c.name = :name" +
+                                " or c.categoryNumber = :parentNumber", Category.class)
+                .setParameter("name", categoryName)
+                .setParameter("parentNumber", parentNumber)
+                .getResultList();
     }
 
     public List<Category> findAll() {
@@ -39,21 +50,11 @@ public class CategoryRepository {
         em.remove(category);
     }
 
-    public List<Category> existsByCategoryNames(String categoryName, String name) {
+    public List<Category> findByNumberSet(Set<String> categoryNumberSet) {
         return em.createQuery(
                         "select c from Category c" +
-                                " where c.name = :name" +
-                                " or (:parentName is not null and c.name = :parentName)", Category.class)
-                .setParameter("name", categoryName)
-                .setParameter("parentName", name)
-                .getResultList();
-    }
-
-    public List<Category> findByNameSet(Set<String> categoryNameSet) {
-        return em.createQuery(
-                        "select c from Category c" +
-                                " where c.name in :categoryNameSet", Category.class)
-                .setParameter("categoryNameSet", categoryNameSet)
+                                " where c.categoryNumber in :categoryNumberSet", Category.class)
+                .setParameter("categoryNumberSet", categoryNumberSet)
                 .getResultList();
     }
 }

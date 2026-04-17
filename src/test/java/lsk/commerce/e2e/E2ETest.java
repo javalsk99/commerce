@@ -401,15 +401,15 @@ public class E2ETest {
     }
 
     private List<OrderProductRequest> createOrderProductRequestList() {
-        String categoryName1 = categoryService.create(new CategoryCreateRequest("가요", null));
-        String categoryName2 = categoryService.create(new CategoryCreateRequest("컴퓨터/IT", null));
-        String categoryName3 = categoryService.create(new CategoryCreateRequest("국내 영화", null));
+        String categoryNumber1 = categoryService.create(new CategoryCreateRequest("가요", null));
+        String categoryNumber2 = categoryService.create(new CategoryCreateRequest("컴퓨터/IT", null));
+        String categoryNumber3 = categoryService.create(new CategoryCreateRequest("국내 영화", null));
 
-        String albumNumber1 = productService.register(createAlbumRequest("BANG BANG", 12000, 10), List.of(categoryName1));
-        String albumNumber2 = productService.register(createAlbumRequest("BLACKHOLE", 14000, 8), List.of(categoryName1));
-        String bookNumber = productService.register(createBookRequest("자바 ORM 표준 JPA 프로그래밍", 10000, 12), List.of(categoryName2));
-        String movieNumber1 = productService.register(createMovieRequest("범죄도시2", 9000, 4), List.of(categoryName3));
-        productService.register(createMovieRequest("범죄도시3", 11000, 6), List.of(categoryName3));
+        String albumNumber1 = productService.register(createAlbumRequest("BANG BANG", 12000, 10), List.of(categoryNumber1));
+        String albumNumber2 = productService.register(createAlbumRequest("BLACKHOLE", 14000, 8), List.of(categoryNumber1));
+        String bookNumber = productService.register(createBookRequest("자바 ORM 표준 JPA 프로그래밍", 10000, 12), List.of(categoryNumber2));
+        String movieNumber1 = productService.register(createMovieRequest("범죄도시2", 9000, 4), List.of(categoryNumber3));
+        productService.register(createMovieRequest("범죄도시3", 11000, 6), List.of(categoryNumber3));
 
         OrderProductRequest orderProductRequest1 = new OrderProductRequest(albumNumber1, 3);
         OrderProductRequest orderProductRequest2 = new OrderProductRequest(albumNumber2, 4);

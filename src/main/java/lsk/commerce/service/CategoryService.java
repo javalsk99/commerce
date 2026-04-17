@@ -12,8 +12,6 @@ import lsk.commerce.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -28,37 +26,22 @@ public class CategoryService {
 
     @Transactional
     public String create(CategoryCreateRequest request) {
-        Category parentCategory = validateCategory(request.name(), request.parentName());
+        Category parentCategory = validateCategory(request.name(), request.parentNumber());
         Category category = Category.createCategory(parentCategory, request.name());
         categoryRepository.save(category);
-        return category.getName();
+        return category.getCategoryNumber();
     }
 
-    public Category findCategoryByName(String categoryName) {
+    public Category findCategoryByCategoryNumber(String categoryNumber) {
         List<Category> categories = categoryRepository.findAll();
 
         return categories.stream()
-                .filter(c -> c.getName().equals(categoryName))
+                .filter(c -> c.getCategoryNumber().equals(categoryNumber))
                 .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. categoryNumber: " + categoryNumber));
     }
 
-    public List<Category> findCategoryByNames(String... categoryNames) {
-        List<Category> categories = categoryRepository.findAll();
-        Set<String> uniqueNames = new HashSet<>(Arrays.asList(categoryNames));
-
-        List<Category> categoryList = new ArrayList<>();
-        for (String categoryName : uniqueNames) {
-            categoryList.add(categories.stream()
-                    .filter(c -> c.getName().equals(categoryName))
-                    .findFirst()
-                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName)));
-        }
-
-        return categoryList;
-    }
-
-    public List<Category> findCategories() {
+    public List<Category> findRootCategories() {
         List<Category> categories = categoryRepository.findAll();
 
         return categories.stream()
@@ -67,29 +50,33 @@ public class CategoryService {
     }
 
     @Transactional
-    public Category changeParentCategory(String categoryName, CategoryChangeParentRequest request) {
+    public Category changeParentCategory(String categoryNumber, CategoryChangeParentRequest request) {
         List<Category> categories = categoryRepository.findAll();
         Category category = categories.stream()
-                .filter(c -> c.getName().equals(categoryName))
+                .filter(c -> c.getCategoryNumber().equals(categoryNumber))
                 .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + categoryName));
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. categoryNumber: " + categoryNumber));
+
+        if (categoryNumber.equals("LVjBKQYeuJQP")) {
+            return category;
+        }
 
         Category newParentCategory = categories.stream()
-                .filter(c -> c.getName().equals(request.parentName()))
+                .filter(c -> c.getCategoryNumber().equals(request.parentNumber()))
                 .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + request.parentName()));
+                .orElseThrow(() -> new DataNotFoundException("부모 카테고리가 존재하지 않습니다. parentNumber: " + request.parentNumber()));
 
         category.changeParentCategory(newParentCategory);
         return newParentCategory;
     }
 
     @Transactional
-    public void deleteCategory(String categoryName) {
-        if (categoryName.equals("가요")) {
+    public void deleteCategory(String categoryNumber) {
+        if (categoryNumber.equals("LVjBKQYeuJQP")) {
             return;
         }
 
-        Optional<Category> optionalCategory = categoryRepository.findWithChild(categoryName);
+        Optional<Category> optionalCategory = categoryRepository.findWithChild(categoryNumber);
         if (optionalCategory.isEmpty()) {
             return;
         }
@@ -117,28 +104,44 @@ public class CategoryService {
         return CategoryDisconnectResponse.from(category);
     }
 
-    private Category validateCategory(String categoryName, String name) {
-        List<Category> categories = categoryRepository.existsByCategoryNames(categoryName, name);
-        if (categories.stream().anyMatch(c -> c.getName().equals(categoryName))) {
-            throw new DuplicateResourceException("이미 존재하는 카테고리입니다. name: " + categoryName);
-        }
+    private Category validateCategory(String categoryName, String parentNumber) {
+        List<Category> categories = categoryRepository.findWithParent(categoryName, parentNumber);
 
         Category parentCategory = null;
-        if (name != null) {
+        if (parentNumber != null) {
             parentCategory = categories.stream()
-                    .filter(c -> c.getName().equals(name))
+                    .filter(c -> c.getCategoryNumber().equals(parentNumber))
                     .findFirst()
-                    .orElseThrow(() -> new DataNotFoundException("존재하지 않는 카테고리입니다. name: " + name));
+                    .orElseThrow(() -> new DataNotFoundException("부모 카테고리가 존재하지 않습니다. parentNumber: " + parentNumber));
+        }
+
+        Category parent = parentCategory;
+        boolean isDuplicate = categories.stream()
+                .filter(c -> c.getName().equals(categoryName))
+                .anyMatch(c -> {
+                    if (parentNumber == null) {
+                        return c.getParent() == null;
+                    }
+
+                    if (c == parent) {
+                        throw new DuplicateResourceException("부모 카테고리와 같은 이름입니다. name: " + categoryName);
+                    }
+
+                    return c.getParent() != null && c.getParent().equals(parent);
+                });
+
+        if (isDuplicate) {
+            throw new DuplicateResourceException("이미 존재하는 카테고리입니다. name: " + categoryName);
         }
 
         return parentCategory;
     }
 
-    protected List<Category> validateAndGetCategories(List<String> categoryNames) {
-        Set<String> categoryNameSet = new HashSet<>(categoryNames);
+    protected List<Category> validateAndGetCategories(List<String> categoryNumbers) {
+        Set<String> categoryNumberSet = new HashSet<>(categoryNumbers);
 
-        List<Category> categories = categoryRepository.findByNameSet(categoryNameSet);
-        if (categoryNameSet.size() != categories.size()) {
+        List<Category> categories = categoryRepository.findByNumberSet(categoryNumberSet);
+        if (categoryNumberSet.size() != categories.size()) {
             throw new DataNotFoundException("존재하지 않는 카테고리가 있습니다");
         }
 

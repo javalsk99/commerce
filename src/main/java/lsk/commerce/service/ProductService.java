@@ -28,9 +28,9 @@ public class ProductService {
     private final CategoryService categoryService;
 
     @Transactional
-    public String register(ProductCreateRequest request, List<String> categoryNames) {
+    public String register(ProductCreateRequest request, List<String> categoryNumbers) {
         Product product = validateAndToProduct(request);
-        List<Category> categories = categoryService.validateAndGetCategories(categoryNames);
+        List<Category> categories = categoryService.validateAndGetCategories(categoryNumbers);
 
         product.connectCategories(categories);
         productRepository.save(product);
@@ -44,6 +44,11 @@ public class ProductService {
 
     public Product findProductWithCategoryProduct(String productNumber) {
         return productRepository.findWithCategoryProduct(productNumber)
+                .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + productNumber));
+    }
+
+    public Product findProductWithCategoryProductCategory(String productNumber) {
+        return productRepository.findWithCategoryProductCategory(productNumber)
                 .orElseThrow(() -> new DataNotFoundException("존재하지 않는 상품입니다. productNumber: " + productNumber));
     }
 

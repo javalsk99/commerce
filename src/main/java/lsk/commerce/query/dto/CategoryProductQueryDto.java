@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public record CategoryProductQueryDto(
         @JsonIgnore
-        String categoryName,
+        String categoryNumber,
         String productName,
         String productNumber
 ) {

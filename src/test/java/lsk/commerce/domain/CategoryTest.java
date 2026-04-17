@@ -1,5 +1,6 @@
 package lsk.commerce.domain;
 
+import lsk.commerce.exception.DuplicateResourceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,15 @@ class CategoryTest {
             }
 
             @Test
+            void shouldIgnoreChange_WhenParentIsSame() {
+                //when
+                childCategory.changeParentCategory(parentCategory);
+
+                //then
+                then(childCategory.getParent()).isEqualTo(parentCategory);
+            }
+
+            @Test
             void idempotency() {
                 //given
                 Category category = createCategory();
@@ -148,6 +158,32 @@ class CategoryTest {
 
         @Nested
         class FailureCase {
+
+            @Test
+            void shouldFailToChange_WhenChildNameEqualsParentName() {
+                //given
+                Category category = Category.createCategory(null, "가요");
+
+                ReflectionTestUtils.setField(category, "id", 3L);
+
+                //when & then
+                thenThrownBy(() -> category.changeParentCategory(parentCategory))
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("자신과 같은 이름의 카테고리를 부모로 설정할 수 없습니다. name: " + "가요");
+            }
+
+            @Test
+            void shouldFailToChange_WhenParentHasSameNameCategory() {
+                //given
+                Category category = Category.createCategory(null, "댄스");
+
+                ReflectionTestUtils.setField(category, "id", 3L);
+
+                //when & then
+                thenThrownBy(() -> category.changeParentCategory(parentCategory))
+                        .isInstanceOf(DuplicateResourceException.class)
+                        .hasMessage("선택한 부모 카테고리에 이미 같은 이름의 카테고리가 있습니다. name: " + "댄스");
+            }
 
             @Test
             void shouldFailToChange_WhenParentIsChild() {

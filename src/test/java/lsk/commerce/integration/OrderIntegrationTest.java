@@ -82,8 +82,8 @@ public class OrderIntegrationTest {
                 .baseAddress("서울시 강남구")
                 .detailAddress("101동 101호")
                 .build());
-        String name = categoryService.create(new CategoryCreateRequest("가요", null));
-        String childCategoryName = categoryService.create(new CategoryCreateRequest("댄스", name));
+        String categoryNumber = categoryService.create(new CategoryCreateRequest("가요", null));
+        String childCategoryName = categoryService.create(new CategoryCreateRequest("댄스", categoryNumber));
         albumNumber1 = productService.register(ProductCreateRequest.builder()
                 .name("BANG BANG")
                 .price(15000)

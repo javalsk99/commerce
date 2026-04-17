@@ -28,6 +28,7 @@ class CategoryProductQueryRepositoryTest {
     @Autowired
     CategoryProductQueryRepository categoryProductQueryRepository;
 
+    String categoryNumber;
     String productNumber1;
     String productNumber2;
 
@@ -35,6 +36,7 @@ class CategoryProductQueryRepositoryTest {
     void beforeEach() {
         Category category = Category.createCategory(null, "가요");
         em.persistAndFlush(category);
+        categoryNumber = category.getCategoryNumber();
 
         Album album1 = createAlbum("BANG BANG");
         Album album2 = createAlbum("BLACKHOLE");
@@ -61,7 +63,7 @@ class CategoryProductQueryRepositoryTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                List<CategoryProductQueryDto> categoryProductQueryDtoList = categoryProductQueryRepository.findCategoryProductsByCategoryName("가요");
+                List<CategoryProductQueryDto> categoryProductQueryDtoList = categoryProductQueryRepository.findCategoryProductsByCategoryName(categoryNumber);
 
                 System.out.println("================= WHEN END ===================");
 

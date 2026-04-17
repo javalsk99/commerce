@@ -32,6 +32,8 @@ class CategoryQueryServiceTest {
     @Autowired
     CategoryQueryService categoryQueryService;
 
+    String categoryNumber;
+    String wrongCategoryNumber = "llII11OO00OO";
     String productNumber1;
     String productNumber2;
 
@@ -39,6 +41,7 @@ class CategoryQueryServiceTest {
     void beforeEach() {
         Category category = Category.createCategory(null, "가요");
         em.persistAndFlush(category);
+        categoryNumber = category.getCategoryNumber();
 
         Album album1 = createAlbum("BANG BANG");
         Album album2 = createAlbum("BLACKHOLE");
@@ -65,7 +68,7 @@ class CategoryQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                CategoryQueryDto categoryQueryDto = categoryQueryService.findCategory("가요");
+                CategoryQueryDto categoryQueryDto = categoryQueryService.findCategory(categoryNumber);
 
                 System.out.println("================= WHEN END ===================");
 
@@ -87,9 +90,9 @@ class CategoryQueryServiceTest {
                 System.out.println("================= WHEN START =================");
 
                 //when
-                thenThrownBy(() -> categoryQueryService.findCategory("록"))
+                thenThrownBy(() -> categoryQueryService.findCategory(wrongCategoryNumber))
                         .isInstanceOf(DataNotFoundException.class)
-                        .hasMessage("존재하지 않는 카테고리입니다. name: " + "록");
+                        .hasMessage("존재하지 않는 카테고리입니다. categoryNumber: " + wrongCategoryNumber);
             }
         }
     }

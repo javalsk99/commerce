@@ -233,8 +233,8 @@ public class IntegrationTest {
 
         @BeforeEach
         void beforeEach() {
-            String name = categoryService.create(new CategoryCreateRequest("가요", null));
-            String childCategoryName = categoryService.create(new CategoryCreateRequest("댄스", name));
+            String categoryNumber = categoryService.create(new CategoryCreateRequest("가요", null));
+            String childCategoryNumber = categoryService.create(new CategoryCreateRequest("댄스", categoryNumber));
             albumNumber1 = productService.register(ProductCreateRequest.builder()
                     .name("BANG BANG")
                     .price(15000)
@@ -242,7 +242,7 @@ public class IntegrationTest {
                     .dtype("A")
                     .artist("IVE")
                     .studio("STARSHIP")
-                    .build(), List.of(childCategoryName));
+                    .build(), List.of(childCategoryNumber));
             albumNumber2 = productService.register(ProductCreateRequest.builder()
                     .name("BLACKHOLE")
                     .price(15000)
@@ -250,7 +250,7 @@ public class IntegrationTest {
                     .dtype("A")
                     .artist("IVE")
                     .studio("STARSHIP")
-                    .build(), List.of(childCategoryName));
+                    .build(), List.of(childCategoryNumber));
         }
     }
 

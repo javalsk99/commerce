@@ -24,8 +24,8 @@ public class CategoryProductService {
         return categoryProductRepository.findAllWithProductByCategory(category);
     }
 
-    public Category disconnect(String categoryName, String productNumber) {
-        Category category = categoryService.findCategoryByName(categoryName);
+    public Category disconnect(String categoryNumber, String productNumber) {
+        Category category = categoryService.findCategoryByCategoryNumber(categoryNumber);
         Product product = productService.findProductWithCategoryProduct(productNumber);
         if (category.getCategoryProducts().stream().noneMatch(cp -> cp.getProduct().equals(product))) {
             return category;
@@ -36,8 +36,8 @@ public class CategoryProductService {
         return category;
     }
 
-    public Category disconnectAll(String categoryName) {
-        Category category = categoryService.findCategoryByName(categoryName);
+    public Category disconnectAll(String categoryNumber) {
+        Category category = categoryService.findCategoryByCategoryNumber(categoryNumber);
         List<CategoryProduct> categoryProducts = new ArrayList<>(findCategoryProductsWithProductByCategory(category));
         if (categoryProducts.isEmpty()) {
             return category;
@@ -51,9 +51,9 @@ public class CategoryProductService {
         return category;
     }
 
-    public Product connect(String productNumber, String categoryName) {
+    public Product connect(String productNumber, String categoryNumber) {
         Product product = productService.findProductWithCategoryProduct(productNumber);
-        Category category = categoryService.findCategoryByName(categoryName);
+        Category category = categoryService.findCategoryByCategoryNumber(categoryNumber);
 
         if (product.getCategoryProducts().stream().anyMatch(c -> category.equals(c.getCategory()))) {
             return product;

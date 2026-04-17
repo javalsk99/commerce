@@ -15,8 +15,8 @@ public record ProductSearchCond(
         @Pattern(regexp = "^[A-Za-z가-힣0-9 _]{1,20}$", message = "카테고리 이름은 한글, 영문, 숫자, 공백, _만 사용하여 1~20자 사이로 입력해 주세요")
         String categoryName,
 
-        @Schema(description = "**상품 이름**은 한글, 초성, 영문, 숫자, 공백, 특수문자(!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요.", example = "ㅍㄹㄱㄹㅁ")
-        @Pattern(regexp = "^[A-Za-z가-힣ㄱ-ㅎ0-9 !#&+,.:_-]{1,50}$", message = "상품 이름은 한글, 초성, 영문, 숫자, 공백, 특수문자(!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요")
+        @Schema(description = "**상품 이름**은 한글, 초성, 영문, 숫자, 공백, 특수문자(()!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요.", example = "ㅍㄹㄱㄹㅁ")
+        @Pattern(regexp = "^[A-Za-z가-힣ㄱ-ㅎ0-9 ()!#&+,.:_-]{1,50}$", message = "상품 이름은 한글, 초성, 영문, 숫자, 공백, 특수문자(()!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요")
         String productName,
         @Schema(
                 description = "**최소 가격**은 100원 이상이어야 합니다. \n\n" +

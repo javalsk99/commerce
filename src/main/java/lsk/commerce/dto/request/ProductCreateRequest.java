@@ -12,7 +12,7 @@ import lombok.Builder;
 public record ProductCreateRequest(
         @Schema(example = "음악_001")
         @NotBlank(message = "상품 이름은 필수입니다")
-        @Pattern(regexp = "^[A-Za-z가-힣0-9 !#&+,.:_-]{1,50}$", message = "상품 이름은 한글, 영문, 숫자, 공백, 특수문자(!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요")
+        @Pattern(regexp = "^[A-Za-z가-힣0-9 ()!#&+,.:_-]{1,50}$", message = "상품 이름은 한글, 영문, 숫자, 공백, 특수문자(()!#&+,.:_-)만 사용하여 1~50자 사이로 입력해 주세요")
         String name,
         @Schema(example = "15000")
         @NotNull(message = "상품 가격은 필수입니다") @Min(value = 100, message = "상품 가격은 100원 이상이어야 합니다")
