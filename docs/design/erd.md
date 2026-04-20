@@ -44,3 +44,6 @@
 
 - 주소를 city, street, zipcode -> zipcode, base_address, detail_address로 변경
 
+
+- 카테고리에서 카테고리 번호 category_number 추가
+

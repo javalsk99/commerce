@@ -61,6 +61,8 @@
 
       Order order = findOrderWithAll(orderNumber);
 
+      order.clearOrderProduct();
+
       em.flush();
       em.clear();
 
