@@ -6,10 +6,10 @@
 # 기술 스택
 - Java, Spring Boot, JPA
 - MySQL, RDS
-- EC2, Nginx, Docker, GitHub Actions
+- Cloudflare, EC2, Nginx, Docker, GitHub Actions
 - JUnit 5, AssertJ, Mockito, Postman, Swagger (springdoc)
 
-# 시스템 아키텍쳐
+# 시스템 아키텍처
 ![architecture](docs/design/images/시스템_아키텍처.PNG)
 본 프로젝트는 GitHub Actions 기반 CI/CD 파이프라인과 Docker를 사용하여 EC2에 배포되고,
 Nginx를 리버스 프록시로 사용하는 API 서버 구조로 설계되었습니다.
