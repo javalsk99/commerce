@@ -1,7 +1,7 @@
 package lsk.commerce.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.portone.sdk.server.payment.PaidPayment;
 import lsk.commerce.api.portone.PaymentCustomData;
 import lsk.commerce.api.portone.SyncPaymentException;

@@ -41,6 +41,7 @@ import lsk.commerce.service.CategoryService;
 import lsk.commerce.service.ProductService;
 import lsk.commerce.util.JwtProvider;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,6 @@ public class E2ETest {
     @LocalServerPort
     int port;
 
-    @Autowired
     WebTestClient client;
 
     @Autowired
@@ -110,6 +110,13 @@ public class E2ETest {
 
     @Value("${birth}")
     String birth;
+
+    @BeforeEach
+    void beforeEach() {
+        client = WebTestClient.bindToServer()
+                .baseUrl("http://localhost:" + port)
+                .build();
+    }
 
     @AfterEach
     void afterEach() {

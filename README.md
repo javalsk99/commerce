@@ -1,6 +1,5 @@
 # 소개
 로그인한 회원이 상품을 주문하고, 재고가 차감되고, 결제가 처리되는 커머스 백엔드 프로젝트  
-[Notion](https://www.notion.so/34030c4484b4808ebc84d1bac00c9d1d)  
 [프로젝트 바로가기](https://lsk-commerce.shop)
 
 # 기술 스택
